@@ -1,0 +1,111 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <h4 class="mb-3 mb-md-0">Gestion des Notifications</h4>
+        <p class="text-secondary">Configurez les alertes et les modèles de messages envoyés automatiquement aux clients
+            et collaborateurs.</p>
+    </div>
+</div>
+
+<form [formGroup]="notificationsForm" (ngSubmit)="saveSettings()">
+    <div class="row">
+        <!-- Section: Modes de Notification -->
+        <div class="col-md-5 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title fw-bolder mb-4">CANAUX DE COMMUNICATION</h6>
+                    <p class="text-secondary mb-4">Sélectionnez les canaux par défaut pour l'envoi des alertes système.
+                    </p>
+
+                    <div class="form-check form-switch mb-4">
+                        <input class="form-check-input" type="checkbox" id="autoSendSms" formControlName="autoSendSms">
+                        <label class="form-check-label ms-2 fw-medium" for="autoSendSms">
+                            Activer l'envoi automatique de SMS
+                        </label>
+                        <div class="text-muted small mt-1 ms-4">Recommandé pour les rappels de paiement et confirmations
+                            urgentes.</div>
+                    </div>
+
+                    <div class="form-check form-switch mb-4">
+                        <input class="form-check-input" type="checkbox" id="autoSendEmail"
+                            formControlName="autoSendEmail">
+                        <label class="form-check-label ms-2 fw-medium" for="autoSendEmail">
+                            Activer l'envoi automatique d'Emails
+                        </label>
+                        <div class="text-muted small mt-1 ms-4">Idéal pour l'envoi de factures, contrats et documents
+                            officiels.</div>
+                    </div>
+
+                    <div class="form-check form-switch mb-4">
+                        <input class="form-check-input" type="checkbox" id="autoSendWhatsapp"
+                            formControlName="autoSendWhatsapp">
+                        <label class="form-check-label ms-2 fw-medium" for="autoSendWhatsapp">
+                            Activer l'envoi automatique via WhatsApp
+                        </label>
+                        <div class="text-muted small mt-1 ms-4">Canal rapide et privilégié pour interagir avec les
+                            locataires.</div>
+                    </div>
+
+                    <div class="form-check form-switch mb-4">
+                        <input class="form-check-input" type="checkbox" id="enablePushNotifications"
+                            formControlName="enablePushNotifications">
+                        <label class="form-check-label ms-2 fw-medium" for="enablePushNotifications">
+                            Activer les Notifications Push (Application)
+                        </label>
+                        <div class="text-muted small mt-1 ms-4">Permet d'alerter les clients directement sur leur
+                            application mobile GbatCar.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Modèles de Messages -->
+        <div class="col-md-7 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title fw-bolder mb-4">MODÈLES DE MESSAGES SMS</h6>
+                    <p class="text-secondary mb-4">Personnalisez le contenu des messages envoyés à vos clients.</p>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Validation de Dossier</label>
+                        <textarea class="form-control" rows="3" formControlName="smsTemplateWelcome"
+                            [ngClass]="{'is-invalid': notificationsForm.get('smsTemplateWelcome')?.invalid && notificationsForm.get('smsTemplateWelcome')?.touched}"></textarea>
+                        <small class="form-text text-primary mt-1 d-block"><i data-feather="info" appFeatherIcon
+                                class="icon-xs pb-1"></i> Variables autorisées : <code
+                                ngNonBindable>{{client_name}}</code>, <code ngNonBindable>{{dossier_id}}</code></small>
+                    </div>
+
+                    <div class="mb-4 border-top pt-4">
+                        <label class="form-label fw-medium text-danger">Relance de Paiement</label>
+                        <textarea class="form-control border-danger-subtle" rows="3"
+                            formControlName="smsTemplateLatePayment"
+                            [ngClass]="{'is-invalid': notificationsForm.get('smsTemplateLatePayment')?.invalid && notificationsForm.get('smsTemplateLatePayment')?.touched}"></textarea>
+                        <small class="form-text text-primary mt-1 d-block"><i data-feather="info" appFeatherIcon
+                                class="icon-xs pb-1"></i> Variables autorisées : <code
+                                ngNonBindable>{{client_name}}</code>, <code ngNonBindable>{{amount}}</code>, <code
+                                ngNonBindable>{{due_date}}</code></small>
+                    </div>
+
+                    <div class="mb-4 border-top pt-4">
+                        <label class="form-label fw-medium text-warning">Rappel de Maintenance (Visite Technique /
+                            Vidange)</label>
+                        <textarea class="form-control border-warning-subtle" rows="3"
+                            formControlName="smsTemplateMaintenance"
+                            [ngClass]="{'is-invalid': notificationsForm.get('smsTemplateMaintenance')?.invalid && notificationsForm.get('smsTemplateMaintenance')?.touched}"></textarea>
+                        <small class="form-text text-primary mt-1 d-block"><i data-feather="info" appFeatherIcon
+                                class="icon-xs pb-1"></i> Variables autorisées : <code
+                                ngNonBindable>{{client_name}}</code>, <code ngNonBindable>{{vehicle_plate}}</code>,
+                            <code ngNonBindable>{{date}}</code></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="col-12 mb-5 mt-2">
+            <button type="submit" class="btn btn-primary d-inline-flex align-items-center">
+                <i data-feather="save" appFeatherIcon class="icon-sm me-2"></i>
+                Enregistrer les Préférences
+            </button>
+        </div>
+    </div>
+</form>

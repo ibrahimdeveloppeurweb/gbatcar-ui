@@ -1,0 +1,120 @@
+<div *ngIf="record" class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <nav class="page-breadcrumb mb-1">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a routerLink="/gbatcar/maintenance/alerts">Alertes & Sinistres</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ record.id }}</li>
+            </ol>
+        </nav>
+        <h4 class="mb-3 mb-md-0 d-flex align-items-center">
+            Détails de l'Alerte <span class="ms-2 badge text-dark bg-warning">{{ record.id }}</span>
+        </h4>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button [routerLink]="['/gbatcar/maintenance/alerts']"
+            class="btn btn-secondary btn-icon-text me-2 mb-2 mb-md-0">
+            <i data-feather="arrow-left" appFeatherIcon class="btn-icon-prepend"></i> Retour
+        </button>
+        <button class="btn btn-outline-danger btn-icon-text me-2 mb-2 mb-md-0"
+            title="Facturer le chauffeur pour dommages">
+            <i data-feather="dollar-sign" appFeatherIcon class="btn-icon-prepend"></i> Émettre une Pénalité
+        </button>
+        <button class="btn btn-warning btn-icon-text mb-2 mb-md-0" title="Changer le statut">
+            <i data-feather="check-circle" appFeatherIcon class="btn-icon-prepend"></i> Mettre à jour l'état
+        </button>
+    </div>
+</div>
+
+<div *ngIf="record" class="row">
+    <div class="col-md-9 mx-auto grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <div>
+                        <h2 class="text-dark mb-1 d-flex align-items-center">
+                            {{ record.type }}
+                        </h2>
+                        <div class="mt-2">
+                            <span class="badge me-2" [ngClass]="{
+                                'bg-warning text-dark fs-6': record.status === 'En traitement',
+                                'bg-danger fs-6': record.status === 'Immobilisé',
+                                'bg-success fs-6': record.status === 'Résolu'
+                            }">Statut : {{ record.status }}</span>
+
+                            <span class="badge" [ngClass]="{
+                                'bg-info fs-6': record.severity === 'Faible',
+                                'bg-warning text-dark fs-6': record.severity === 'Moyenne',
+                                'bg-danger fs-6': record.severity === 'Critique'
+                            }">Gravité : {{ record.severity }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-6 mb-4">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Véhicule concerné</label>
+                        <p class="mb-0 fw-medium fs-5 text-dark">{{ record.vehicle }}</p>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Date du Sinistre</label>
+                        <p class="mb-0 fs-5">{{ record.date | date:'longDate':'':'fr-FR' }} à {{ record.date |
+                            date:'HH:mm' }}</p>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Locataire au volant</label>
+                        <div class="d-flex align-items-center mt-2">
+                            <i data-feather="user" appFeatherIcon class="icon-md text-secondary me-2"></i>
+                            <span class="fw-medium text-primary"><a href="javascript:void(0)">{{ record.client
+                                    }}</a></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12 mb-4">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Description des Faits
+                            (Constat)</label>
+                        <div class="bg-light p-3 rounded mt-1 border">
+                            <p class="mb-0 text-dark fw-medium">{{ record.description }}</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12 mb-4" *ngIf="record.driverInfo">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Informations Tiers /
+                            Commentaires</label>
+                        <p class="mb-0 text-secondary">
+                            {{ record.driverInfo }}
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h6 class="mt-4 mb-3">Documents & Photos</h6>
+                <div class="d-flex align-items-center flex-wrap">
+                    <div class="bg-light p-3 rounded d-flex align-items-center me-3 mb-2 border"
+                        *ngIf="record.policeReport">
+                        <i data-feather="file-text" appFeatherIcon class="text-secondary me-2"></i>
+                        <div>
+                            <p class="mb-0 tx-13 fw-medium">Constat_Amiable_{{ record.id }}.pdf</p>
+                            <span class="tx-11 text-muted">1.2 MB</span>
+                        </div>
+                    </div>
+
+                    <!-- Dummy Photos -->
+                    <div class="me-3 mb-2"
+                        style="width: 80px; height: 80px; background-color: #e9ecef; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                        <i data-feather="image" style="color: #adb5bd;"></i>
+                    </div>
+                    <div class="me-3 mb-2"
+                        style="width: 80px; height: 80px; background-color: #e9ecef; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                        <i data-feather="image" style="color: #adb5bd;"></i>
+                    </div>
+
+                    <button class="btn btn-sm btn-light ms-2 mb-2"><i data-feather="plus" appFeatherIcon
+                            class="icon-sm"></i> Ajouter d'autres fichiers</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

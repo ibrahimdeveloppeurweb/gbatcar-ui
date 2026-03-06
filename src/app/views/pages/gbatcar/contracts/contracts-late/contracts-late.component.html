@@ -1,0 +1,132 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <h4 class="mb-3 mb-md-0 text-danger">Suivi des Retards & Impayés</h4>
+        <p class="text-secondary">Liste filtrée des contrats de VTC présentant un défaut de paiement.</p>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0"
+            (click)="toggleAdvancedFilters()">
+            <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
+            {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
+        </button>
+    </div>
+</div>
+
+<!-- Filtres Avancés -->
+<div class="row mb-3" *ngIf="showAdvancedFilters">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title text-danger mb-3">Filtres de recherche (Souffrance)</h6>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
+                        <input type="text" class="form-control form-control-sm" placeholder="Débiteur, ID contrat..."
+                            [(ngModel)]="advSearchTerm">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fs-12px text-secondary mb-1">Niveau d'Alerte</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="advAlertFilter">
+                            <option value="">Tous</option>
+                            <option value="Risque Modéré">Risque Modéré (En retard)</option>
+                            <option value="Critique">Critique (Impayé définitif)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fs-12px text-secondary mb-1">Résultats à afficher</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="advCountFilter">
+                            <option [value]="5">Top 5 Urgences</option>
+                            <option [value]="10">10</option>
+                            <option [value]="20">20</option>
+                            <option [value]="50">50</option>
+                            <option [value]="1000">Tous</option>
+                        </select>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-md-12 d-flex justify-content-end mt-3">
+                        <button class="btn btn-sm btn-primary me-2" style="width: 120px;"
+                            (click)="applyAdvancedFilters()">
+                            <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Filtrer
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" style="width: 120px;" (click)="resetFilters()">
+                            <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="card-title text-danger mb-0">DOSSIERS EN SOUFFRANCE ({{ filteredContracts.length }})</h6>
+                    <div class="d-flex align-items-center">
+                        <input type="text" class="form-control form-control-sm me-2"
+                            placeholder="Chercher un débiteur, ID contrat..." style="width: 250px;"
+                            [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
+                        <select class="form-select form-select-sm" style="width: 150px;" [(ngModel)]="quickAlertFilter"
+                            (change)="applyQuickFilters()">
+                            <option value="">Tous statuts</option>
+                            <option value="Risque Modéré">Risque Modéré</option>
+                            <option value="Critique">Critique</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>N° Contrat</th>
+                                <th>Client (Locataire)</th>
+                                <th>Véhicule Associé</th>
+                                <th>Retard (Est.)</th>
+                                <th>Niveau d'Alerte</th>
+                                <th>Actions Requises</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let contract of filteredContracts">
+                                <td class="fw-medium text-dark">{{ contract.id }}</td>
+                                <td>
+                                    <a [routerLink]="['/gbatcar/clients/details', contract.clientId]"
+                                        class="text-primary fw-medium">{{ contract.clientName }}</a>
+                                </td>
+                                <td>{{ contract.vehicle }}</td>
+                                <td>
+                                    <span class="text-danger fw-bold">{{ calculateLateDays() }} jours</span>
+                                </td>
+                                <td>
+                                    <span class="badge" [ngClass]="{
+                                        'bg-warning text-dark': contract.paymentStatus === 'En retard',
+                                        'bg-danger': contract.paymentStatus === 'Impayé définitif'
+                                    }">
+                                        {{ contract.paymentStatus === 'En retard' ? 'Risque Modéré' : 'Critique' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-xs btn-outline-warning me-2" title="Relancer par SMS">
+                                        <i data-feather="message-circle" appFeatherIcon class="icon-sm"></i> SMS
+                                    </button>
+                                    <button class="btn btn-xs btn-outline-danger" title="Mise en demeure">
+                                        <i data-feather="alert-triangle" appFeatherIcon class="icon-sm"></i> Pénalité
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="filteredContracts.length === 0">
+                                <td colspan="6" class="text-center py-4 text-success fw-medium">
+                                    <i data-feather="check-circle" appFeatherIcon class="me-2 mb-1"></i>
+                                    Excellente nouvelle : Aucun retard de paiement détecté !
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

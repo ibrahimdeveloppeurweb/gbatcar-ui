@@ -1,0 +1,95 @@
+<div *ngIf="payment" class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <nav class="page-breadcrumb mb-1">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a routerLink="/gbatcar/payments">Encaissements</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ payment.id }}</li>
+            </ol>
+        </nav>
+        <h4 class="mb-3 mb-md-0">Détails de la Transaction <span class="text-primary">{{ payment.id }}</span></h4>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button [routerLink]="['/gbatcar/payments']" class="btn btn-secondary btn-icon-text me-2 mb-2 mb-md-0">
+            <i data-feather="arrow-left" appFeatherIcon class="btn-icon-prepend"></i> Retour
+        </button>
+        <button class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0" title="Imprimer le reçu (PDF)">
+            <i data-feather="printer" appFeatherIcon class="btn-icon-prepend"></i> Générer un Reçu
+        </button>
+    </div>
+</div>
+
+<div *ngIf="payment" class="row">
+    <div class="col-md-8 mx-auto grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="text-success mb-0">{{ payment.amount | number }} <span
+                            class="tx-16 text-muted">FCFA</span></h2>
+                    <span class="badge" [ngClass]="{
+                        'bg-success fs-6': payment.status === 'Validé',
+                        'bg-warning text-dark fs-6': payment.status === 'En attente',
+                        'bg-danger fs-6': payment.status === 'Rejeté'
+                    }">{{ payment.status }}</span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Client Associé</label>
+                        <p class="mb-0 fw-medium"><a href="javascript:void(0)">{{ payment.client }}</a></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Contrat Affecté</label>
+                        <p class="mb-0"><a [routerLink]="['/gbatcar/contracts/details', payment.contractId]"
+                                class="text-primary fw-medium">{{ payment.contractId }}</a></p>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Moyen de Paiement</label>
+                        <p class="mb-0 d-flex align-items-center">
+                            <i data-feather="smartphone" appFeatherIcon class="icon-sm text-primary me-2"
+                                *ngIf="payment.method.includes('Mobile Money')"></i>
+                            <i data-feather="dollar-sign" appFeatherIcon class="icon-sm text-success me-2"
+                                *ngIf="payment.method === 'Espèces'"></i>
+                            {{ payment.method }}
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Référence</label>
+                        <p class="mb-0">{{ payment.reference }}</p>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Date d'Opération</label>
+                        <p class="mb-0">{{ payment.date | date:'longDate':'':'fr-FR' }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Enregistré par</label>
+                        <p class="mb-0 text-muted">Administrateur Système</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h6 class="mt-4 mb-3">Documents Associés</h6>
+                <div class="d-flex align-items-center">
+                    <div class="bg-light p-3 rounded d-flex align-items-center me-3">
+                        <i data-feather="file" appFeatherIcon class="text-secondary me-2"></i>
+                        <div>
+                            <p class="mb-0 tx-13 fw-medium">reçu_transaction_{{ payment.id }}.pdf</p>
+                            <span class="tx-11 text-muted">124 KB</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-xs btn-outline-secondary">Télécharger</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="!payment" class="row">
+    <div class="col-md-12 text-center py-5">
+        <h4 class="text-muted">Transaction introuvable.</h4>
+        <button [routerLink]="['/gbatcar/payments']" class="btn btn-primary mt-3">Retour au journal</button>
+    </div>
+</div>

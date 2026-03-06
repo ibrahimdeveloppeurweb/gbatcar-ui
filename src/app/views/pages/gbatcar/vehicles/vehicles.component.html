@@ -1,0 +1,173 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <h4 class="mb-3 mb-md-0">Parc Automobile</h4>
+        <p class="text-secondary">Gérez l'ensemble des véhicules de la flotte GbatCar.</p>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0 me-2"
+            (click)="toggleAdvancedFilters()">
+            <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
+            {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
+        </button>
+        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" routerLink="new">
+            <i data-feather="plus-circle" appFeatherIcon class="btn-icon-prepend"></i>
+            Nouveau Véhicule
+        </button>
+    </div>
+</div>
+
+<!-- Filtres Avancés -->
+<div class="row mb-3" *ngIf="showAdvancedFilters">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">Filtres de recherche</h6>
+                <div class="row g-3">
+                    <!-- Text & Selectors -->
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
+                        <input type="text" class="form-control form-control-sm" placeholder="Marque, Modèle, Plaque..."
+                            [(ngModel)]="advSearchTerm">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Assignation (Client)</label>
+                        <input type="text" class="form-control form-control-sm" placeholder="Nom du client ou 'Aucun'"
+                            [(ngModel)]="advAssignedClient">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Statut du Véhicule</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
+                            <option value="">Tous</option>
+                            <option value="Disponible">Disponible</option>
+                            <option value="Assigné">Assigné</option>
+                            <option value="En Maintenance">En Maintenance</option>
+                            <option value="Hors Service">Hors Service</option>
+                        </select>
+                    </div>
+
+                    <!-- Min/Max Ranges -->
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Année</label>
+                        <div class="d-flex align-items-center">
+                            <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
+                                [(ngModel)]="advYearMin">
+                            <span class="text-secondary">-</span>
+                            <input type="number" class="form-control form-control-sm ms-1" placeholder="Max"
+                                [(ngModel)]="advYearMax">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fs-12px text-secondary mb-1">Kilométrage (km)</label>
+                        <div class="d-flex align-items-center">
+                            <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
+                                [(ngModel)]="advMileageMin">
+                            <span class="text-secondary">-</span>
+                            <input type="number" class="form-control form-control-sm ms-1" placeholder="Max"
+                                [(ngModel)]="advMileageMax">
+                        </div>
+                    </div>
+
+                    <!-- Count Limiter -->
+                    <div class="col-md-4">
+                        <label class="form-label fs-12px text-secondary mb-1">Résultats à afficher</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="advCountFilter">
+                            <option [value]="5">5</option>
+                            <option [value]="10">10</option>
+                            <option [value]="20">20</option>
+                            <option [value]="50">50</option>
+                            <option [value]="1000">Tous</option>
+                        </select>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button class="btn btn-sm btn-primary me-2 w-50" (click)="applyAdvancedFilters()">
+                            <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Filtrer
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary w-50" (click)="resetFilters()">
+                            <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="card-title mb-0">Flotte GbatCar ({{ filteredVehicles.length }})</h6>
+                    <div class="d-flex align-items-center">
+                        <input type="text" class="form-control form-control-sm me-2"
+                            placeholder="Recherche par plaque, marque..." style="width: 250px;"
+                            [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
+                        <select class="form-select form-select-sm" style="width: 200px;" [(ngModel)]="quickStatusFilter"
+                            (change)="applyQuickFilters()">
+                            <option value="">Tous les statuts</option>
+                            <option value="Disponible">Disponible</option>
+                            <option value="Assigné">Assigné</option>
+                            <option value="En Maintenance">En Maintenance</option>
+                            <option value="Hors Service">Hors Service</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Véhicule (Marque & Modèle)</th>
+                                <th>Immatriculation</th>
+                                <th>Année</th>
+                                <th>Kilométrage</th>
+                                <th>Statut</th>
+                                <th>Assignation</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let vehicle of filteredVehicles">
+                                <td class="fw-medium text-dark">{{ vehicle.brand }} {{ vehicle.model }}</td>
+                                <td class="fw-bold text-primary">{{ vehicle.licensePlate }}</td>
+                                <td>{{ vehicle.year }}</td>
+                                <td>{{ vehicle.mileage | number }} km</td>
+                                <td>
+                                    <span class="badge" [ngClass]="{
+                                        'bg-success': vehicle.status === 'Disponible',
+                                        'bg-primary': vehicle.status === 'Assigné',
+                                        'bg-warning text-dark': vehicle.status === 'En Maintenance',
+                                        'bg-secondary': vehicle.status === 'Hors Service'
+                                    }">
+                                        {{ vehicle.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span [ngClass]="{'text-muted fst-italic': vehicle.assignedClient === 'Aucun'}">
+                                        {{ vehicle.assignedClient }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-2"
+                                        [routerLink]="['details', vehicle.id]">
+                                        <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary"
+                                        [routerLink]="['edit', vehicle.id]">
+                                        <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="filteredVehicles.length === 0">
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    Aucun véhicule trouvé avec ces critères.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

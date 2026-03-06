@@ -1,0 +1,282 @@
+<div class="mb-4">
+    <nav class="page-breadcrumb mb-1">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a routerLink="/gbatcar/clients">Clients</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ pageTitle }}</li>
+        </ol>
+    </nav>
+    <div class="d-flex align-items-center mb-3 mb-md-0">
+        <button [routerLink]="['/gbatcar/clients']" class="btn btn-primary btn-icon btn-xs me-3"
+            title="Retour à la liste">
+            <i data-feather="arrow-left" appFeatherIcon></i>
+        </button>
+        <h4 class="mb-0">{{ pageTitle }}</h4>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">{{ pageTitle }}</h6>
+                <form [formGroup]="clientForm" (ngSubmit)="saveClient()">
+
+                    <h5 class="mb-3">Informations Personnelles</h5>
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Nom</label>
+                            <input type="text" class="form-control" formControlName="lastName" placeholder="Ex: Koné"
+                                [ngClass]="{'is-invalid': clientForm.get('lastName')?.invalid && clientForm.get('lastName')?.touched}">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Prénom</label>
+                            <input type="text" class="form-control" formControlName="firstName" placeholder="Ex: Amadou"
+                                [ngClass]="{'is-invalid': clientForm.get('firstName')?.invalid && clientForm.get('firstName')?.touched}">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <label class="form-label text-dark fw-medium">Date de naissance</label>
+                            <input type="date" class="form-control" formControlName="birthDate" placeholder="JJ/MM/AAAA"
+                                [ngClass]="{'is-invalid': clientForm.get('birthDate')?.invalid && clientForm.get('birthDate')?.touched}">
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label text-dark fw-medium">Genre</label>
+                            <select class="form-select" formControlName="gender"
+                                [ngClass]="{'is-invalid': clientForm.get('gender')?.invalid && clientForm.get('gender')?.touched}">
+                                <option value="" disabled selected>Sélectionner</option>
+                                <option value="Homme">Homme</option>
+                                <option value="Femme">Femme</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label text-dark fw-medium">Statut matrimonial</label>
+                            <select class="form-select" formControlName="maritalStatus"
+                                [ngClass]="{'is-invalid': clientForm.get('maritalStatus')?.invalid && clientForm.get('maritalStatus')?.touched}">
+                                <option value="" disabled selected>Sélectionner</option>
+                                <option value="Célibataire">Célibataire</option>
+                                <option value="Marié(e)">Marié(e)</option>
+                                <option value="Divorcé(e)">Divorcé(e)</option>
+                                <option value="Veuf/Veuve">Veuf/Veuve</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label text-dark fw-medium">Nombre d'enfants</label>
+                            <input type="number" class="form-control" formControlName="childrenCount" placeholder="0"
+                                min="0"
+                                [ngClass]="{'is-invalid': clientForm.get('childrenCount')?.invalid && clientForm.get('childrenCount')?.touched}">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Numéro de Téléphone</label>
+                            <input type="tel" class="form-control" formControlName="phone"
+                                placeholder="Ex: +225 0707070707"
+                                [ngClass]="{'is-invalid': clientForm.get('phone')?.invalid && clientForm.get('phone')?.touched}">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Email</label>
+                            <input type="email" class="form-control" formControlName="email"
+                                placeholder="Ex: client@email.com"
+                                [ngClass]="{'is-invalid': clientForm.get('email')?.invalid && clientForm.get('email')?.touched}">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-12">
+                            <label class="form-label text-dark fw-medium">Adresse de Domiciliation Complète</label>
+                            <input type="text" class="form-control" formControlName="address"
+                                placeholder="Ex: Cocody Angré, Abidjan"
+                                [ngClass]="{'is-invalid': clientForm.get('address')?.invalid && clientForm.get('address')?.touched}">
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3 mt-4 border-top pt-4">Identité et Adresse (Détaillées)</h5>
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Pays de nationalité</label>
+                            <input type="text" class="form-control" formControlName="nationality"
+                                [ngClass]="{'is-invalid': clientForm.get('nationality')?.invalid && clientForm.get('nationality')?.touched}">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Lieu de naissance</label>
+                            <input type="text" class="form-control" formControlName="birthPlace"
+                                placeholder="Saisissez votre lieu de naissa..."
+                                [ngClass]="{'is-invalid': clientForm.get('birthPlace')?.invalid && clientForm.get('birthPlace')?.touched}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Ville de résidence</label>
+                            <input type="text" class="form-control" formControlName="city"
+                                placeholder="Saisissez votre ville"
+                                [ngClass]="{'is-invalid': clientForm.get('city')?.invalid && clientForm.get('city')?.touched}">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Quartier de résidence</label>
+                            <input type="text" class="form-control" formControlName="neighborhood"
+                                placeholder="Saisissez votre quartier"
+                                [ngClass]="{'is-invalid': clientForm.get('neighborhood')?.invalid && clientForm.get('neighborhood')?.touched}">
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3 mt-4 border-top pt-4">Situation Socio-Économique et Logement</h5>
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Niveau d'étude</label>
+                            <select class="form-select" formControlName="educationLevel"
+                                [ngClass]="{'is-invalid': clientForm.get('educationLevel')?.invalid && clientForm.get('educationLevel')?.touched}">
+                                <option value="" disabled selected>Sélectionner</option>
+                                <option value="Aucun">Aucun</option>
+                                <option value="Primaire">Primaire</option>
+                                <option value="Secondaire">Secondaire</option>
+                                <option value="Universitaire">Universitaire</option>
+                                <option value="Professionnel">Professionnel</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Profession principale</label>
+                            <select class="form-select" formControlName="profession"
+                                [ngClass]="{'is-invalid': clientForm.get('profession')?.invalid && clientForm.get('profession')?.touched}">
+                                <option value="" disabled selected>Sélectionner</option>
+                                <option value="Salarié(e) privé(e)">Salarié(e) privé(e)</option>
+                                <option value="Fonctionnaire">Fonctionnaire</option>
+                                <option value="Indépendant(e) / Commerçant(e)">Indépendant(e) / Commerçant(e)</option>
+                                <option value="Chauffeur VTC">Chauffeur VTC</option>
+                                <option value="Autre">Autre</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Tranche de revenus</label>
+                            <select class="form-select" formControlName="incomeBracket"
+                                [ngClass]="{'is-invalid': clientForm.get('incomeBracket')?.invalid && clientForm.get('incomeBracket')?.touched}">
+                                <option value="" disabled selected>Sélectionner</option>
+                                <option value="Moins de 200 000 FCFA">Moins de 200 000 FCFA</option>
+                                <option value="Entre 200 000 et 500 000 FCFA">Entre 200 000 et 500 000 FCFA</option>
+                                <option value="Plus de 500 000 FCFA">Plus de 500 000 FCFA</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Statut de logement</label>
+                            <select class="form-select" formControlName="housingStatus"
+                                [ngClass]="{'is-invalid': clientForm.get('housingStatus')?.invalid && clientForm.get('housingStatus')?.touched}">
+                                <option value="" disabled selected>Sélectionner</option>
+                                <option value="Locataire">Locataire</option>
+                                <option value="Propriétaire">Propriétaire</option>
+                                <option value="Hébergé(e)">Hébergé(e)</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Compte bancaire principal</label>
+                            <select class="form-select" formControlName="primaryBankAccount"
+                                [ngClass]="{'is-invalid': clientForm.get('primaryBankAccount')?.invalid && clientForm.get('primaryBankAccount')?.touched}">
+                                <option value="" disabled selected>Sélectionner</option>
+                                <option value="Ecobank">Ecobank</option>
+                                <option value="SGCI">SGCI</option>
+                                <option value="NSIA">NSIA</option>
+                                <option value="Orange Money">Orange Money</option>
+                                <option value="Wave">Wave</option>
+                                <option value="Autre / Non bancarisé">Autre / Non bancarisé</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Source princ. de remboursement</label>
+                            <select class="form-select" formControlName="repaymentSource"
+                                [ngClass]="{'is-invalid': clientForm.get('repaymentSource')?.invalid && clientForm.get('repaymentSource')?.touched}">
+                                <option value="" disabled selected>Sélectionner</option>
+                                <option value="Mon salaire fixe">Mon salaire fixe</option>
+                                <option value="Les recettes VTC du véhicule">Les recettes VTC du véhicule</option>
+                                <option value="Les revenus de mon entreprise">Les revenus de mon entreprise</option>
+                                <option value="Autre">Autre</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Déjà souscrit à un crédit/location-vente
+                                ?</label>
+                            <select class="form-select" formControlName="previousCreditExperience"
+                                [ngClass]="{'is-invalid': clientForm.get('previousCreditExperience')?.invalid && clientForm.get('previousCreditExperience')?.touched}">
+                                <option value="" disabled selected>Sélectionner</option>
+                                <option value="Oui">Oui</option>
+                                <option value="Non">Non</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Comment avez-vous connu GBATCAR ?</label>
+                            <select class="form-select" formControlName="discoveryChannel"
+                                [ngClass]="{'is-invalid': clientForm.get('discoveryChannel')?.invalid && clientForm.get('discoveryChannel')?.touched}">
+                                <option value="" disabled selected>Sélectionner</option>
+                                <option value="Bouche à Oreille">Bouche à Oreille</option>
+                                <option value="Facebook">Facebook</option>
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="LinkedIn">LinkedIn</option>
+                                <option value="Google">Google</option>
+                                <option value="Bureau GbatCar">Bureau GbatCar</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3 mt-4 border-top pt-4">Documents Officiels</h5>
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Numéro de carte d'identité
+                                (CNI/Passeport)</label>
+                            <input type="text" class="form-control" formControlName="idNumber"
+                                placeholder="Saisissez le numéro ici"
+                                [ngClass]="{'is-invalid': clientForm.get('idNumber')?.invalid && clientForm.get('idNumber')?.touched}">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Date d'émission de la carte
+                                d'identité</label>
+                            <input type="date" class="form-control" formControlName="idIssueDate"
+                                placeholder="JJ/MM/AAAA"
+                                [ngClass]="{'is-invalid': clientForm.get('idIssueDate')?.invalid && clientForm.get('idIssueDate')?.touched}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Numéro Permis de Conduire</label>
+                            <input type="text" class="form-control" formControlName="licenseNumber"
+                                placeholder="P000000000"
+                                [ngClass]="{'is-invalid': clientForm.get('licenseNumber')?.invalid && clientForm.get('licenseNumber')?.touched}">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Expérience de conduite (Années)</label>
+                            <input type="number" class="form-control" formControlName="drivingExperienceYears"
+                                placeholder="0" min="0"
+                                [ngClass]="{'is-invalid': clientForm.get('drivingExperienceYears')?.invalid && clientForm.get('drivingExperienceYears')?.touched}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Scan CNI</label>
+                            <input type="file" class="form-control">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Scan Permis / Attestation</label>
+                            <input type="file" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="mt-4 border-top pt-4 text-end">
+                        <button type="button" class="btn btn-secondary me-2" routerLink="/gbatcar/clients">
+                            Annuler
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            {{ isEditMode ? 'Enregistrer les Modifications' : 'Créer le Dossier' }}
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

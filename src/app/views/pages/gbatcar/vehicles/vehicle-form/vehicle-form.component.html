@@ -1,0 +1,193 @@
+<div class="mb-4">
+    <nav class="page-breadcrumb mb-1">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a routerLink="/gbatcar/vehicles">Parc Automobile</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ pageTitle }}</li>
+        </ol>
+    </nav>
+    <div class="d-flex align-items-center mb-3 mb-md-0">
+        <button [routerLink]="['/gbatcar/vehicles']" class="btn btn-primary btn-icon btn-xs me-3"
+            title="Retour au parc">
+            <i data-feather="arrow-left" appFeatherIcon></i>
+        </button>
+        <h4 class="mb-0">{{ pageTitle }}</h4>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">{{ pageTitle }}</h6>
+                <form [formGroup]="vehicleForm" (ngSubmit)="saveVehicle()">
+
+                    <h5 class="mb-3">Informations de Base</h5>
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Marque</label>
+                            <input type="text" class="form-control" formControlName="brand" placeholder="Ex: Toyota"
+                                [ngClass]="{'is-invalid': vehicleForm.get('brand')?.invalid && vehicleForm.get('brand')?.touched}">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Modèle</label>
+                            <input type="text" class="form-control" formControlName="model" placeholder="Ex: Yaris"
+                                [ngClass]="{'is-invalid': vehicleForm.get('model')?.invalid && vehicleForm.get('model')?.touched}">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Année</label>
+                            <input type="number" class="form-control" formControlName="year" placeholder="Ex: 2021"
+                                [ngClass]="{'is-invalid': vehicleForm.get('year')?.invalid && vehicleForm.get('year')?.touched}">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Couleur</label>
+                            <input type="text" class="form-control" formControlName="color" placeholder="Ex: Blanc"
+                                [ngClass]="{'is-invalid': vehicleForm.get('color')?.invalid && vehicleForm.get('color')?.touched}">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Initiale statutaire</label>
+                            <select class="form-select" formControlName="status"
+                                [ngClass]="{'is-invalid': vehicleForm.get('status')?.invalid && vehicleForm.get('status')?.touched}">
+                                <option value="Disponible">Disponible (Sur Parc)</option>
+                                <option value="Assigné">Assigné à un client</option>
+                                <option value="En Maintenance">En Maintenance</option>
+                                <option value="Hors Service">Hors Service</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Finition / Version</label>
+                            <input type="text" class="form-control" formControlName="trim"
+                                placeholder="Ex: LE, GLS, AWD"
+                                [ngClass]="{'is-invalid': vehicleForm.get('trim')?.invalid && vehicleForm.get('trim')?.touched}">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Boîte de vitesses</label>
+                            <select class="form-select" formControlName="transmission"
+                                [ngClass]="{'is-invalid': vehicleForm.get('transmission')?.invalid && vehicleForm.get('transmission')?.touched}">
+                                <option value="Automatique">Automatique</option>
+                                <option value="Manuelle">Manuelle</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Carburant</label>
+                            <select class="form-select" formControlName="fuelType"
+                                [ngClass]="{'is-invalid': vehicleForm.get('fuelType')?.invalid && vehicleForm.get('fuelType')?.touched}">
+                                <option value="Essence">Essence</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="Hybride">Hybride</option>
+                                <option value="Électrique">Électrique</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3 mt-4 border-top pt-4">Identification et Technique</h5>
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Immatriculation (Plaque)</label>
+                            <input type="text" class="form-control" formControlName="licensePlate"
+                                placeholder="Ex: 1234 AB 01"
+                                [ngClass]="{'is-invalid': vehicleForm.get('licensePlate')?.invalid && vehicleForm.get('licensePlate')?.touched}">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Numéro de Châssis (VIN)</label>
+                            <input type="text" class="form-control" formControlName="chassisNumber"
+                                placeholder="Numéro à 17 caractères"
+                                [ngClass]="{'is-invalid': vehicleForm.get('chassisNumber')?.invalid && vehicleForm.get('chassisNumber')?.touched}">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Kilométrage Actuel (km)</label>
+                            <input type="number" class="form-control" formControlName="mileage" placeholder="0"
+                                [ngClass]="{'is-invalid': vehicleForm.get('mileage')?.invalid && vehicleForm.get('mileage')?.touched}">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Versement Journalier (Location-Vente)</label>
+                            <input type="number" class="form-control" formControlName="dailyRate" placeholder="15000"
+                                [ngClass]="{'is-invalid': vehicleForm.get('dailyRate')?.invalid && vehicleForm.get('dailyRate')?.touched}">
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3 mt-4 border-top pt-4">Offre Commerciale (Location-Vente)</h5>
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Prix de Vente Total (FCFA)</label>
+                            <input type="number" class="form-control" formControlName="totalPrice"
+                                placeholder="Ex: 5000000"
+                                [ngClass]="{'is-invalid': vehicleForm.get('totalPrice')?.invalid && vehicleForm.get('totalPrice')?.touched}">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Apport Initial Requis (%)</label>
+                            <input type="number" class="form-control" formControlName="depositPercentage"
+                                placeholder="Ex: 20"
+                                [ngClass]="{'is-invalid': vehicleForm.get('depositPercentage')?.invalid && vehicleForm.get('depositPercentage')?.touched}">
+                            <div class="form-text text-muted"
+                                *ngIf="vehicleForm.get('totalPrice')?.value && vehicleForm.get('depositPercentage')?.value">
+                                Soit env. {{ formatCurrency((vehicleForm.get('totalPrice')?.value || 0) *
+                                (vehicleForm.get('depositPercentage')?.value || 0) / 100) }}
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Durée du contrat (Mois)</label>
+                            <input type="number" class="form-control" formControlName="durationInMonths"
+                                placeholder="Ex: 24"
+                                [ngClass]="{'is-invalid': vehicleForm.get('durationInMonths')?.invalid && vehicleForm.get('durationInMonths')?.touched}">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" id="includeInsurance"
+                                    formControlName="includingInsurance">
+                                <label class="form-check-label" for="includeInsurance">Assurance incluse dans
+                                    l'offre</label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" id="includeGPS"
+                                    formControlName="includingGPS">
+                                <label class="form-check-label" for="includeGPS">Tracker GPS inclus dans l'offre</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3 mt-4 border-top pt-4">Documents Numériques</h5>
+                    <p class="text-muted tx-12 mb-3">Ces documents seront associés au dossier administratif du véhicule.
+                    </p>
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Carte Grise</label>
+                            <input type="file" class="form-control">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Attestation d'Assurance</label>
+                            <input type="file" class="form-control">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Technique de visite</label>
+                            <input type="file" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="mt-4 border-top pt-4 text-end">
+                        <button type="button" class="btn btn-secondary me-2" routerLink="/gbatcar/vehicles">
+                            Annuler
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            {{ isEditMode ? 'Enregistrer les Modifications' : 'Enregistrer le Véhicule' }}
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

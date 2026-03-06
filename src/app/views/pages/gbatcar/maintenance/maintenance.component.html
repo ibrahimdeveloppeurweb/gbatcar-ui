@@ -1,0 +1,159 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <h4 class="mb-3 mb-md-0">Journal des Interventions</h4>
+        <p class="text-secondary">Suivi de la maintenance de la flotte et des dépenses en garage.</p>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0 me-2"
+            (click)="toggleAdvancedFilters()">
+            <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
+            {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
+        </button>
+        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0">
+            <i data-feather="tool" appFeatherIcon class="btn-icon-prepend"></i> Nouvelle Intervention
+        </button>
+    </div>
+</div>
+
+<!-- Filtres Avancés -->
+<div class="row mb-3" *ngIf="showAdvancedFilters">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">Recherche Multicritères</h6>
+                <div class="row g-3">
+                    <!-- Text & Selectors -->
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
+                        <input type="text" class="form-control form-control-sm" placeholder="Véhicule, Garage, ID..."
+                            [(ngModel)]="advSearchTerm">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Statut</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
+                            <option value="">Tous les statuts</option>
+                            <option value="Planifié">Planifié</option>
+                            <option value="En cours">En cours</option>
+                            <option value="Terminé">Terminé</option>
+                        </select>
+                    </div>
+                    <!-- Date Range -->
+                    <div class="col-md-6">
+                        <label class="form-label fs-12px text-secondary mb-1">Date d'intervention (Début/Fin)</label>
+                        <div class="d-flex align-items-center">
+                            <input type="date" class="form-control form-control-sm me-1" [(ngModel)]="advDateMin">
+                            <span class="text-secondary">-</span>
+                            <input type="date" class="form-control form-control-sm ms-1" [(ngModel)]="advDateMax">
+                        </div>
+                    </div>
+
+                    <!-- Amount Range -->
+                    <div class="col-md-5">
+                        <label class="form-label fs-12px text-secondary mb-1">Coût (FCFA)</label>
+                        <div class="d-flex align-items-center">
+                            <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
+                                [(ngModel)]="advCostMin">
+                            <span class="text-secondary">-</span>
+                            <input type="number" class="form-control form-control-sm ms-1" placeholder="Max"
+                                [(ngModel)]="advCostMax">
+                        </div>
+                    </div>
+
+                    <!-- Count Limiter -->
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Résultats à afficher</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="advCountFilter">
+                            <option [value]="5">5</option>
+                            <option [value]="10">10</option>
+                            <option [value]="20">20</option>
+                            <option [value]="50">50</option>
+                            <option [value]="1000">Tous</option>
+                        </select>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-md-4 d-flex align-items-end justify-content-end">
+                        <button class="btn btn-sm btn-primary me-2 flex-grow-1" (click)="applyAdvancedFilters()">
+                            <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Filtrer
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary flex-grow-1" (click)="resetFilters()">
+                            <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="card-title mb-0">RÉPERTOIRE DE MAINTENANCE ({{ filteredMaintenance.length }})</h6>
+                    <div class="d-flex align-items-center">
+                        <input type="text" class="form-control form-control-sm me-2"
+                            placeholder="Recherche véhicule, garage..." style="width: 250px;"
+                            [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
+                        <select class="form-select form-select-sm" style="width: 200px;" [(ngModel)]="quickStatusFilter"
+                            (change)="applyQuickFilters()">
+                            <option value="">Tous les statuts</option>
+                            <option value="Planifié">Planifié</option>
+                            <option value="En cours">En cours</option>
+                            <option value="Terminé">Terminé</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>N° Bon</th>
+                                <th>Véhicule d'Intervention</th>
+                                <th>Motif / Type</th>
+                                <th>Garagiste / Prestataire</th>
+                                <th>Coût (FCFA)</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let mnt of filteredMaintenance">
+                                <td class="text-muted">{{ mnt.date | date:'dd/MM/yyyy' }}</td>
+                                <td class="fw-medium text-dark">{{ mnt.id }}</td>
+                                <td><a href="javascript:void(0)" class="text-primary fw-medium">{{ mnt.vehicle }}</a>
+                                </td>
+                                <td>{{ mnt.type }}</td>
+                                <td>{{ mnt.provider }}</td>
+                                <td class="fw-bolder">{{ mnt.cost | number }}</td>
+                                <td>
+                                    <span class="badge" [ngClass]="{
+                                        'bg-info': mnt.status === 'Planifié',
+                                        'bg-warning text-dark': mnt.status === 'En cours',
+                                        'bg-success': mnt.status === 'Terminé'
+                                    }">
+                                        {{ mnt.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button [routerLink]="['/gbatcar/maintenance/details', mnt.id]"
+                                        class="btn btn-sm btn-outline-secondary me-1" title="Voir les détails">
+                                        <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" title="Imprimer rapport">
+                                        <i data-feather="printer" appFeatherIcon class="icon-sm"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="filteredMaintenance.length === 0">
+                                <td colspan="8" class="text-center py-4 text-muted">Auncune intervention enregistrée.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

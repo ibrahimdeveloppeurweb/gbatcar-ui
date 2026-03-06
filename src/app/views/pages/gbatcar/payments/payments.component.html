@@ -1,0 +1,243 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <h4 class="mb-3 mb-md-0">Journal des Encaissements</h4>
+        <p class="text-secondary">Suivi global de la trésorerie entrante (Mobile Money, Espèces, Banque).</p>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0 me-2"
+            (click)="toggleAdvancedFilters()">
+            <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
+            {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
+        </button>
+        <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0 me-2"
+            title="Exporter vers Excel">
+            <i data-feather="download" appFeatherIcon class="btn-icon-prepend"></i> Exporter
+        </button>
+        <button [routerLink]="['/gbatcar/payments/new']" class="btn btn-primary btn-icon-text mb-2 mb-md-0">
+            <i data-feather="plus-circle" appFeatherIcon class="btn-icon-prepend"></i> Saisir Paiement Manuel
+        </button>
+    </div>
+</div>
+
+<!-- Filtres Avancés -->
+<div class="row mb-3" *ngIf="showAdvancedFilters">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">Recherche Multicritères</h6>
+                <div class="row g-3">
+                    <!-- Text & Selectors -->
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
+                        <input type="text" class="form-control form-control-sm" placeholder="ID, Client, Réf..."
+                            [(ngModel)]="advSearchTerm">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Moyen de Paiement</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="advMethodFilter">
+                            <option value="">Tous les moyens</option>
+                            <option value="Mobile Money">Mobile Money</option>
+                            <option value="Espèces">Espèces</option>
+                            <option value="Virement Bancaire">Virement Bancaire</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Statut</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
+                            <option value="">Tous les statuts</option>
+                            <option value="Validé">Validé</option>
+                            <option value="En attente">En attente</option>
+                            <option value="Rejeté">Rejeté</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Date d'encaissement (Début/Fin)</label>
+                        <div class="d-flex align-items-center">
+                            <input type="date" class="form-control form-control-sm me-1" [(ngModel)]="advDateMin">
+                            <span class="text-secondary">-</span>
+                            <input type="date" class="form-control form-control-sm ms-1" [(ngModel)]="advDateMax">
+                        </div>
+                    </div>
+
+                    <!-- Amount Range -->
+                    <div class="col-md-5">
+                        <label class="form-label fs-12px text-secondary mb-1">Montant (FCFA)</label>
+                        <div class="d-flex align-items-center">
+                            <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
+                                [(ngModel)]="advAmountMin">
+                            <span class="text-secondary">-</span>
+                            <input type="number" class="form-control form-control-sm ms-1" placeholder="Max"
+                                [(ngModel)]="advAmountMax">
+                        </div>
+                    </div>
+
+                    <!-- Count Limiter -->
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Résultats à afficher</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="advCountFilter">
+                            <option [value]="5">5</option>
+                            <option [value]="10">10</option>
+                            <option [value]="20">20</option>
+                            <option [value]="50">50</option>
+                            <option [value]="1000">Tous</option>
+                        </select>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-md-4 d-flex align-items-end justify-content-end">
+                        <button class="btn btn-sm btn-primary me-2 flex-grow-1" (click)="applyAdvancedFilters()">
+                            <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Filtrer
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary flex-grow-1" (click)="resetFilters()">
+                            <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Summary Cards -->
+    <div class="col-md-4 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-baseline">
+                    <h6 class="card-title mb-0">Total Encaissé (Ce mois)</h6>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-6 col-md-12 col-xl-5">
+                        <h3 class="mb-2">1,250,000</h3>
+                        <div class="d-flex align-items-baseline">
+                            <p class="text-success"><span>+3.3%</span> <i data-feather="arrow-up" appFeatherIcon
+                                    class="icon-sm mb-1"></i></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-baseline">
+                    <h6 class="card-title mb-0">Transactions En Attente</h6>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-6 col-md-12 col-xl-5">
+                        <h3 class="mb-2 text-warning">45,000</h3>
+                        <div class="d-flex align-items-baseline">
+                            <p class="text-muted tx-13">Virements à valider</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-baseline">
+                    <h6 class="card-title mb-0">Moyen Principal</h6>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h3 class="mb-2 text-primary">Mobile Money</h3>
+                        <div class="d-flex align-items-baseline">
+                            <p class="text-muted tx-13">Représente 72% des flux</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="card-title mb-0">HISTORIQUE DES TRANSACTIONS ({{ filteredPayments.length }})</h6>
+                    <div class="d-flex align-items-center">
+                        <input type="text" class="form-control form-control-sm me-2"
+                            placeholder="Recherche (ID, Client, Réf...)" style="width: 250px;"
+                            [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
+                        <select class="form-select form-select-sm" style="width: 200px;" [(ngModel)]="quickMethodFilter"
+                            (change)="applyQuickFilters()">
+                            <option value="">Tous les moyens</option>
+                            <option value="Mobile Money">Mobile Money</option>
+                            <option value="Espèces">Espèces</option>
+                            <option value="Virement Bancaire">Virement Bancaire</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>ID Paiement</th>
+                                <th>Mode de Paiement & Réf.</th>
+                                <th>Client / Contrat</th>
+                                <th>Montant (FCFA)</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let payment of filteredPayments">
+                                <td class="text-muted">{{ payment.date | date:'dd/MM/yyyy' }}</td>
+                                <td class="fw-medium text-dark">{{ payment.id }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i data-feather="smartphone" appFeatherIcon class="icon-sm text-primary me-2"
+                                            *ngIf="payment.method.includes('Mobile Money')"></i>
+                                        <i data-feather="dollar-sign" appFeatherIcon class="icon-sm text-success me-2"
+                                            *ngIf="payment.method === 'Espèces'"></i>
+                                        <i data-feather="briefcase" appFeatherIcon class="icon-sm text-info me-2"
+                                            *ngIf="payment.method === 'Virement Bancaire'"></i>
+                                        <div>
+                                            <span class="d-block">{{ payment.method }}</span>
+                                            <span class="tx-11 text-muted">Réf: {{ payment.reference }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0)" class="text-primary fw-medium d-block">{{
+                                        payment.client }}</a>
+                                    <span class="tx-11 text-muted">{{ payment.contractId }}</span>
+                                </td>
+                                <td class="fw-bolder fs-6">{{ payment.amount | number }}</td>
+                                <td>
+                                    <span class="badge" [ngClass]="{
+                                        'bg-success': payment.status === 'Validé',
+                                        'bg-warning text-dark': payment.status === 'En attente',
+                                        'bg-danger': payment.status === 'Rejeté'
+                                    }">
+                                        {{ payment.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button [routerLink]="['/gbatcar/payments/details', payment.id]"
+                                        class="btn btn-sm btn-outline-secondary me-1" title="Voir les détails">
+                                        <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" title="Imprimer le reçu">
+                                        <i data-feather="printer" appFeatherIcon class="icon-sm"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="filteredPayments.length === 0">
+                                <td colspan="7" class="text-center py-4 text-muted">Aucune transaction trouvée.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

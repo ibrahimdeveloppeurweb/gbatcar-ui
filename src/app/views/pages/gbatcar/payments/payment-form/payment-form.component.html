@@ -1,0 +1,92 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <nav class="page-breadcrumb mb-1">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a routerLink="/gbatcar/payments">Encaissements</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Nouveau Paiement</li>
+            </ol>
+        </nav>
+        <h4 class="mb-3 mb-md-0">Saisir un Paiement Manuel</h4>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button [routerLink]="['/gbatcar/payments']" class="btn btn-outline-secondary btn-icon-text me-2 mb-2 mb-md-0">
+            <i data-feather="x" appFeatherIcon class="btn-icon-prepend"></i>
+            Annuler
+        </button>
+        <button class="btn btn-primary btn-icon-text mb-2 mb-md-0">
+            <i data-feather="save" appFeatherIcon class="btn-icon-prepend"></i>
+            Valider l'encaissement
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title text-primary">Détails de l'opération (Location-Vente)</h6>
+                <form [formGroup]="paymentForm">
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Contrat cible</label>
+                            <select class="form-select" formControlName="contractId"
+                                [ngClass]="{'is-invalid': paymentForm.get('contractId')?.invalid && paymentForm.get('contractId')?.touched}">
+                                <option value="">Sélectionnez un contrat...</option>
+                                <option value="CTR-2024-001">CTR-2024-001 - Jean Dubois (Toyota Yaris)</option>
+                                <option value="CTR-2024-002">CTR-2024-002 - Fatou Sylla (Suzuki Swift)</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Période concernée (Traite)</label>
+                            <input type="month" class="form-control" formControlName="period"
+                                [ngClass]="{'is-invalid': paymentForm.get('period')?.invalid && paymentForm.get('period')?.touched}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-4 mb-3">
+                            <label class="form-label text-dark fw-medium">Date d'encaissement</label>
+                            <input type="date" class="form-control" formControlName="date"
+                                [ngClass]="{'is-invalid': paymentForm.get('date')?.invalid && paymentForm.get('date')?.touched}">
+                        </div>
+                        <div class="col-sm-4 mb-3">
+                            <label class="form-label text-dark fw-medium">Montant perçu (FCFA)</label>
+                            <input type="number" class="form-control" formControlName="amount"
+                                [ngClass]="{'is-invalid': paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched}"
+                                placeholder="Ex: 15000">
+                        </div>
+                        <div class="col-sm-4 mb-3">
+                            <label class="form-label text-dark fw-medium">Moyen de paiement</label>
+                            <select class="form-select" formControlName="method">
+                                <option value="Mobile Money">Mobile Money (Wave/Orange/MTN)</option>
+                                <option value="Espèces">Espèces (En agence)</option>
+                                <option value="Virement Bancaire">Virement Bancaire</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Référence de transaction</label>
+                            <input type="text" class="form-control" formControlName="reference"
+                                placeholder="Ex: WV-847294 ou N° de reçu"
+                                [ngClass]="{'is-invalid': paymentForm.get('reference')?.invalid && paymentForm.get('reference')?.touched}">
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Preuve numérisée (Bordereau, Capture)</label>
+                            <input type="file" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-12 mb-3">
+                            <label class="form-label text-dark fw-medium">Note / Commentaire interne</label>
+                            <textarea class="form-control" formControlName="notes" rows="2"
+                                placeholder="Informations complémentaires..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

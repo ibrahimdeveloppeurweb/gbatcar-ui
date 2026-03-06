@@ -1,0 +1,210 @@
+<div *ngIf="contract" class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <nav class="page-breadcrumb mb-1">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a routerLink="/gbatcar/contracts">Contrats</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ contract.id }}</li>
+            </ol>
+        </nav>
+        <h4 class="mb-3 mb-md-0">Détails du Contrat <span class="text-primary">{{ contract.id }}</span></h4>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button [routerLink]="['/gbatcar/contracts']" class="btn btn-secondary btn-icon-text me-2 mb-2 mb-md-0"
+            title="Retour à la liste">
+            <i data-feather="arrow-left" appFeatherIcon class="btn-icon-prepend"></i> Retour
+        </button>
+        <button class="btn btn-outline-primary btn-icon-text me-2 mb-2 mb-md-0" title="Imprimer le contrat PDF">
+            <i data-feather="printer" appFeatherIcon class="btn-icon-prepend"></i> Exporter PDF
+        </button>
+        <button [routerLink]="['/gbatcar/contracts/edit', contract.id]"
+            class="btn btn-warning btn-icon-text mb-2 mb-md-0" title="Modifier les conditions">
+            <i data-feather="edit" appFeatherIcon class="btn-icon-prepend"></i> Modifier
+        </button>
+    </div>
+</div>
+
+<div *ngIf="contract" class="row">
+    <!-- Header Card -->
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-5">
+                        <div class="d-flex align-items-center mb-3 mb-md-0">
+                            <div class="me-3">
+                                <i data-feather="file-text" appFeatherIcon class="text-primary"
+                                    style="width: 48px; height: 48px;"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">Locataire : <a
+                                        [routerLink]="['/gbatcar/clients/details', contract.clientId]"
+                                        class="text-primary">{{ contract.clientName }}</a></h5>
+                                <p class="text-muted tx-13">Véhicule : <a class="text-dark fw-medium"
+                                        href="javascript:void(0)">{{ contract.vehicle }}</a></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex flex-column mb-3 mb-md-0">
+                            <p class="text-muted tx-13 mb-1">Période du contrat</p>
+                            <h6 class="mb-0">{{ contract.startDate | date:'dd/MM/yyyy' }} <i data-feather="arrow-right"
+                                    appFeatherIcon class="icon-sm mx-1"></i> {{ contract.endDate | date:'dd/MM/yyyy' }}
+                            </h6>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-md-end">
+                        <span class="badge fs-6" [ngClass]="{
+                            'bg-primary': contract.status === 'En cours',
+                            'bg-warning text-dark': contract.status === 'En Attente',
+                            'bg-success': contract.status === 'Soldé',
+                            'bg-danger': contract.status === 'Résilié'
+                        }">{{ contract.status }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Progress -->
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Avancement Financier du Contrat</h6>
+
+                <div class="row text-center mt-3 mb-3">
+                    <div class="col-sm-4 border-end">
+                        <p class="text-muted tx-12 mb-1">Montant Total Exigible</p>
+                        <h4 class="mb-0">{{ contract.totalAmount | number }} <span class="tx-14 text-muted">FCFA</span>
+                        </h4>
+                    </div>
+                    <div class="col-sm-4 border-end">
+                        <p class="text-muted tx-12 mb-1">Montant Payé</p>
+                        <h4 class="text-success mb-0">{{ contract.paidAmount | number }} <span
+                                class="tx-14 text-muted">FCFA</span></h4>
+                    </div>
+                    <div class="col-sm-4">
+                        <p class="text-muted tx-12 mb-1">Reste à payer</p>
+                        <h4 class="text-danger mb-0">{{ (contract.totalAmount - contract.paidAmount) | number }} <span
+                                class="tx-14 text-muted">FCFA</span></h4>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="tx-13 fw-medium">Progression du recouvrement</span>
+                        <span class="tx-13 fw-bolder">{{ progressPercentage | number:'1.0-1' }}%</span>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" [ngClass]="{
+                                'bg-success': progressPercentage === 100 || contract.paymentStatus === 'À jour',
+                                'bg-warning': contract.paymentStatus === 'En retard',
+                                'bg-danger': contract.status === 'Résilié'
+                            }" role="progressbar" [style.width.%]="progressPercentage"
+                            aria-valuenow="progressPercentage" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Area -->
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <ul ngbNav #nav="ngbNav" [(activeId)]="activeId" class="nav-tabs">
+                    <li [ngbNavItem]="1">
+                        <a ngbNavLink class="tx-14"><i data-feather="dollar-sign" appFeatherIcon
+                                class="icon-sm me-1"></i> Reçus & Paiements Liés</a>
+                        <ng-template ngbNavContent>
+                            <div class="mt-3">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Réf. Encaissement</th>
+                                                <th>Moyen de paiement</th>
+                                                <th>Montant (FCFA)</th>
+                                                <th>Statut</th>
+                                                <th>Attestation</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr *ngFor="let payment of payments">
+                                                <td class="text-muted">{{ payment.date | date:'dd/MM/yyyy' }}</td>
+                                                <td class="fw-medium text-dark">{{ payment.id }}</td>
+                                                <td>{{ payment.method }} <span class="tx-11 text-muted d-block">{{
+                                                        payment.reference }}</span></td>
+                                                <td class="fw-bolder">{{ payment.amount | number }}</td>
+                                                <td>
+                                                    <span class="badge" [ngClass]="{
+                                                        'bg-success': payment.status === 'Validé',
+                                                        'bg-warning text-dark': payment.status === 'En attente'
+                                                    }">{{ payment.status }}</span>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary"
+                                                        title="Imprimer le reçu">
+                                                        <i data-feather="printer" appFeatherIcon class="icon-sm"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr *ngIf="payments.length === 0">
+                                                <td colspan="6" class="text-center py-4 text-muted">Aucun paiement
+                                                    enregistré pour ce contrat.</td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot *ngIf="payments.length > 0">
+                                            <tr>
+                                                <th colspan="3" class="text-end">Sous-total perçu :</th>
+                                                <th colspan="3" class="fs-5 text-success">{{ contract.paidAmount |
+                                                    number }} FCFA</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </ng-template>
+                    </li>
+                    <li [ngbNavItem]="2">
+                        <a ngbNavLink class="tx-14"><i data-feather="file" appFeatherIcon class="icon-sm me-1"></i>
+                            Pièces du dossier</a>
+                        <ng-template ngbNavContent>
+                            <div class="row mt-4">
+                                <div class="col-md-4 mb-3">
+                                    <div class="border rounded p-3 text-center">
+                                        <i data-feather="file-text" appFeatherIcon class="text-primary mb-2"
+                                            style="width: 32px; height: 32px;"></i>
+                                        <h6 class="mb-1">Contrat de Location (Signé)</h6>
+                                        <p class="text-muted tx-12 mb-3">Dernière maj: {{ contract.startDate |
+                                            date:'dd/MM/yyyy' }}</p>
+                                        <button class="btn btn-sm btn-primary">Consulter PDF</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="border rounded p-3 text-center bg-light">
+                                        <i data-feather="plus-circle" appFeatherIcon class="text-muted mb-2"
+                                            style="width: 32px; height: 32px;"></i>
+                                        <h6 class="mb-1 text-muted">Ajouter un Avenant</h6>
+                                        <p class="text-muted tx-12 mb-3">Déposer un nouveau document</p>
+                                        <button class="btn btn-sm btn-outline-secondary">Parcourir...</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </ng-template>
+                    </li>
+                </ul>
+                <div [ngbNavOutlet]="nav" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="!contract" class="row">
+    <div class="col-md-12 text-center py-5">
+        <h4 class="text-muted">Contrat introuvable.</h4>
+        <button [routerLink]="['/gbatcar/contracts']" class="btn btn-primary mt-3">Retour à la liste</button>
+    </div>
+</div>

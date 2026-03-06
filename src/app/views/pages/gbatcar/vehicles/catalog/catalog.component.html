@@ -1,0 +1,168 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <h4 class="mb-3 mb-md-0">Catalogue & Arrivages</h4>
+        <p class="text-secondary">Gérez les véhicules en stock et définissez leurs offres commerciales (Location-Vente).
+        </p>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0 me-2"
+            (click)="toggleAdvancedFilters()">
+            <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
+            {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
+        </button>
+        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" routerLink="../new">
+            <i data-feather="plus-circle" appFeatherIcon class="btn-icon-prepend"></i>
+            Nouvel Arrivage
+        </button>
+    </div>
+</div>
+
+<!-- Filtres Avancés -->
+<div class="row mb-3" *ngIf="showAdvancedFilters">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">Filtres de recherche du catalogue</h6>
+                <div class="row g-3">
+                    <!-- Text & Selectors -->
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
+                        <input type="text" class="form-control form-control-sm" placeholder="Marque, Modèle..."
+                            [(ngModel)]="advSearchTerm">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Statut de l'arrivage</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
+                            <option value="">Tous les statuts</option>
+                            <option value="Disponible">Disponible (Prêt)</option>
+                            <option value="En Préparation">En Préparation</option>
+                            <option value="En Attente Apport">En Attente d'Apport</option>
+                        </select>
+                    </div>
+
+                    <!-- Min/Max Ranges -->
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Année</label>
+                        <div class="d-flex align-items-center">
+                            <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
+                                [(ngModel)]="advYearMin">
+                            <span class="text-secondary">-</span>
+                            <input type="number" class="form-control form-control-sm ms-1" placeholder="Max"
+                                [(ngModel)]="advYearMax">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Prix de Vente (FCFA)</label>
+                        <div class="d-flex align-items-center">
+                            <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
+                                [(ngModel)]="advPriceMin">
+                            <span class="text-secondary">-</span>
+                            <input type="number" class="form-control form-control-sm ms-1" placeholder="Max"
+                                [(ngModel)]="advPriceMax">
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-md-12 text-end mt-3">
+                        <button class="btn btn-sm btn-outline-secondary me-2" (click)="resetFilters()">
+                            <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
+                        </button>
+                        <button class="btn btn-sm btn-primary" (click)="applyAdvancedFilters()">
+                            <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Appliquer les filtres
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="card-title mb-0">Véhicules Disponibles ({{ filteredCatalog.length }})</h6>
+    <div class="d-flex align-items-center">
+        <input type="text" class="form-control form-control-sm me-2" placeholder="Recherche rapide..."
+            style="width: 250px;" [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
+        <select class="form-select form-select-sm" style="width: 200px;" [(ngModel)]="quickStatusFilter"
+            (change)="applyQuickFilters()">
+            <option value="">Tous les statuts</option>
+            <option value="Disponible">Disponible (Prêt)</option>
+            <option value="En Préparation">En Préparation</option>
+            <option value="En Attente Apport">En Attente d'Apport</option>
+        </select>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 col-xl-4 grid-margin stretch-card" *ngFor="let item of filteredCatalog">
+        <div class="card w-100" style="cursor: pointer;" [routerLink]="['/gbatcar/vehicles/details', item.id]">
+            <img [src]="item.images[0]" class="card-img-top" alt="Vehicle Image"
+                style="height: 200px; object-fit: cover;">
+
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="card-title mb-0">{{ item.brand }} {{ item.model }} <span class="text-muted fs-6">{{
+                            item.year }}</span></h5>
+                    <span class="badge" [ngClass]="{
+                        'bg-success': item.status === 'Disponible',
+                        'bg-warning text-dark': item.status === 'En Préparation',
+                        'bg-primary': item.status === 'En Attente Apport'
+                    }">{{ item.status }}</span>
+                </div>
+
+                <p class="text-secondary fs-13px mb-3">
+                    {{ item.trim }} • {{ item.transmission }} • {{ item.fuelType }} • {{ item.mileageAtPurchase | number
+                    }} km
+                </p>
+
+                <div class="bg-light p-3 rounded mb-3">
+                    <h6 class="text-primary mb-2">Offre Commerciale</h6>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-secondary fs-13px">Prix Total :</span>
+                        <span class="fw-bold fs-14px">{{ formatCurrency(item.commercialOffer.totalPrice) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1 border-bottom pb-1">
+                        <span class="text-secondary fs-13px">Apport Initial ({{ item.commercialOffer.depositPercentage
+                            }}%) :</span>
+                        <span class="fw-bold text-success fs-14px">{{
+                            formatCurrency(calculateDeposit(item.commercialOffer.totalPrice,
+                            item.commercialOffer.depositPercentage)) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <span class="text-secondary fs-13px">Mensualité ({{ item.commercialOffer.durationInMonths }}
+                            mois) :</span>
+                        <span class="fw-bolder text-dark fs-5">{{
+                            formatCurrency(calculateMonthlyPayment(item.commercialOffer.totalPrice,
+                            calculateDeposit(item.commercialOffer.totalPrice, item.commercialOffer.depositPercentage),
+                            item.commercialOffer.durationInMonths)) }}</span>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <span class="badge bg-outline-secondary text-secondary border border-secondary"
+                        *ngIf="item.commercialOffer.includingInsurance">
+                        <i data-feather="check-circle" appFeatherIcon class="icon-xs me-1"></i> Assurance Incluse
+                    </span>
+                    <span class="badge bg-outline-secondary text-secondary border border-secondary"
+                        *ngIf="item.commercialOffer.includingGPS">
+                        <i data-feather="map-pin" appFeatherIcon class="icon-xs me-1"></i> Tracker GPS Inclus
+                    </span>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                    <button class="btn btn-outline-primary btn-sm flex-grow-1"
+                        [routerLink]="['/gbatcar/vehicles/edit', item.id]" (click)="$event.stopPropagation()">
+                        <i data-feather="edit-2" appFeatherIcon class="icon-sm me-1"></i> Éditer l'offre
+                    </button>
+                    <button class="btn btn-primary btn-sm flex-grow-1" *ngIf="item.status === 'Disponible'"
+                        (click)="$event.stopPropagation()">
+                        <i data-feather="check" appFeatherIcon class="icon-sm me-1"></i> Réserver
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 text-center py-5" *ngIf="filteredCatalog.length === 0">
+        <h5 class="text-muted">Aucun véhicule trouvé dans le catalogue.</h5>
+    </div>
+</div>

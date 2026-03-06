@@ -1,0 +1,238 @@
+<div *ngIf="vehicle" class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <nav class="page-breadcrumb mb-1">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a routerLink="/gbatcar/vehicles">Parc Automobile</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ vehicle.licensePlate }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex align-items-center mb-3 mb-md-0">
+            <button (click)="goBack()" class="btn btn-primary btn-icon btn-xs me-3" title="Retour à la flotte">
+                <i data-feather="arrow-left" appFeatherIcon></i>
+            </button>
+            <h4 class="mb-0">Dossier Véhicule : {{ vehicle.brand }} {{ vehicle.model }} ({{ vehicle.licensePlate }})
+            </h4>
+        </div>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button type="button" class="btn btn-outline-primary btn-icon-text me-2 mb-2 mb-md-0"
+            [routerLink]="['/gbatcar/vehicles/edit', vehicle.id]">
+            <i data-feather="edit" appFeatherIcon class="btn-icon-prepend"></i>
+            Modifier Infos
+        </button>
+    </div>
+</div>
+
+<div class="row" *ngIf="vehicle">
+    <!-- Colonne Gauche : Profil & Stats -->
+    <div class="col-md-4 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-baseline mb-4">
+                    <h6 class="card-title mb-0">IDENTIFICATION DU VÉHICULE</h6>
+                </div>
+
+                <div class="d-flex flex-column align-items-center border-bottom pb-4 mb-4">
+                    <div
+                        class="wd-80 ht-80 rounded-circle overflow-hidden mb-3 bg-light d-flex justify-content-center align-items-center">
+                        <i data-feather="truck" appFeatherIcon class="text-secondary wd-40 ht-40"></i>
+                    </div>
+                    <div class="text-center">
+                        <p class="tx-16 fw-bolder text-primary">{{ vehicle.licensePlate }}</p>
+                        <p class="tx-12 text-muted">{{ vehicle.id }}</p>
+                        <span class="badge mt-2" [ngClass]="{
+                            'bg-success': vehicle.status === 'Disponible',
+                            'bg-primary': vehicle.status === 'Assigné',
+                            'bg-warning text-dark': vehicle.status === 'En Maintenance',
+                            'bg-secondary': vehicle.status === 'Hors Service'
+                        }">
+                            {{ vehicle.status }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <label class="tx-11 fw-bolder mb-0 text-uppercase">Spécifications :</label>
+                    <p class="text-muted d-flex align-items-center mt-1"><strong>Marque :</strong> <span
+                            class="ms-2 text-dark">{{ vehicle.brand }}</span></p>
+                    <p class="text-muted d-flex align-items-center mt-1"><strong>Modèle :</strong> <span
+                            class="ms-2 text-dark">{{ vehicle.model }}</span></p>
+                    <p class="text-muted d-flex align-items-center mt-1"><strong>Finition :</strong> <span
+                            class="ms-2 text-dark">{{ vehicle.trim }}</span></p>
+                    <p class="text-muted d-flex align-items-center mt-1"><strong>Boîte :</strong> <span
+                            class="ms-2 text-dark">{{ vehicle.transmission }}</span></p>
+                    <p class="text-muted d-flex align-items-center mt-1"><strong>Carburant :</strong> <span
+                            class="ms-2 text-dark">{{ vehicle.fuelType }}</span></p>
+                    <p class="text-muted d-flex align-items-center mt-1"><strong>Année :</strong> <span
+                            class="ms-2 text-dark">{{ vehicle.year }}</span></p>
+                    <p class="text-muted d-flex align-items-center mt-1"><strong>Couleur :</strong> <span
+                            class="ms-2 text-dark">{{ vehicle.color }}</span></p>
+                    <p class="text-muted d-flex align-items-center mt-1"><strong>Châssis (VIN) :</strong> <span
+                            class="ms-2 text-dark">{{ vehicle.chassisNumber }}</span></p>
+                </div>
+
+                <div class="mt-4 pt-3 border-top pb-2">
+                    <h6 class="tx-11 fw-bolder mb-3 text-uppercase text-danger">Offre Commerciale (Location-Vente)</h6>
+                    <div class="d-flex justify-content-between text-muted mt-2">
+                        <span>Prix total :</span>
+                        <span class="text-dark fw-bold">{{ vehicle.totalPrice | number }} FCFA</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted mt-2">
+                        <span>Apport initial ({{ vehicle.depositPercentage }}%) :</span>
+                        <span class="text-success fw-bold">{{ (vehicle.totalPrice * vehicle.depositPercentage / 100) |
+                            number }} FCFA</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted mt-2">
+                        <span>Mensualité ({{ vehicle.durationInMonths }} mois) :</span>
+                        <span class="text-dark fw-bold">{{ ((vehicle.totalPrice - (vehicle.totalPrice *
+                            vehicle.depositPercentage / 100)) / vehicle.durationInMonths) | number:'1.0-0' }}
+                            FCFA</span>
+                    </div>
+                    <div class="d-flex flex-wrap mt-3 gap-2">
+                        <span class="badge border border-secondary text-secondary fw-normal fs-12px"
+                            *ngIf="vehicle.includingInsurance"><i data-feather="check-circle" appFeatherIcon
+                                class="icon-xs me-1"></i> Assurance incluse</span>
+                        <span class="badge border border-secondary text-secondary fw-normal fs-12px"
+                            *ngIf="vehicle.includingGPS"><i data-feather="map-pin" appFeatherIcon
+                                class="icon-xs me-1"></i> Traceur GPS inclus</span>
+                    </div>
+                    <div class="mt-3" *ngIf="vehicle.status === 'Disponible'">
+                        <button class="btn btn-outline-danger btn-sm w-100"
+                            [routerLink]="['/gbatcar/vehicles/edit', vehicle.id]"><i data-feather="edit-2"
+                                appFeatherIcon class="icon-sm me-1"></i> Éditer l'offre</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Colonne Droite : Assignation & Maintenance -->
+    <div class="col-md-8">
+        <div class="row">
+            <div class="col-md-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-baseline">
+                            <h6 class="card-title mb-0">AFFECTATION ACTUELLE</h6>
+                        </div>
+                        <div class="row mt-4">
+                            <div class="col-12 text-center">
+                                <h3 class="fw-bolder fs-5"
+                                    [ngClass]="{'text-success': vehicle.status === 'Disponible', 'text-primary': vehicle.status === 'Assigné', 'text-warning': vehicle.status === 'En Maintenance', 'text-muted': vehicle.status === 'Hors Service'}">
+                                    {{ vehicle.assignedClient !== 'Aucun' ? vehicle.assignedClient : 'Véhicule sur Parc'
+                                    }}
+                                </h3>
+                                <p class="text-muted mt-2">Redevance journalière : <span class="fw-bold text-dark">{{
+                                        vehicle.dailyRate | number }} FCFA</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-baseline">
+                            <h6 class="card-title mb-0">SUIVI KILOMÉTRIQUE</h6>
+                        </div>
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h3 class="fw-bolder fs-4 text-dark text-center">{{ vehicle.mileage | number }} <span
+                                        class="tx-14 text-muted fw-normal">km</span></h3>
+
+                                <div class="mt-4 pt-3 border-top">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-muted tx-12">Dernière Maintenance</span>
+                                        <span class="fw-medium text-dark tx-12">{{ vehicle.lastMaintenance |
+                                            date:'dd/MM/yyyy' }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted tx-12">Prochaine Maintenance (Est.)</span>
+                                        <span class="fw-medium text-danger tx-12">{{ vehicle.nextMaintenanceMileage |
+                                            number }} km</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card grid-margin">
+            <div class="card-body">
+                <h6 class="card-title mb-4">DOSSIER VÉHICULE & MAINTENANCE</h6>
+
+                <ul ngbNav #vehicleNav="ngbNav" class="nav-tabs nav-tabs-line">
+                    <li [ngbNavItem]="1">
+                        <a ngbNavLink>Historique des Interventions</a>
+                        <ng-template ngbNavContent>
+                            <div class="d-flex justify-content-end mb-3">
+                                <button class="btn btn-warning btn-sm text-dark">
+                                    <i data-feather="tool" appFeatherIcon class="icon-sm me-1"></i> Ajouter Intervention
+                                </button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Type d'intervention</th>
+                                            <th>Kilométrage</th>
+                                            <th>Garagiste</th>
+                                            <th>Coût (FCFA)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>15 Fév 2024</td>
+                                            <td class="fw-medium">Vidange complète + Filtres</td>
+                                            <td>44,800 km</td>
+                                            <td>Garage Auto GbatCar</td>
+                                            <td>35,000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>10 Déc 2023</td>
+                                            <td class="fw-medium">Changement Plaquettes Freins</td>
+                                            <td>38,500 km</td>
+                                            <td>Garage Auto GbatCar</td>
+                                            <td>25,000</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </ng-template>
+                    </li>
+                    <li [ngbNavItem]="2">
+                        <a ngbNavLink>Documents Numérisés</a>
+                        <ng-template ngbNavContent>
+                            <div class="row px-3">
+                                <div class="col-sm-4 border rounded p-3 text-center mb-3 mb-sm-0 me-3">
+                                    <i data-feather="file-text" appFeatherIcon
+                                        class="text-primary mb-2 mb-2 wd-30 ht-30"></i>
+                                    <h6 class="mb-1">Carte Grise</h6>
+                                    <p class="text-muted tx-12 mb-2">Valide</p>
+                                    <button class="btn btn-outline-primary btn-xs">Voir Doc</button>
+                                </div>
+                                <div class="col-sm-4 border rounded p-3 text-center mb-3 mb-sm-0 me-3">
+                                    <i data-feather="shield" appFeatherIcon class="text-success mb-2 wd-30 ht-30"></i>
+                                    <h6 class="mb-1">Assurance Tous Risques</h6>
+                                    <p class="text-muted tx-12 mb-2 text-danger">Exp. dans 45 jours</p>
+                                    <button class="btn btn-outline-primary btn-xs">Voir Doc</button>
+                                </div>
+                                <div class="col-sm-4 border rounded p-3 text-center">
+                                    <i data-feather="check-square" appFeatherIcon
+                                        class="text-info mb-2 wd-30 ht-30"></i>
+                                    <h6 class="mb-1">Visite Technique</h6>
+                                    <p class="text-muted tx-12 mb-2">Valide</p>
+                                    <button class="btn btn-outline-primary btn-xs">Voir Doc</button>
+                                </div>
+                            </div>
+                        </ng-template>
+                    </li>
+                </ul>
+                <div [ngbNavOutlet]="vehicleNav" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,284 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <h4 class="mb-3 mb-md-0">Conformité & Visites Techniques</h4>
+        <p class="text-secondary">Suivez les échéances d'assurances et de visites techniques de toute la flotte.</p>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0">
+            <i data-feather="upload" appFeatherIcon class="btn-icon-prepend"></i>
+            Nouveau Document
+        </button>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body py-3">
+                <div class="row align-items-center">
+                    <div class="col-md-6 mb-2 mb-md-0">
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-primary text-primary">
+                                <i data-feather="search" appFeatherIcon class="icon-sm"></i>
+                            </span>
+                            <input type="text" class="form-control border-primary bg-transparent"
+                                placeholder="Rechercher par véhicule ou plaque..." [(ngModel)]="searchTerm">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select border-primary bg-transparent" [(ngModel)]="typeFilter">
+                            <option value="">Tous les documents</option>
+                            <option value="Expiring Soon">Expire dans < 30 jours</option>
+                            <option value="Expired">Documents Expirés !</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs nav-tabs-line mb-4" id="complianceTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="legal-tab" data-bs-toggle="tab" href="#legal" role="tab"
+                            aria-controls="legal" aria-selected="true" (click)="activeTab = 'legal'">
+                            <i data-feather="file-text" appFeatherIcon class="icon-sm me-2"></i>
+                            Administratif & Légal
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="tech-tab" data-bs-toggle="tab" href="#tech" role="tab"
+                            aria-controls="tech" aria-selected="false" (click)="activeTab = 'tech'">
+                            <i data-feather="tool" appFeatherIcon class="icon-sm me-2"></i>
+                            Technique & Sécurité
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Tab content -->
+                <div class="tab-content" id="complianceTabsContent">
+
+                    <!-- Tab 1: Administratif & Légal -->
+                    <div class="tab-pane fade show active" id="legal" role="tabpanel" aria-labelledby="legal-tab">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Véhicule & Client</th>
+                                        <th>Assurance</th>
+                                        <th>Vignette (Taxe Auto)</th>
+                                        <th>Licence Transport</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let item of filteredCompliance">
+                                        <td>
+                                            <div class="fw-bold text-dark">{{ item.vehicle }}</div>
+                                            <div class="text-secondary fs-13px">{{ item.licensePlate }} • {{
+                                                item.assignedClient }}</div>
+                                        </td>
+
+                                        <!-- Assurance -->
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2">
+                                                    <i data-feather="shield" appFeatherIcon class="icon-md" [ngClass]="{
+                                                        'text-success': item.insurance.status === 'Valid',
+                                                        'text-warning': item.insurance.status === 'Expiring Soon',
+                                                        'text-danger': item.insurance.status === 'Expired'
+                                                    }"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-medium">{{ item.insurance.expiryDate |
+                                                        date:'dd/MM/yyyy' }}</div>
+                                                    <span class="badge"
+                                                        [ngClass]="{ 'bg-success': item.insurance.status === 'Valid', 'bg-warning text-dark': item.insurance.status === 'Expiring Soon', 'bg-danger': item.insurance.status === 'Expired' }">
+                                                        {{ item.insurance.status === 'Expired' ? 'Expiré' : 'J-' +
+                                                        item.insurance.daysLeft }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Vignette -->
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2">
+                                                    <i data-feather="file" appFeatherIcon class="icon-md" [ngClass]="{
+                                                        'text-success': item.roadTax.status === 'Valid',
+                                                        'text-warning': item.roadTax.status === 'Expiring Soon',
+                                                        'text-danger': item.roadTax.status === 'Expired'
+                                                    }"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-medium"
+                                                        [ngClass]="{'text-danger': item.roadTax.status === 'Expired'}">
+                                                        {{ item.roadTax.expiryDate | date:'dd/MM/yyyy' }}
+                                                    </div>
+                                                    <span class="badge"
+                                                        [ngClass]="{ 'bg-success': item.roadTax.status === 'Valid', 'bg-warning text-dark': item.roadTax.status === 'Expiring Soon', 'bg-danger': item.roadTax.status === 'Expired' }">
+                                                        {{ item.roadTax.status === 'Expired' ? 'Expiré' : 'J-' +
+                                                        item.roadTax.daysLeft }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Licence Transport -->
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2">
+                                                    <i data-feather="briefcase" appFeatherIcon class="icon-md"
+                                                        [ngClass]="{
+                                                        'text-success': item.transportLicense.status === 'Valid',
+                                                        'text-warning': item.transportLicense.status === 'Expiring Soon',
+                                                        'text-danger': item.transportLicense.status === 'Expired'
+                                                    }"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-medium"
+                                                        [ngClass]="{'text-danger': item.transportLicense.status === 'Expired'}">
+                                                        {{ item.transportLicense.expiryDate | date:'dd/MM/yyyy' }}
+                                                    </div>
+                                                    <span class="badge"
+                                                        [ngClass]="{ 'bg-success': item.transportLicense.status === 'Valid', 'bg-warning text-dark': item.transportLicense.status === 'Expiring Soon', 'bg-danger': item.transportLicense.status === 'Expired' }">
+                                                        {{ item.transportLicense.status === 'Expired' ? 'Expiré' :
+                                                        item.transportLicense.type }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" title="Mettre à jour">
+                                                <i data-feather="upload-cloud" appFeatherIcon class="icon-sm"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr *ngIf="filteredCompliance.length === 0">
+                                        <td colspan="5" class="text-center py-4 text-muted">Aucun document ne correspond
+                                            à ce filtre.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Technique & Sécurité -->
+                    <div class="tab-pane fade" id="tech" role="tabpanel" aria-labelledby="tech-tab">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Véhicule & Client</th>
+                                        <th>Visite Technique</th>
+                                        <th>Extincteur & Sécurité</th>
+                                        <th>Maintenance Préventive</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let item of filteredCompliance">
+                                        <td>
+                                            <div class="fw-bold text-dark">{{ item.vehicle }}</div>
+                                            <div class="text-secondary fs-13px">{{ item.licensePlate }} • {{
+                                                item.assignedClient }}</div>
+                                        </td>
+
+                                        <!-- Visite Technique -->
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2">
+                                                    <i data-feather="check-square" appFeatherIcon class="icon-md"
+                                                        [ngClass]="{
+                                                        'text-success': item.technicalInspection.status === 'Valid',
+                                                        'text-warning': item.technicalInspection.status === 'Expiring Soon',
+                                                        'text-danger': item.technicalInspection.status === 'Expired'
+                                                    }"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-medium"
+                                                        [ngClass]="{'text-danger': item.technicalInspection.status === 'Expired'}">
+                                                        {{ item.technicalInspection.expiryDate | date:'dd/MM/yyyy' }}
+                                                    </div>
+                                                    <span class="badge"
+                                                        [ngClass]="{ 'bg-success': item.technicalInspection.status === 'Valid', 'bg-warning text-dark': item.technicalInspection.status === 'Expiring Soon', 'bg-danger': item.technicalInspection.status === 'Expired' }">
+                                                        {{ item.technicalInspection.status === 'Expired' ? 'Expiré' :
+                                                        'J-' + item.technicalInspection.daysLeft }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Extincteur -->
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2">
+                                                    <i data-feather="alert-triangle" appFeatherIcon class="icon-md"
+                                                        [ngClass]="{
+                                                        'text-success': item.fireExtinguisher.status === 'Valid',
+                                                        'text-warning': item.fireExtinguisher.status === 'Expiring Soon',
+                                                        'text-danger': item.fireExtinguisher.status === 'Expired'
+                                                    }"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-medium"
+                                                        [ngClass]="{'text-danger': item.fireExtinguisher.status === 'Expired'}">
+                                                        {{ item.fireExtinguisher.expiryDate | date:'dd/MM/yyyy' }}
+                                                    </div>
+                                                    <span class="badge"
+                                                        [ngClass]="{ 'bg-success': item.fireExtinguisher.status === 'Valid', 'bg-warning text-dark': item.fireExtinguisher.status === 'Expiring Soon', 'bg-danger': item.fireExtinguisher.status === 'Expired' }">
+                                                        {{ item.fireExtinguisher.status === 'Expired' ? 'Périmé' :
+                                                        'Valide' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Maintenance Préventive -->
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2">
+                                                    <i data-feather="settings" appFeatherIcon class="icon-md" [ngClass]="{
+                                                        'text-success': item.preventiveMaintenance.status === 'Valid',
+                                                        'text-warning': item.preventiveMaintenance.status === 'Expiring Soon',
+                                                        'text-danger': item.preventiveMaintenance.status === 'Expired'
+                                                    }"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-medium">Prochaine: {{
+                                                        item.preventiveMaintenance.nextKm | number }} km</div>
+                                                    <div class="fs-12px"
+                                                        [ngClass]="{'text-danger': item.preventiveMaintenance.status === 'Expired', 'text-warning': item.preventiveMaintenance.status === 'Expiring Soon'}">
+                                                        Actuel: {{ item.preventiveMaintenance.currentKm | number }} km
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" title="Mettre à jour">
+                                                <i data-feather="upload-cloud" appFeatherIcon class="icon-sm"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr *ngIf="filteredCompliance.length === 0">
+                                        <td colspan="5" class="text-center py-4 text-muted">Aucun document ne correspond
+                                            à ce filtre.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,79 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <h4 class="mb-3 mb-md-0">Gestion des Utilisateurs</h4>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" (click)="navigateToAdd()">
+            <i data-feather="user-plus" appFeatherIcon class="btn-icon-prepend"></i>
+            Ajouter un collaborateur
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Comptes Employés</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nom & Prénom</th>
+                                <th>Email</th>
+                                <th>Rôle</th>
+                                <th>Permissions</th>
+                                <th>Dernière connexion</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let user of collaborators">
+                                <td>{{ user.firstName }} {{ user.lastName }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="badge" [ngClass]="{
+                          'bg-primary': user.role === 'Super-Admin',
+                          'bg-info': user.role === 'Comptable',
+                          'bg-warning text-dark': user.role === 'Service Client',
+                          'bg-secondary': user.role === 'Mécanicien'
+                        }">
+                                        {{ user.role }}
+                                    </span>
+                                </td>
+                                <td>{{ formatPermissions(user.permissions) }}</td>
+                                <td>{{ user.lastLogin | date:'dd/MM/yyyy HH:mm' }}</td>
+                                <td>
+                                    <span class="badge"
+                                        [ngClass]="user.status === 'Actif' ? 'bg-success' : 'bg-danger'">
+                                        {{ user.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn action-btn btn-view" [routerLink]="['details', user.id]"
+                                        title="Voir détails">
+                                        <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                    </button>
+                                    <button class="btn action-btn btn-edit" (click)="navigateToEdit(user)"
+                                        title="Modifier">
+                                        <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
+                                    </button>
+                                    <button class="btn action-btn btn-toggle" (click)="toggleStatus(user)"
+                                        title="Désactiver/Activer">
+                                        <span *ngIf="user.status === 'Actif'" class="d-inline-flex align-items-center">
+                                            <i data-feather="slash" appFeatherIcon class="icon-sm"></i>
+                                        </span>
+                                        <span *ngIf="user.status !== 'Actif'" class="d-inline-flex align-items-center">
+                                            <i data-feather="check" appFeatherIcon class="icon-sm"></i>
+                                        </span>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

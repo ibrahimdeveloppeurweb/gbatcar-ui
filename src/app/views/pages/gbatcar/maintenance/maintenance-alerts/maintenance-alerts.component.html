@@ -1,0 +1,170 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <h4 class="mb-3 mb-md-0 text-warning">Alertes & Sinistres</h4>
+        <p class="text-secondary">Tableau de bord de suivi des accidents, pannes lourdes et accrochages.</p>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button type="button" class="btn btn-outline-warning btn-icon-text mb-2 mb-md-0 me-2"
+            (click)="toggleAdvancedFilters()">
+            <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
+            {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
+        </button>
+        <button [routerLink]="['/gbatcar/maintenance/alerts/new']" class="btn btn-warning btn-icon-text mb-2 mb-md-0">
+            <i data-feather="alert-triangle" appFeatherIcon class="btn-icon-prepend"></i> Déclarer un Sinistre
+        </button>
+    </div>
+</div>
+
+<!-- Filtres Avancés -->
+<div class="row mb-3" *ngIf="showAdvancedFilters">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title text-warning mb-3">Recherche de Sinistres</h6>
+                <div class="row g-3">
+                    <!-- Text & Selectors -->
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
+                        <input type="text" class="form-control form-control-sm"
+                            placeholder="Véhicule, client, alerte..." [(ngModel)]="advSearchTerm">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Gravité</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="advSeverityFilter">
+                            <option value="">Toutes</option>
+                            <option value="Faible">Faible</option>
+                            <option value="Moyenne">Moyenne</option>
+                            <option value="Critique">Critique</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Statut Résolution</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
+                            <option value="">Tous les statuts</option>
+                            <option value="En traitement">En traitement</option>
+                            <option value="Immobilisé">Véhicule Immobilisé</option>
+                            <option value="Résolu">Résolu</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div class="col-md-5">
+                        <label class="form-label fs-12px text-secondary mb-1">Date du Sinistre (Début/Fin)</label>
+                        <div class="d-flex align-items-center">
+                            <input type="date" class="form-control form-control-sm me-1" [(ngModel)]="advDateMin">
+                            <span class="text-secondary">-</span>
+                            <input type="date" class="form-control form-control-sm ms-1" [(ngModel)]="advDateMax">
+                        </div>
+                    </div>
+
+                    <!-- Count Limiter -->
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Résultats à afficher</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="advCountFilter">
+                            <option [value]="5">5</option>
+                            <option [value]="10">10</option>
+                            <option [value]="20">20</option>
+                            <option [value]="50">50</option>
+                            <option [value]="1000">Tous</option>
+                        </select>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-md-4 d-flex align-items-end justify-content-end">
+                        <button class="btn btn-sm btn-primary me-2 flex-grow-1" (click)="applyAdvancedFilters()">
+                            <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Filtrer
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary flex-grow-1" (click)="resetFilters()">
+                            <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="card-title text-warning mb-0">INCIDENTS DÉCLARÉS ({{ filteredAlerts.length }})</h6>
+                    <div class="d-flex align-items-center">
+                        <input type="text" class="form-control form-control-sm me-2"
+                            placeholder="Recherche véhicule, locataire..." style="width: 250px;"
+                            [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
+                        <select class="form-select form-select-sm" style="width: 200px;" [(ngModel)]="quickStatusFilter"
+                            (change)="applyQuickFilters()">
+                            <option value="">Tous les statuts</option>
+                            <option value="En traitement">En traitement</option>
+                            <option value="Immobilisé">Véhicule Immobilisé</option>
+                            <option value="Résolu">Résolu</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date du Sinistre</th>
+                                <th>Véhicule Concerné</th>
+                                <th>Locataire au volant</th>
+                                <th>Nature de l'Alerte</th>
+                                <th>Gravité</th>
+                                <th>Statut de résolution</th>
+                                <th>Actions Requises</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let alert of filteredAlerts">
+                                <td class="text-muted">{{ alert.date | date:'dd/MM/yyyy' }}</td>
+                                <td><a href="javascript:void(0)" class="text-primary fw-medium">{{ alert.vehicle }}</a>
+                                </td>
+                                <td>{{ alert.client }}</td>
+                                <td>
+                                    <div class="fw-medium text-dark">{{ alert.type }}</div>
+                                    <div class="tx-11 text-muted">{{ alert.description }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge" [ngClass]="{
+                                        'bg-info': alert.severity === 'Faible',
+                                        'bg-warning text-dark': alert.severity === 'Moyenne',
+                                        'bg-danger': alert.severity === 'Critique'
+                                    }">
+                                        {{ alert.severity }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge" [ngClass]="{
+                                        'bg-warning text-dark': alert.status === 'En traitement',
+                                        'bg-danger': alert.status === 'Immobilisé',
+                                        'bg-success': alert.status === 'Résolu'
+                                    }">
+                                        {{ alert.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button [routerLink]="['/gbatcar/maintenance/alerts/details', alert.id]"
+                                        class="btn btn-sm btn-outline-secondary me-1" title="Voir les détails">
+                                        <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger"
+                                        title="Convertir en Pénalité Financière">
+                                        <i data-feather="dollar-sign" appFeatherIcon class="icon-sm"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="filteredAlerts.length === 0">
+                                <td colspan="7" class="text-center py-4 text-success fw-medium">
+                                    <i data-feather="check-circle" appFeatherIcon class="me-2 mb-1"></i>
+                                    Aucun sinistre ou alerte en cours. Le parc est sain !
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

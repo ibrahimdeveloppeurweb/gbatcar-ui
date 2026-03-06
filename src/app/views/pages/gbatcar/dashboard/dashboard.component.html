@@ -1,0 +1,476 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+  <div>
+    <h4 class="mb-3 mb-md-0">Tableau de Bord</h4>
+  </div>
+  <div class="d-flex align-items-center flex-wrap text-nowrap">
+    <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0 me-2"
+      (click)="toggleAdvancedFilters()">
+      <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
+      {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres de Synthèse' }}
+    </button>
+    <button [routerLink]="['/gbatcar/contracts/new']" class="btn btn-primary btn-icon-text mb-2 mb-md-0">
+      <i class="btn-icon-prepend" data-feather="plus" appFeatherIcon></i>
+      Nouveau Contrat
+    </button>
+  </div>
+</div>
+
+<!-- Filtres de Synthèse Globaux -->
+<div class="row mb-3" *ngIf="showAdvancedFilters">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-title text-primary mb-3">
+          <i data-feather="sliders" appFeatherIcon class="icon-sm me-2"></i>
+          Filtres Globaux du Tableau de Bord
+        </h6>
+        <div class="row g-3">
+          <!-- Période Principale -->
+          <div class="col-md-3">
+            <label class="form-label fs-12px text-secondary mb-1 fw-bold">Période d'analyse</label>
+            <select class="form-select form-select-sm" [(ngModel)]="advPeriod">
+              <option value="Aujourd'hui">Aujourd'hui</option>
+              <option value="Cette Semaine">Cette Semaine</option>
+              <option value="Ce Mois">Ce Mois</option>
+              <option value="Cette Année">Cette Année</option>
+              <option value="Personnalisée">Personnalisée...</option>
+            </select>
+          </div>
+
+          <!-- Date Range (Visible si personnalisée ou pour affiner) -->
+          <div class="col-md-4">
+            <label class="form-label fs-12px text-secondary mb-1">Plage de dates spécifique</label>
+            <div class="d-flex align-items-center">
+              <input type="date" class="form-control form-control-sm me-1" [(ngModel)]="advDateMin">
+              <span class="text-secondary">-</span>
+              <input type="date" class="form-control form-control-sm ms-1" [(ngModel)]="advDateMax">
+            </div>
+          </div>
+
+          <!-- Catégorie Véhicule -->
+          <div class="col-md-3">
+            <label class="form-label fs-12px text-secondary mb-1">Catégorie de Flotte</label>
+            <select class="form-select form-select-sm" [(ngModel)]="advVehicleCategory">
+              <option value="">Toutes les catégories</option>
+              <option value="Berlines">Berlines</option>
+              <option value="SUV / 4x4">SUV / 4x4</option>
+              <option value="Utilitaires">Utilitaires</option>
+            </select>
+          </div>
+
+          <!-- Type de Contrat -->
+          <div class="col-md-2">
+            <label class="form-label fs-12px text-secondary mb-1">Type de Contrat</label>
+            <select class="form-select form-select-sm" [(ngModel)]="advContractType">
+              <option value="">Tous</option>
+              <option value="VTC">Gestion VTC</option>
+              <option value="LCD">Location Courte</option>
+              <option value="LLD">Location Longue</option>
+            </select>
+          </div>
+
+          <!-- Actions -->
+          <div class="col-md-12 d-flex align-items-center justify-content-end mt-3 pt-2 border-top">
+            <button class="btn btn-sm btn-primary me-2 px-4" (click)="applyAdvancedFilters()">
+              <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Actualiser les données
+            </button>
+            <button class="btn btn-sm btn-outline-secondary px-3" (click)="resetFilters()">
+              Réinitialiser
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12 col-xl-12 stretch-card">
+    <div class="row flex-grow-1">
+
+      <!-- Card 1: Clients Actifs -->
+      <div class="col-md-4 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-baseline">
+              <h6 class="card-title mb-0">Clients Actifs</h6>
+              <div ngbDropdown class="mb-2">
+                <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton">
+                  <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+                </a>
+                <div ngbDropdownMenu aria-labelledby="dropdownMenuButton">
+                  <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i data-feather="eye"
+                      appFeatherIcon class="icon-sm me-2"></i> <span class="">Voir Profils</span></a>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-6 col-md-12 col-xl-5">
+                <h3 class="mb-2">{{ stats.activeClients }}</h3>
+                <div class="d-flex align-items-baseline">
+                  <p class="text-success">
+                    <span>+{{ stats.activeClientsGrowth }}%</span>
+                    <i data-feather="arrow-up" appFeatherIcon class="icon-sm mb-1"></i>
+                  </p>
+                </div>
+              </div>
+              <div class="col-6 col-md-12 col-xl-7">
+                <div class="mt-md-3 mt-xl-0">
+                  <apx-chart [series]="clientsChartOptions.series" [chart]="clientsChartOptions.chart"
+                    [colors]="clientsChartOptions.colors" [xaxis]="clientsChartOptions.xaxis"
+                    [stroke]="clientsChartOptions.stroke" [markers]="clientsChartOptions.markers"></apx-chart>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Flotte GbatCar -->
+      <div class="col-md-4 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-baseline">
+              <h6 class="card-title mb-0">Flotte GbatCar</h6>
+              <div ngbDropdown class="mb-2">
+                <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton1">
+                  <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+                </a>
+                <div ngbDropdownMenu aria-labelledby="dropdownMenuButton1">
+                  <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i data-feather="eye"
+                      appFeatherIcon class="icon-sm me-2"></i> <span class="">Voir tous</span></a>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-6 col-md-12 col-xl-5">
+                <h3 class="mb-2">{{ stats.totalVehicles }}</h3>
+                <div class="d-flex align-items-baseline">
+                  <p class="text-secondary">
+                    <span>{{ stats.availableVehicles }} dispos</span>
+                  </p>
+                </div>
+              </div>
+              <div class="col-6 col-md-12 col-xl-7">
+                <div class="mt-md-3 mt-xl-0">
+                  <apx-chart [series]="vehiclesChartOptions.series" [chart]="vehiclesChartOptions.chart"
+                    [colors]="vehiclesChartOptions.colors" [plotOptions]="vehiclesChartOptions.plotOptions"
+                    [xaxis]="vehiclesChartOptions.xaxis"></apx-chart>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Rendement Mensuel -->
+      <div class="col-md-4 grid-margin stretch-card">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-baseline">
+              <h6 class="card-title mb-0">Rendement Mensuel</h6>
+              <div ngbDropdown class="mb-2">
+                <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton2">
+                  <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+                </a>
+                <div ngbDropdownMenu aria-labelledby="dropdownMenuButton2">
+                  <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i data-feather="eye"
+                      appFeatherIcon class="icon-sm me-2"></i> <span class="">Détails</span></a>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-6 col-md-12 col-xl-5">
+                <h3 class="mb-2 fs-5">{{ formatCurrency(stats.monthlyRevenue) }}</h3>
+                <div class="d-flex align-items-baseline">
+                  <p class="text-success">
+                    <span>+{{ stats.monthlyRevenueGrowth }}%</span>
+                    <i data-feather="arrow-up" appFeatherIcon class="icon-sm mb-1"></i>
+                  </p>
+                </div>
+              </div>
+              <div class="col-6 col-md-12 col-xl-7">
+                <div class="mt-md-3 mt-xl-0">
+                  <apx-chart [series]="revenueMiniChartOptions.series" [chart]="revenueMiniChartOptions.chart"
+                    [colors]="revenueMiniChartOptions.colors" [xaxis]="revenueMiniChartOptions.xaxis"
+                    [stroke]="revenueMiniChartOptions.stroke" [markers]="revenueMiniChartOptions.markers"></apx-chart>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div> <!-- row -->
+
+<div class="row">
+  <div class="col-lg-12 grid-margin stretch-card">
+    <div class="card overflow-hidden">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-baseline mb-4 mb-md-3">
+          <h6 class="card-title mb-0">Évolution des Encaissements</h6>
+          <div ngbDropdown>
+            <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton3">
+              <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+            </a>
+            <div ngbDropdownMenu aria-labelledby="dropdownMenuButton3">
+              <a ngbDropdownItem class="d-flex align-items-center" href="javascript:void(0)" (click)="exportData()"><i
+                  data-feather="download" appFeatherIcon class="icon-sm me-2"></i> <span class="">Exporter
+                  xlsx</span></a>
+            </div>
+          </div>
+        </div>
+        <div class="row align-items-start">
+          <div class="col-md-7">
+            <p class="text-secondary fs-13px mb-3 mb-md-0">Aperçu des paiements reçus (Mobile Money & Espèces) sur les 7
+              derniers jours.</p>
+          </div>
+          <div class="col-md-5 d-flex justify-content-md-end">
+            <div class="btn-group mb-3 mb-md-0" role="group" aria-label="Filtres de période">
+              <button type="button" class="btn btn-primary d-none d-md-block"
+                (click)="updatePeriod('Semaine')">Semaine</button>
+              <button type="button" class="btn btn-outline-primary" (click)="updatePeriod('Mois')">Mois</button>
+              <button type="button" class="btn btn-outline-primary" (click)="updatePeriod('Année')">Année</button>
+            </div>
+          </div>
+        </div>
+        <div class="flot-wrapper">
+          <apx-chart [series]="revenueChartOptions.series" [chart]="revenueChartOptions.chart"
+            [colors]="revenueChartOptions.colors" [grid]="revenueChartOptions.grid" [xaxis]="revenueChartOptions.xaxis"
+            [yaxis]="revenueChartOptions.yaxis" [stroke]="revenueChartOptions.stroke"
+            [dataLabels]="revenueChartOptions.dataLabels" [tooltip]="revenueChartOptions.tooltip"></apx-chart>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> <!-- row -->
+
+<div class="row">
+  <!-- Vehicle Sales Chart -->
+  <div class="col-lg-8 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-baseline mb-2">
+          <h6 class="card-title mb-0">Ventes Mensuelles (Véhicules)</h6>
+          <div ngbDropdown class="mb-2">
+            <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton8">
+              <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+            </a>
+            <div ngbDropdownMenu aria-labelledby="dropdownMenuButton8">
+              <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i data-feather="eye"
+                  appFeatherIcon class="icon-sm me-2"></i> <span class="">Détails</span></a>
+              <a ngbDropdownItem class="d-flex align-items-center" href="javascript:void(0)" (click)="exportData()"><i
+                  data-feather="download" appFeatherIcon class="icon-sm me-2"></i> <span class="">Télécharger</span></a>
+            </div>
+          </div>
+        </div>
+        <p class="text-secondary">Statistiques des véhicules vendus au cours de l'année.</p>
+        <apx-chart [series]="vehicleSalesChartOptions.series" [chart]="vehicleSalesChartOptions.chart"
+          [colors]="vehicleSalesChartOptions.colors" [fill]="vehicleSalesChartOptions.fill"
+          [grid]="vehicleSalesChartOptions.grid" [xaxis]="vehicleSalesChartOptions.xaxis"
+          [yaxis]="vehicleSalesChartOptions.yaxis" [legend]="vehicleSalesChartOptions.legend"
+          [stroke]="vehicleSalesChartOptions.stroke" [dataLabels]="vehicleSalesChartOptions.dataLabels"
+          [plotOptions]="vehicleSalesChartOptions.plotOptions"></apx-chart>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fleet Status Donut Chart -->
+  <div class="col-lg-4 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-baseline mb-2">
+          <h6 class="card-title mb-0">État de la Flotte</h6>
+          <div ngbDropdown class="mb-2">
+            <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuFleet">
+              <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+            </a>
+            <div ngbDropdownMenu aria-labelledby="dropdownMenuFleet">
+              <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i data-feather="eye"
+                  appFeatherIcon class="icon-sm me-2"></i> <span class="">Voir véhicules</span></a>
+            </div>
+          </div>
+        </div>
+        <apx-chart [series]="fleetStatusChartOptions.series" [chart]="fleetStatusChartOptions.chart"
+          [colors]="fleetStatusChartOptions.colors" [plotOptions]="fleetStatusChartOptions.plotOptions"
+          [stroke]="fleetStatusChartOptions.stroke" [labels]="fleetStatusChartOptions.labels"
+          [legend]="fleetStatusChartOptions.legend" [dataLabels]="fleetStatusChartOptions.dataLabels"></apx-chart>
+      </div>
+    </div>
+  </div>
+</div> <!-- row -->
+
+<div class="row">
+  <!-- Maintenance Alerts -->
+  <div class="col-lg-4 col-md-6 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-title text-warning mb-2">Suivi Entretien & Conformité</h6>
+        <p class="text-secondary mb-3">Véhicules nécessitant une attention urgente.</p>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th class="pt-0">Véhicule</th>
+                <th class="pt-0">Type</th>
+                <th class="pt-0">Échéance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let alert of maintenanceAlerts">
+                <td>{{ alert.vehicle }}</td>
+                <td>{{ alert.type }}</td>
+                <td>
+                  <span class="badge" [ngClass]="alert.severity === 'danger' ? 'bg-danger' : 'bg-warning'">
+                    {{ alert.dueDate }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expiring Contracts -->
+  <div class="col-lg-4 col-md-6 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-title mb-2">Fin de Contrats Imminentes</h6>
+        <p class="text-secondary mb-3">Contrats à renouveler ou véhicules à récupérer.</p>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th class="pt-0">Client</th>
+                <th class="pt-0">Véhicule</th>
+                <th class="pt-0">Date d'Expiration</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let contract of expiringContracts">
+                <td>{{ contract.client }}</td>
+                <td>{{ contract.vehicle }}</td>
+                <td class="text-danger fw-bold">{{ contract.expiryDate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity Timeline / Inbox -->
+  <div class="col-lg-4 col-md-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-baseline mb-2">
+          <h6 class="card-title mb-0">Activités Récentes</h6>
+          <div ngbDropdown class="mb-2">
+            <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuActivity">
+              <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+            </a>
+            <div ngbDropdownMenu aria-labelledby="dropdownMenuActivity">
+              <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i data-feather="eye"
+                  appFeatherIcon class="icon-sm me-2"></i> <span class="">Voir tout</span></a>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex flex-column">
+          <a href="" (click)="false" class="d-flex align-items-center border-bottom py-3"
+            *ngFor="let activity of recentActivity">
+            <div class="me-3">
+              <div class="p-2 bg-primary rounded-circle text-white">
+                <i data-feather="activity" appFeatherIcon class="icon-sm"></i>
+              </div>
+            </div>
+            <div class="w-100">
+              <div class="d-flex justify-content-between">
+                <h6 class="text-body mb-2">{{ activity.user }}</h6>
+                <p class="text-secondary fs-12px">{{ activity.time }}</p>
+              </div>
+              <p class="text-secondary fs-13px">{{ activity.description }}</p>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Retards & Impayés Alert -->
+  <div class="col-lg-5 col-xl-4 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-baseline mb-2">
+          <h6 class="card-title text-danger mb-0">Alerte Retards & Impayés</h6>
+        </div>
+        <p class="text-secondary mb-4">Ces clients ont manqué leur date d'échéance de paiement.</p>
+
+        <div class="d-flex flex-column text-center justify-content-center h-50">
+          <h1 class="display-3 text-danger fw-bolder">{{ stats.pendingPaymentsCount }}</h1>
+          <p class="fs-4 fw-bold text-dark mt-2">Dossiers concernés</p>
+          <h3 class="mt-4">{{ formatCurrency(stats.pendingPaymentsAmount) }}</h3>
+          <p class="text-muted">Total estimé des impayés</p>
+        </div>
+        <div class="d-grid mt-4">
+          <button class="btn btn-danger">Lancer les relances SMS</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Onboarding Table -->
+  <div class="col-lg-7 col-xl-8 stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-baseline mb-2">
+          <h6 class="card-title mb-0">Dossiers en Attente de Validation</h6>
+          <div ngbDropdown class="mb-2">
+            <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton7">
+              <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+            </a>
+            <div ngbDropdownMenu aria-labelledby="dropdownMenuButton7">
+              <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i data-feather="eye"
+                  appFeatherIcon class="icon-sm me-2"></i> <span class="">Voir Profils</span></a>
+            </div>
+          </div>
+        </div>
+        <div class="table-responsive mt-3">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th class="pt-0">Client</th>
+                <th class="pt-0">Téléphone</th>
+                <th class="pt-0">Profil</th>
+                <th class="pt-0">Date de Demande</th>
+                <th class="pt-0">Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let req of recentOnboardings">
+                <td>{{ req.name }}</td>
+                <td>{{ req.phone }}</td>
+                <td>{{ req.type }}</td>
+                <td>{{ req.date | date:'dd/MM/yyyy' }}</td>
+                <td>
+                  <span class="badge" [ngClass]="{
+                          'bg-warning': req.status === 'pending',
+                          'bg-success': req.status === 'approved',
+                          'bg-danger': req.status === 'rejected'
+                        }">
+                    {{ req.status === 'pending' ? 'En attente' : req.status === 'approved' ? 'Validé' : 'Rejeté' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

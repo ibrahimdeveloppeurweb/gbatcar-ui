@@ -1,0 +1,112 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <nav class="page-breadcrumb mb-1">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a routerLink="/gbatcar/maintenance/alerts">Alertes & Sinistres</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Déclarer un Incident</li>
+            </ol>
+        </nav>
+        <h4 class="mb-3 mb-md-0 text-warning">Déclarer un Sinistre ou une Panne</h4>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button [routerLink]="['/gbatcar/maintenance/alerts']"
+            class="btn btn-outline-secondary btn-icon-text me-2 mb-2 mb-md-0">
+            <i data-feather="x" appFeatherIcon class="btn-icon-prepend"></i>
+            Annuler
+        </button>
+        <button class="btn btn-warning btn-icon-text mb-2 mb-md-0">
+            <i data-feather="save" appFeatherIcon class="btn-icon-prepend"></i>
+            Enregistrer la Déclaration
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title text-warning">Formulaire de déclaration d'incident</h6>
+                <form [formGroup]="alertForm">
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Véhicule impliqué (Locataire) <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" formControlName="vehicleId"
+                                [ngClass]="{'is-invalid': alertForm.get('vehicleId')?.invalid && alertForm.get('vehicleId')?.touched}">
+                                <option value="">Sélectionnez le véhicule...</option>
+                                <option value="VHC-1001">Toyota Corolla (7890 IJ 01) - Jean Dubois</option>
+                                <option value="VHC-1002">Suzuki Swift (9012 EF 01) - Fatou Sylla</option>
+                                <option value="VHC-1003">Kia Rio (3456 GH 01) - Marie Koné</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Date & Heure de l'incident <span
+                                    class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" formControlName="date"
+                                [ngClass]="{'is-invalid': alertForm.get('date')?.invalid && alertForm.get('date')?.touched}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Nature / Type de sinistre <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" formControlName="type"
+                                [ngClass]="{'is-invalid': alertForm.get('type')?.invalid && alertForm.get('type')?.touched}">
+                                <option value="">Sélectionnez la nature...</option>
+                                <option value="Accident Matériel">Accident Matériel (Choc)</option>
+                                <option value="Accident Corporel">Accident Corporel</option>
+                                <option value="Panne Mécanique">Panne Mécanique / Moteur</option>
+                                <option value="Vol ou Tentative">Vol ou Tentative de Vol</option>
+                                <option value="Bris de glace">Bris de glace</option>
+                                <option value="Incendie">Incendie</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Niveau de Gravité (Estimmé) <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" formControlName="severity">
+                                <option value="Faible">Faible (Dégâts mineurs, rayures)</option>
+                                <option value="Moyenne">Moyenne (Réparation avec immobilisation courte)</option>
+                                <option value="Critique">Critique (Véhicule gravement endommagé ou détruit)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-12 mb-3">
+                            <label class="form-label text-dark fw-medium">Circonstances détaillées de l'incident <span
+                                    class="text-danger">*</span></label>
+                            <textarea class="form-control" formControlName="description" rows="4"
+                                placeholder="Veuillez décrire avec précision les faits..."
+                                [ngClass]="{'is-invalid': alertForm.get('description')?.invalid && alertForm.get('description')?.touched}"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Informations sur l'autre chauffeur /
+                                Tiers</label>
+                            <textarea class="form-control" formControlName="driverInfo" rows="2"
+                                placeholder="S'il y a un tiers (nom, assurance, immatriculation)..."></textarea>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Constat de police / Rapport officiel
+                                (PDF)</label>
+                            <input type="file" class="form-control" formControlName="policeReport"
+                                accept="application/pdf">
+                            <small class="text-muted mt-1 d-block">Obligatoire pour les accidents corporels.</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-12 mb-3">
+                            <label class="form-label text-dark fw-medium">Photos du sinistre (Max 5)</label>
+                            <input type="file" class="form-control" formControlName="photos" multiple accept="image/*">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

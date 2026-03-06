@@ -1,0 +1,107 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <nav class="page-breadcrumb mb-1">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a routerLink="/gbatcar/contracts">Contrats</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ isEditMode ? 'Modifier le contrat' : 'Créer un
+                    contrat' }}</li>
+            </ol>
+        </nav>
+        <h4 class="mb-3 mb-md-0">{{ isEditMode ? 'Modifier Contrat' : 'Nouveau Contrat' }}</h4>
+    </div>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button [routerLink]="['/gbatcar/contracts']" class="btn btn-outline-secondary btn-icon-text me-2 mb-2 mb-md-0">
+            <i data-feather="x" appFeatherIcon class="btn-icon-prepend"></i>
+            Annuler
+        </button>
+        <button class="btn btn-primary btn-icon-text mb-2 mb-md-0">
+            <i data-feather="save" appFeatherIcon class="btn-icon-prepend"></i>
+            Enregistrer le Contrat
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Informations Générales</h6>
+                <form [formGroup]="contractForm">
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Client / Locataire</label>
+                            <select class="form-select" formControlName="clientId"
+                                [ngClass]="{'is-invalid': contractForm.get('clientId')?.invalid && contractForm.get('clientId')?.touched}">
+                                <option value="">Sélectionnez un client...</option>
+                                <option value="CLI-001">Jean Dubois (CLI-001)</option>
+                                <option value="CLI-002">Marie Koné (CLI-002)</option>
+                                <option value="CLI-003">Paul Yao (CLI-003)</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Véhicule Assigné</label>
+                            <select class="form-select" formControlName="vehicleId"
+                                [ngClass]="{'is-invalid': contractForm.get('vehicleId')?.invalid && contractForm.get('vehicleId')?.touched}">
+                                <option value="">Sélectionnez un véhicule...</option>
+                                <option value="VHC-1002">Hyundai Accent - 5678 CD 01 (Disponible)</option>
+                                <option value="VHC-1005">Toyota Corolla - 7890 IJ 01 (Hors Service)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Date de Prise d'Effet (Livraison)</label>
+                            <input type="date" class="form-control" formControlName="startDate"
+                                [ngClass]="{'is-invalid': contractForm.get('startDate')?.invalid && contractForm.get('startDate')?.touched}">
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Durée d'Amortissement (Mois)</label>
+                            <input type="number" class="form-control" formControlName="duration"
+                                [ngClass]="{'is-invalid': contractForm.get('duration')?.invalid && contractForm.get('duration')?.touched}"
+                                placeholder="Ex: 36 (Durée avant transfert de propriété)">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-4 mb-3">
+                            <label class="form-label text-dark fw-medium">Versement Journalier (Location-Vente)</label>
+                            <input type="number" class="form-control" formControlName="dailyRate"
+                                [ngClass]="{'is-invalid': contractForm.get('dailyRate')?.invalid && contractForm.get('dailyRate')?.touched}"
+                                placeholder="15000">
+                        </div>
+                        <div class="col-sm-4 mb-3">
+                            <label class="form-label text-dark fw-medium">Dépôt de Garantie (Apport initial)</label>
+                            <input type="number" class="form-control" formControlName="cautionAmount"
+                                [ngClass]="{'is-invalid': contractForm.get('cautionAmount')?.invalid && contractForm.get('cautionAmount')?.touched}"
+                                placeholder="Ex: 500000">
+                        </div>
+                        <div class="col-sm-4 mb-3">
+                            <label class="form-label text-dark fw-medium">Montant Total Estimé (FCFA)</label>
+                            <input type="number" class="form-control" formControlName="totalAmount" readonly
+                                value="7500000">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6 class="card-title mt-4">Conditions & Pièces Jointes</h6>
+
+                    <div class="row">
+                        <div class="col-sm-12 mb-3">
+                            <label class="form-label text-dark fw-medium">Contrat Signé Scanné (PDF)</label>
+                            <input type="file" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-12 mb-3">
+                            <label class="form-label text-dark fw-medium">Notes additionnelles</label>
+                            <textarea class="form-control" formControlName="notes" rows="3"
+                                placeholder="Particularités du contrat..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
