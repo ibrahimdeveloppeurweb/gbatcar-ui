@@ -17,6 +17,76 @@
     </div>
 </div>
 
+<!-- KPI Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-2 col-6 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #6c757d;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Total Contrats</p>
+                        <h4 class="fw-bold mb-0">{{ contracts.length }}</h4>
+                    </div>
+                    <i data-feather="file-text" appFeatherIcon class="icon-lg text-secondary"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-6 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #2ecc71;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Actifs</p>
+                        <h4 class="fw-bold mb-0 text-success">{{ activeContractsCount }}</h4>
+                    </div>
+                    <i data-feather="check-circle" appFeatherIcon class="icon-lg text-success"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-6 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #e74c3c;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">En Retard</p>
+                        <h4 class="fw-bold mb-0 text-danger">{{ lateContractsCount }}</h4>
+                    </div>
+                    <i data-feather="alert-triangle" appFeatherIcon class="icon-lg text-danger"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card h-100" style="border-left: 4px solid #f39c12;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Maturité &lt; 30j</p>
+                        <h4 class="fw-bold mb-0 text-warning">{{ maturingSoonCount }}</h4>
+                    </div>
+                    <i data-feather="clock" appFeatherIcon class="icon-lg text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-12">
+        <div class="card h-100" style="border-left: 4px solid #343a40;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Dossiers Incomplets</p>
+                        <h4 class="fw-bold mb-0 text-dark">{{ incompleteDossiersCount }}</h4>
+                    </div>
+                    <i data-feather="folder" appFeatherIcon class="icon-lg text-dark"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <!-- Filtres Avancés -->
 <div class="row mb-3" *ngIf="showAdvancedFilters">
     <div class="col-md-12">
@@ -126,11 +196,13 @@
                         <thead>
                             <tr>
                                 <th>N° Contrat</th>
-                                <th>Client (Locataire)</th>
-                                <th>Véhicule Associé</th>
-                                <th>Période</th>
-                                <th>Avancement Financier</th>
-                                <th>Statut Légal</th>
+                                <th>Client</th>
+                                <th>Usage</th>
+                                <th>Véhicule</th>
+                                <th>Fin de Contrat</th>
+                                <th>Avancement</th>
+                                <th>Risque</th>
+                                <th>Statut</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -139,21 +211,30 @@
                                 <td class="fw-medium text-dark">{{ contract.id }}</td>
                                 <td>
                                     <a [routerLink]="['/gbatcar/clients/details', contract.clientId]"
-                                        class="text-primary fw-medium">{{ contract.clientName }}</a>
-                                </td>
-                                <td>{{ contract.vehicle }}</td>
-                                <td>
-                                    <div class="tx-13">{{ contract.startDate | date:'dd/MM/yyyy' }}</div>
-                                    <div class="text-muted tx-11">au {{ contract.endDate | date:'dd/MM/yyyy' }}</div>
+                                        class="text-primary fw-medium d-block">{{ contract.clientName }}</a>
+                                    <span class="text-muted tx-11">{{ contract.clientId }}</span>
                                 </td>
                                 <td>
-                                    <div class="d-flex justify-content-between tx-12 mb-1">
+                                    <span class="badge bg-light text-dark border">VTC</span>
+                                </td>
+                                <td>
+                                    <span class="d-block tx-13">{{ contract.vehicle.split('(')[0] }}</span>
+                                    <span class="text-muted tx-11">{{ contract.vehicle.split('(')[1].replace(')', '')
+                                        }}</span>
+                                </td>
+                                <td>
+                                    <div class="tx-12 fw-medium">{{ contract.endDate | date:'dd/MM/yyyy' }}</div>
+                                    <div class="tx-11"
+                                        [ngClass]="getDaysUntilDeadline(contract.endDate) < 30 ? 'text-danger fw-bold' : 'text-muted'">
+                                        J-{{ getDaysUntilDeadline(contract.endDate) }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex justify-content-between tx-11 mb-1">
                                         <span>{{ (contract.paidAmount / contract.totalAmount * 100) | number:'1.0-0'
                                             }}%</span>
-                                        <span class="text-muted">{{ contract.paidAmount | number }} / {{
-                                            contract.totalAmount | number }}</span>
                                     </div>
-                                    <div class="progress" style="height: 4px;">
+                                    <div class="progress" style="height: 6px; width: 80px;">
                                         <div class="progress-bar" [ngClass]="{
                                             'bg-success': contract.status === 'Soldé' || contract.paymentStatus === 'À jour',
                                             'bg-warning': contract.paymentStatus === 'En retard',
@@ -163,7 +244,16 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge" [ngClass]="{
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle me-2"
+                                            [ngClass]="'bg-' + getRiskLevel(contract).class.split('-')[1]"
+                                            style="width: 8px; height: 8px;"></div>
+                                        <span class="tx-12" [ngClass]="getRiskLevel(contract).class">{{
+                                            getRiskLevel(contract).label }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-pill" [ngClass]="{
                                         'bg-primary': contract.status === 'En cours',
                                         'bg-warning text-dark': contract.status === 'En Attente',
                                         'bg-success': contract.status === 'Soldé',
@@ -175,20 +265,20 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <button [routerLink]="['/gbatcar/contracts/details', contract.id]"
-                                            class="btn btn-xs btn-outline-primary me-1" title="Voir (Show)">
+                                            class="btn btn-icon btn-xs btn-outline-primary me-1" title="Détails">
                                             <i data-feather="eye" appFeatherIcon class="icon-xs"></i>
                                         </button>
-                                        <button class="btn btn-xs btn-outline-success me-1" title="Valider">
+                                        <button class="btn btn-icon btn-xs btn-outline-success me-1" title="Valider">
                                             <i data-feather="check-square" appFeatherIcon class="icon-xs"></i>
                                         </button>
-                                        <button class="btn btn-xs btn-outline-warning" title="Modifier (Edit)">
+                                        <button class="btn btn-icon btn-xs btn-outline-warning" title="Modifier">
                                             <i data-feather="edit-2" appFeatherIcon class="icon-xs"></i>
                                         </button>
                                     </div>
                                 </td>
                             </tr>
                             <tr *ngIf="filteredContracts.length === 0">
-                                <td colspan="7" class="text-center py-4 text-muted">
+                                <td colspan="9" class="text-center py-4 text-muted">
                                     Aucun contrat trouvé avec ces critères.
                                 </td>
                             </tr>

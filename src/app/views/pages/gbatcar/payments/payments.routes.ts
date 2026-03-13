@@ -9,6 +9,10 @@ import { PenaltyDetailsComponent } from './penalty-details/penalty-details.compo
 
 export const paymentsRoutes: Routes = [
     {
+        path: 'dashboard',
+        loadComponent: () => import('./payment-dashboard/payment-dashboard.component').then(m => m.PaymentDashboardComponent)
+    },
+    {
         path: '',
         component: PaymentsComponent
     },

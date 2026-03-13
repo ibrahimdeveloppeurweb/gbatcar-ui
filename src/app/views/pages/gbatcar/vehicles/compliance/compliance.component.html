@@ -3,34 +3,113 @@
         <h4 class="mb-3 mb-md-0">Conformité & Visites Techniques</h4>
         <p class="text-secondary">Suivez les échéances d'assurances et de visites techniques de toute la flotte.</p>
     </div>
-    <div class="d-flex align-items-center flex-wrap text-nowrap">
-        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0">
+    <div class="d-flex align-items-center flex-wrap text-nowrap gap-2">
+        <button class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0" (click)="showFilters = !showFilters">
+            <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
+            {{ showFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
+        </button>
+        <button class="btn btn-primary btn-icon-text mb-2 mb-md-0" routerLink="/gbatcar/vehicles/compliance/add">
             <i data-feather="upload" appFeatherIcon class="btn-icon-prepend"></i>
             Nouveau Document
         </button>
     </div>
 </div>
 
+<!-- KPI Summary Cards -->
 <div class="row mb-4">
+    <div class="col-md-3 col-6 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #e74c3c; cursor:pointer"
+            (click)="typeFilter='Expired'; showFilters=false">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Documents Expirés</p>
+                        <h4 class="fw-bold mb-0 text-danger">{{ expiredCount }}</h4>
+                        <small class="text-danger">Action requise</small>
+                    </div>
+                    <i data-feather="x-circle" appFeatherIcon class="icon-lg text-danger"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #f39c12; cursor:pointer"
+            (click)="typeFilter='Expiring Soon'; showFilters=false">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Expire Bientôt (&lt; 30j)</p>
+                        <h4 class="fw-bold mb-0 text-warning">{{ expiringSoonCount }}</h4>
+                        <small class="text-warning">À surveiller</small>
+                    </div>
+                    <i data-feather="clock" appFeatherIcon class="icon-lg text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card h-100" style="border-left: 4px solid #2ecc71; cursor:pointer"
+            (click)="typeFilter=''; showFilters=false">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Véhicules En Règle</p>
+                        <h4 class="fw-bold mb-0 text-success">{{ validCount }}</h4>
+                        <small class="text-success">Conformes</small>
+                    </div>
+                    <i data-feather="check-circle" appFeatherIcon class="icon-lg text-success"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card h-100" style="border-left: 4px solid #6c757d;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Total Flotte Suivie</p>
+                        <h4 class="fw-bold mb-0">{{ complianceList.length }}</h4>
+                        <small class="text-muted">véhicules</small>
+                    </div>
+                    <i data-feather="shield" appFeatherIcon class="icon-lg text-secondary"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row mb-3" *ngIf="showFilters">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-body py-3">
-                <div class="row align-items-center">
-                    <div class="col-md-6 mb-2 mb-md-0">
-                        <div class="input-group">
-                            <span class="input-group-text bg-transparent border-primary text-primary">
-                                <i data-feather="search" appFeatherIcon class="icon-sm"></i>
-                            </span>
-                            <input type="text" class="form-control border-primary bg-transparent"
-                                placeholder="Rechercher par véhicule ou plaque..." [(ngModel)]="searchTerm">
-                        </div>
-                    </div>
+            <div class="card-body">
+                <h6 class="card-title mb-3">Filtres de recherche</h6>
+                <div class="row g-3">
                     <div class="col-md-3">
-                        <select class="form-select border-primary bg-transparent" [(ngModel)]="typeFilter">
+                        <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
+                        <input type="text" class="form-control form-control-sm"
+                            placeholder="Véhicule, plaque, client..." [(ngModel)]="searchTerm">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fs-12px text-secondary mb-1">Statut des Documents</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="typeFilter">
                             <option value="">Tous les documents</option>
                             <option value="Expiring Soon">Expire dans < 30 jours</option>
-                            <option value="Expired">Documents Expirés !</option>
+                            <option value="Expired">Documents Expirés</option>
                         </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fs-12px text-secondary mb-1">Expiration entre :</label>
+                        <div class="d-flex align-items-center">
+                            <input type="date" class="form-control form-control-sm me-1" placeholder="Début">
+                            <span class="text-secondary">-</span>
+                            <input type="date" class="form-control form-control-sm ms-1" placeholder="Fin">
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end mt-2 mt-md-0 pb-1">
+                        <button class="btn btn-sm btn-primary flex-grow-1">Rechercher</button>
+                        <button class="btn btn-sm btn-outline-secondary ms-2 flex-grow-1"
+                            (click)="searchTerm=''; typeFilter=''">Réinit.</button>
                     </div>
                 </div>
             </div>
@@ -42,21 +121,20 @@
     <div class="col-md-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
-                <!-- Nav tabs -->
                 <ul class="nav nav-tabs nav-tabs-line mb-4" id="complianceTabs" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link active" id="legal-tab" data-bs-toggle="tab" href="#legal" role="tab"
-                            aria-controls="legal" aria-selected="true" (click)="activeTab = 'legal'">
+                        <button class="nav-link bg-transparent border-0" [class.active]="activeTab === 'legal'"
+                            (click)="activeTab = 'legal'">
                             <i data-feather="file-text" appFeatherIcon class="icon-sm me-2"></i>
                             Administratif & Légal
-                        </a>
+                        </button>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="tech-tab" data-bs-toggle="tab" href="#tech" role="tab"
-                            aria-controls="tech" aria-selected="false" (click)="activeTab = 'tech'">
+                        <button class="nav-link bg-transparent border-0" [class.active]="activeTab === 'tech'"
+                            (click)="activeTab = 'tech'">
                             <i data-feather="tool" appFeatherIcon class="icon-sm me-2"></i>
                             Technique & Sécurité
-                        </a>
+                        </button>
                     </li>
                 </ul>
 
@@ -64,15 +142,16 @@
                 <div class="tab-content" id="complianceTabsContent">
 
                     <!-- Tab 1: Administratif & Légal -->
-                    <div class="tab-pane fade show active" id="legal" role="tabpanel" aria-labelledby="legal-tab">
+                    <div class="tab-pane d-block" *ngIf="activeTab === 'legal'" id="legal" role="tabpanel"
+                        aria-labelledby="legal-tab">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
                                 <thead>
                                     <tr>
-                                        <th>Véhicule & Client</th>
-                                        <th>Assurance</th>
-                                        <th>Vignette (Taxe Auto)</th>
-                                        <th>Licence Transport</th>
+                                        <th>Véhicule & Locataire</th>
+                                        <th>Assurance (Tous Risques)</th>
+                                        <th>Carte Grise</th>
+                                        <th>Contrat Location-Vente</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -148,17 +227,28 @@
                                                     </div>
                                                     <span class="badge"
                                                         [ngClass]="{ 'bg-success': item.transportLicense.status === 'Valid', 'bg-warning text-dark': item.transportLicense.status === 'Expiring Soon', 'bg-danger': item.transportLicense.status === 'Expired' }">
-                                                        {{ item.transportLicense.status === 'Expired' ? 'Expiré' :
-                                                        item.transportLicense.type }}
+                                                        {{ item.transportLicense.status === 'Expired' ? 'Terminé' :
+                                                        'En cours' }}
                                                     </span>
                                                 </div>
                                             </div>
                                         </td>
 
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" title="Mettre à jour">
-                                                <i data-feather="upload-cloud" appFeatherIcon class="icon-sm"></i>
-                                            </button>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <a class="btn btn-sm btn-outline-info btn-icon" title="Détails"
+                                                    [routerLink]="['/gbatcar/vehicles/compliance/details', item.id]">
+                                                    <i data-feather="eye" appFeatherIcon></i>
+                                                </a>
+                                                <a class="btn btn-sm btn-outline-primary btn-icon" title="Mettre à jour"
+                                                    [routerLink]="['/gbatcar/vehicles/compliance/add']">
+                                                    <i data-feather="upload-cloud" appFeatherIcon></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-danger btn-icon" title="Supprimer"
+                                                    (click)="deleteDoc(item)">
+                                                    <i data-feather="trash-2" appFeatherIcon></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr *ngIf="filteredCompliance.length === 0">
@@ -171,7 +261,8 @@
                     </div>
 
                     <!-- Tab 2: Technique & Sécurité -->
-                    <div class="tab-pane fade" id="tech" role="tabpanel" aria-labelledby="tech-tab">
+                    <div class="tab-pane d-block" *ngIf="activeTab === 'tech'" id="tech" role="tabpanel"
+                        aria-labelledby="tech-tab">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
                                 <thead>
@@ -263,9 +354,21 @@
                                         </td>
 
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" title="Mettre à jour">
-                                                <i data-feather="upload-cloud" appFeatherIcon class="icon-sm"></i>
-                                            </button>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <a class="btn btn-sm btn-outline-info btn-icon" title="Détails"
+                                                    [routerLink]="['/gbatcar/vehicles/compliance/details', item.id]">
+                                                    <i data-feather="eye" appFeatherIcon></i>
+                                                </a>
+                                                <a class="btn btn-sm btn-outline-primary btn-icon" title="Mettre à jour"
+                                                    [routerLink]="['/gbatcar/vehicles/compliance/add', item.id]">
+                                                    <i data-feather="upload-cloud" appFeatherIcon></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-danger btn-icon" title="Supprimer"
+                                                    (click)="deleteDoc(item)">
+                                                    <i data-feather="trash-2" appFeatherIcon></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr *ngIf="filteredCompliance.length === 0">

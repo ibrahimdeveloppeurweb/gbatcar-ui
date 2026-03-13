@@ -1,0 +1,215 @@
+<!-- ==================== HEADER ==================== -->
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <h4 class="mb-1 fw-bold">Nouvelle Intervention</h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a routerLink="/gbatcar/maintenance">Interventions</a></li>
+                <li class="breadcrumb-item active">Nouvelle Intervention</li>
+            </ol>
+        </nav>
+    </div>
+    <button class="btn btn-outline-secondary btn-sm d-flex align-items-center mt-3 mt-md-0" (click)="onCancel()">
+        <i data-feather="arrow-left" appFeatherIcon class="icon-sm me-1"></i> Retour
+    </button>
+</div>
+
+<!-- ==================== SUCCESS ALERT ==================== -->
+<div *ngIf="submitSuccess" class="alert alert-success d-flex align-items-center mb-4" role="alert">
+    <i data-feather="check-circle" appFeatherIcon class="icon-sm me-2"></i>
+    <span>Intervention enregistrée avec succès ! Redirection en cours...</span>
+</div>
+
+<!-- ==================== FORM ==================== -->
+<div class="row">
+    <div class="col-12">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+            <!-- SECTION 1 : Informations Générales -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
+                        <i data-feather="info" appFeatherIcon class="icon-sm me-2 text-primary"></i>
+                        Informations Générales
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+
+                        <!-- Date d'intervention -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Date d'Intervention <span
+                                    class="text-danger">*</span></label>
+                            <input type="date" class="form-control" [class.is-invalid]="isInvalid('date')"
+                                formControlName="date">
+                            <div class="invalid-feedback">La date est requise.</div>
+                        </div>
+
+                        <!-- Véhicule -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Véhicule <span class="text-danger">*</span></label>
+                            <select class="form-select" formControlName="vehicle"
+                                [class.is-invalid]="isInvalid('vehicle')">
+                                <option value="">-- Sélectionner un véhicule --</option>
+                                <option *ngFor="let v of vehicles" [value]="v.label">{{ v.label }}</option>
+                            </select>
+                            <div class="invalid-feedback">Le véhicule est requis.</div>
+                        </div>
+
+                        <!-- Kilométrage actuel -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Kilométrage actuel (km)</label>
+                            <input type="number" class="form-control" placeholder="Ex: 45000"
+                                formControlName="kilometrage" min="0">
+                        </div>
+
+                        <!-- Type d'intervention -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Type d'Intervention <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" formControlName="type" [class.is-invalid]="isInvalid('type')">
+                                <option value="">-- Sélectionner le type --</option>
+                                <option *ngFor="let t of interventionTypes" [value]="t">{{ t }}</option>
+                            </select>
+                            <div class="invalid-feedback">Le type est requis.</div>
+                        </div>
+
+                        <!-- Type personnalisé si "Autre" -->
+                        <div class="col-md-6" *ngIf="isTypeAutre">
+                            <label class="form-label fw-medium">Préciser le type <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" placeholder="Décrivez le type d'intervention..."
+                                formControlName="typeAutre">
+                        </div>
+
+                        <!-- Statut -->
+                        <div class="col-md-6" [class.col-md-6]="!isTypeAutre">
+                            <label class="form-label fw-medium">Statut <span class="text-danger">*</span></label>
+                            <select class="form-select" formControlName="status"
+                                [class.is-invalid]="isInvalid('status')">
+                                <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+                            </select>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2 : Prestataire & Coût -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
+                        <i data-feather="tool" appFeatherIcon class="icon-sm me-2 text-warning"></i>
+                        Prestataire & Coût
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+
+                        <!-- Prestataire -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Prestataire / Garage <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" formControlName="provider"
+                                [class.is-invalid]="isInvalid('provider')">
+                                <option value="">-- Sélectionner le prestataire --</option>
+                                <option *ngFor="let p of providers" [value]="p">{{ p }}</option>
+                            </select>
+                            <div class="invalid-feedback">Le prestataire est requis.</div>
+                        </div>
+
+                        <!-- Prestataire personnalisé -->
+                        <div class="col-md-6" *ngIf="isProviderAutre">
+                            <label class="form-label fw-medium">Nom du prestataire <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" placeholder="Nom du garage / prestataire..."
+                                formControlName="providerAutre">
+                        </div>
+
+                        <!-- Technicien -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Technicien responsable</label>
+                            <input type="text" class="form-control" placeholder="Nom du technicien..."
+                                formControlName="technicien">
+                        </div>
+
+                        <!-- Coût -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Coût Total (FCFA) <span
+                                    class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" [class.is-invalid]="isInvalid('cost')"
+                                    placeholder="Ex: 45000" formControlName="cost" min="0">
+                                <span class="input-group-text">FCFA</span>
+                                <div class="invalid-feedback">Le coût est requis et doit être positif.</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3 : Prochaine Maintenance -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
+                        <i data-feather="calendar" appFeatherIcon class="icon-sm me-2 text-success"></i>
+                        Prochaine Maintenance (Optionnel)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Date de la prochaine maintenance</label>
+                            <input type="date" class="form-control" formControlName="nextMaintenanceDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Prochaine maintenance (km)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" placeholder="Ex: 50000"
+                                    formControlName="nextMaintenanceKm" min="0">
+                                <span class="input-group-text">km</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 4 : Notes & Observations -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
+                        <i data-feather="file-text" appFeatherIcon class="icon-sm me-2 text-secondary"></i>
+                        Notes & Observations
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Description / Travaux effectués</label>
+                            <textarea class="form-control" rows="4"
+                                placeholder="Décrivez les travaux effectués, les pièces remplacées, les observations techniques..."
+                                formControlName="description"></textarea>
+                            <div class="form-text text-muted">Optionnel — informations complémentaires sur
+                                l'intervention.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== ACTIONS ==================== -->
+            <div class="d-flex justify-content-end gap-2 mb-5">
+                <button type="button" class="btn btn-outline-secondary px-4" (click)="onCancel()"
+                    [disabled]="isSubmitting">
+                    <i data-feather="x" appFeatherIcon class="icon-sm me-1"></i> Annuler
+                </button>
+                <button type="submit" class="btn btn-primary px-5" [disabled]="isSubmitting">
+                    <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    <i *ngIf="!isSubmitting" data-feather="save" appFeatherIcon class="icon-sm me-1"></i>
+                    {{ isSubmitting ? 'Enregistrement...' : 'Enregistrer l\'Intervention' }}
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>

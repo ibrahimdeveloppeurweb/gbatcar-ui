@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import Swal from 'sweetalert2';
-import { NotificationService } from '../../../../../core/services/notification.service';
+import { NotificationService } from '../../../../../core/services/notification/notification.service';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({

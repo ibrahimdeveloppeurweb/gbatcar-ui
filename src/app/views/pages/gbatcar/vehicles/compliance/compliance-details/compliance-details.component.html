@@ -1,0 +1,252 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <h4 class="mb-3 mb-md-0">Détails de Conformité</h4>
+        <nav class="page-breadcrumb mb-0">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a routerLink="/gbatcar/vehicles/compliance">Conformité</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Fiche Véhicule</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row" *ngIf="item">
+    <div class="col-md-12 stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <div>
+                        <h5 class="card-title mb-1 text-primary">{{ item.vehicle }} <span
+                                class="text-secondary fw-normal">({{ item.licensePlate }})</span></h5>
+                        <p class="text-muted mb-0">Client Assigné : <span class="fw-bold text-dark">{{
+                                item.assignedClient }}</span></p>
+                    </div>
+                    <div>
+                        <span class="badge bg-success fs-6">En Règle</span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Administratif & Légal -->
+                    <div class="col-md-6 mb-4 mb-md-0">
+                        <h6 class="mb-3">
+                            <i data-feather="file-text" class="icon-sm text-primary me-2"></i> Administratif & Légal
+                        </h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="d-block fw-bold">Assurance (Tous Risques)</span>
+                                    <small class="text-muted" *ngIf="item.insurance.status === 'Valid'">Expire dans {{
+                                        item.insurance.daysLeft }} jours</small>
+                                </div>
+                                <span class="badge rounded-pill"
+                                    [ngClass]="{'bg-success': item.insurance.status === 'Valid', 'bg-warning text-dark': item.insurance.status === 'Expiring Soon', 'bg-danger': item.insurance.status === 'Expired'}">
+                                    {{ item.insurance.expiryDate | date:'dd/MM/yyyy' }}
+                                </span>
+                            </li>
+                            <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="d-block fw-bold">Carte Grise</span>
+                                    <small class="text-muted" *ngIf="item.roadTax.status === 'Valid'">Expire dans {{
+                                        item.roadTax.daysLeft }} jours</small>
+                                </div>
+                                <span class="badge rounded-pill"
+                                    [ngClass]="{'bg-success': item.roadTax.status === 'Valid', 'bg-warning text-dark': item.roadTax.status === 'Expiring Soon', 'bg-danger': item.roadTax.status === 'Expired'}">
+                                    {{ item.roadTax.expiryDate | date:'dd/MM/yyyy' }}
+                                </span>
+                            </li>
+                            <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="d-block fw-bold">Contrat Location-Vente</span>
+                                    <small class="text-muted">Type: {{ item.transportLicense.type }}</small>
+                                </div>
+                                <span class="badge rounded-pill"
+                                    [ngClass]="{'bg-success': item.transportLicense.status === 'Valid', 'bg-warning text-dark': item.transportLicense.status === 'Expiring Soon', 'bg-danger': item.transportLicense.status === 'Expired'}">
+                                    {{ item.transportLicense.expiryDate | date:'dd/MM/yyyy' }}
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Technique & Sécurité -->
+                    <div class="col-md-6">
+                        <h6 class="mb-3">
+                            <i data-feather="tool" class="icon-sm text-primary me-2"></i> Technique & Sécurité
+                        </h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="d-block fw-bold">Visite Technique</span>
+                                    <small class="text-muted" *ngIf="item.technicalInspection.status === 'Valid'">Expire
+                                        dans {{ item.technicalInspection.daysLeft }} jours</small>
+                                </div>
+                                <span class="badge rounded-pill"
+                                    [ngClass]="{'bg-success': item.technicalInspection.status === 'Valid', 'bg-warning text-dark': item.technicalInspection.status === 'Expiring Soon', 'bg-danger': item.technicalInspection.status === 'Expired'}">
+                                    {{ item.technicalInspection.expiryDate | date:'dd/MM/yyyy' }}
+                                </span>
+                            </li>
+                            <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">Extincteur</span>
+                                <span class="badge rounded-pill"
+                                    [ngClass]="{'bg-success': item.fireExtinguisher.status === 'Valid', 'bg-warning text-dark': item.fireExtinguisher.status === 'Expiring Soon', 'bg-danger': item.fireExtinguisher.status === 'Expired'}">
+                                    {{ item.fireExtinguisher.expiryDate | date:'dd/MM/yyyy' }}
+                                </span>
+                            </li>
+                            <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="d-block fw-bold">Maintenance Préventive</span>
+                                    <small class="text-muted">Kilométrage Actuel: {{
+                                        item.preventiveMaintenance.currentKm | number }} km</small>
+                                </div>
+                                <span class="badge bg-info rounded-pill">
+                                    Prochaine: {{ item.preventiveMaintenance.nextKm | number }} km
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-top">
+                    <button class="btn btn-outline-primary" routerLink="/gbatcar/vehicles/compliance">Retour à la
+                        liste</button>
+                    <button class="btn btn-primary ms-2" [routerLink]="['/gbatcar/vehicles/compliance/add']">Mettre à
+                        jour un document</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Historique des Documents -->
+<div class="row mt-4" *ngIf="item">
+    <div class="col-md-12 stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="card-title mb-0">Historique des Documents</h6>
+                    <small class="text-muted">Les coûts de renouvellement sont automatiquement portés au compte du
+                        locataire.</small>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date d'Ajout</th>
+                                <th>Type de Document</th>
+                                <th>Période de Validité</th>
+                                <th>Coût du Renouvellement</th>
+                                <th>Affectation</th>
+                                <th>Statut</th>
+                                <th>Fichier</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>10/01/2023</td>
+                                <td>Assurance (Tous Risques)</td>
+                                <td>15/01/2023 - 14/01/2024</td>
+                                <td class="fw-bold">185 000 FCFA</td>
+                                <td><span class="badge bg-info text-dark">Répercuté au locataire</span></td>
+                                <td><span class="badge bg-secondary">Archivé</span></td>
+                                <td><a href="#" class="text-primary"><i data-feather="download" appFeatherIcon
+                                            class="icon-sm"></i>
+                                        doc_assurance_2023.pdf</a></td>
+                            </tr>
+                            <tr>
+                                <td>05/02/2023</td>
+                                <td>Visite Technique</td>
+                                <td>10/02/2023 - 09/02/2024</td>
+                                <td class="fw-bold">45 000 FCFA</td>
+                                <td><span class="badge bg-info text-dark">Répercuté au locataire</span></td>
+                                <td><span class="badge bg-secondary">Archivé</span></td>
+                                <td><a href="#" class="text-primary"><i data-feather="download" appFeatherIcon
+                                            class="icon-sm"></i>
+                                        sicta_2023.pdf</a></td>
+                            </tr>
+                            <tr>
+                                <td>Aujourd'hui</td>
+                                <td>Assurance (Tous Risques)</td>
+                                <td>En cours jusqu'au {{ item.insurance.expiryDate | date:'dd/MM/yyyy' }}</td>
+                                <td class="fw-bold">195 000 FCFA</td>
+                                <td><span class="badge bg-info text-dark">Répercuté au locataire</span></td>
+                                <td><span class="badge bg-success">Actif</span></td>
+                                <td><a href="#" class="text-primary"><i data-feather="download" appFeatherIcon
+                                            class="icon-sm"></i>
+                                        doc_actuel.pdf</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gestion des Infractions & Contraventions -->
+<div class="row mt-4" *ngIf="item">
+    <div class="col-md-12 stretch-card">
+        <div class="card border-warning" style="border-left: 4px solid #f39c12 !important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="card-title mb-1">
+                            <i data-feather="alert-triangle" appFeatherIcon class="icon-sm text-warning me-2"></i>
+                            Gestion des Infractions & Contraventions
+                        </h6>
+                        <small class="text-muted">Les amendes reçues au nom de GbatCar sont répercutées sur le solde du
+                            locataire.</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-warning">
+                        <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Saisir une Infraction
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Type d'Infraction</th>
+                                <th>Description / Preuve</th>
+                                <th>Montant</th>
+                                <th>Affectation Financière</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Mock infraction data -->
+                            <tr>
+                                <td>15/01/2024</td>
+                                <td>Excès de Vitesse (GPS)</td>
+                                <td><a href="#" class="text-primary"><i data-feather="file" appFeatherIcon
+                                            class="icon-xs me-1"></i>rapport_vitesse_jan24.pdf</a></td>
+                                <td class="fw-bold text-danger">10 000 FCFA</td>
+                                <td><span class="badge bg-danger">Répercuté au locataire</span></td>
+                                <td><span class="badge bg-success">Payé</span></td>
+                            </tr>
+                            <tr>
+                                <td>03/03/2024</td>
+                                <td>Stationnement Interdit</td>
+                                <td><span class="text-muted fst-italic">PV N° AB-1234 – Plateau</span></td>
+                                <td class="fw-bold text-danger">5 000 FCFA</td>
+                                <td><span class="badge bg-warning text-dark">En attente</span></td>
+                                <td><span class="badge bg-warning text-dark">Non payé</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div *ngIf="false" class="text-center py-4 text-muted">
+                    <i data-feather="check-circle" appFeatherIcon class="icon-lg d-block mx-auto mb-2 text-success"></i>
+                    <small>Aucune infraction enregistrée pour ce véhicule.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row" *ngIf="!item">
+    <div class="col-md-12">
+        <div class="alert alert-danger">Document de conformité introuvable.</div>
+        <button class="btn btn-primary" routerLink="/gbatcar/vehicles/compliance">Retour à la liste</button>
+    </div>
+</div>

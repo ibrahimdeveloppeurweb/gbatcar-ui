@@ -5,16 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { NgApexchartsModule, ApexOptions } from 'ng-apexcharts';
 import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon.directive';
 import { ThemeCssVariableService, ThemeCssVariablesType } from '../../../../core/services/theme-css-variable.service';
+import { DashboardService } from '../../../../core/services';
 import {
-    MOCK_DASHBOARD_STATS,
-    MOCK_REVENUE_CHART_DATA,
-    MOCK_RECENT_ONBOARDING,
-    MOCK_MONTHLY_SALES_DATA,
-    MOCK_FLEET_STATUS,
-    MOCK_MAINTENANCE_ALERTS,
-    MOCK_EXPIRING_CONTRACTS,
-    MOCK_RECENT_ACTIVITY
-} from '../../../../core/mock/gbatcar-dashboard.mock';
+    DashboardStats, RecentOnboarding, DashboardMaintenanceAlert,
+    ExpiringContract, RecentActivity, RiskDistribution,
+    UrgentAction, MonthlySalesData, RevenueChartData
+} from '../../../../core/models';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 
@@ -34,12 +30,22 @@ import Swal from 'sweetalert2';
 })
 export class GbatcarDashboardComponent implements OnInit {
 
-    stats = { ...MOCK_DASHBOARD_STATS }; // Clone to allow modification
-    recentOnboardings = MOCK_RECENT_ONBOARDING;
-    maintenanceAlerts = MOCK_MAINTENANCE_ALERTS;
-    expiringContracts = MOCK_EXPIRING_CONTRACTS;
-    recentActivity = MOCK_RECENT_ACTIVITY;
-    fleetStatus = [...MOCK_FLEET_STATUS]; // Clone to allow modification
+    private dashboardService = inject(DashboardService);
+
+    stats: DashboardStats = {
+        activeClients: 0, activeClientsGrowth: 0, totalVehicles: 0, availableVehicles: 0,
+        monthlyRevenue: 0, monthlyRevenueGrowth: 0, pendingPaymentsCount: 0, pendingPaymentsAmount: 0,
+        portfolioValue: 0, portfolioValueGrowth: 0, collectionRate: 0, collectionRateTarget: 0,
+        idleRate: 0, idleRateTrend: 'up'
+    };
+    recentOnboardings: RecentOnboarding[] = [];
+    maintenanceAlerts: DashboardMaintenanceAlert[] = [];
+    expiringContracts: ExpiringContract[] = [];
+    recentActivity: RecentActivity[] = [];
+    riskDistribution: RiskDistribution[] = [];
+    urgentActions: UrgentAction[] = [];
+    monthlySalesData: MonthlySalesData[] = [];
+    revenueChartData: RevenueChartData[] = [];
 
     // Advanced Filters 
     showAdvancedFilters: boolean = true;
@@ -56,30 +62,15 @@ export class GbatcarDashboardComponent implements OnInit {
     }
 
     applyAdvancedFilters() {
-        // Simulate data update logic based on filters
-        // In a real app, this would trigger API calls with the filter criteria
-
-        // Randomly adjust stats just to show the UI reacting
-        const variance = Math.random() * 0.2 + 0.9; // random multiplier between 0.9 and 1.1
-
-        this.stats.activeClients = Math.round(MOCK_DASHBOARD_STATS.activeClients * variance);
-        this.stats.totalVehicles = Math.round(MOCK_DASHBOARD_STATS.totalVehicles * variance);
-        this.stats.availableVehicles = Math.round(MOCK_DASHBOARD_STATS.availableVehicles * variance);
-        this.stats.monthlyRevenue = Math.round(MOCK_DASHBOARD_STATS.monthlyRevenue * variance);
-        this.stats.pendingPaymentsCount = Math.round(MOCK_DASHBOARD_STATS.pendingPaymentsCount * variance);
-
-        // Slightly modify chart data to show refresh
-        this.clientsChartOptions.series[0].data = this.clientsChartOptions.series[0].data.map((v: number) => Math.round(v * variance));
-        this.vehiclesChartOptions.series[0].data = this.vehiclesChartOptions.series[0].data.map((v: number) => Math.round(v * variance));
-
+        this.fetchDashboardData();
         Swal.fire({
             toast: true,
             position: 'top-end',
             showConfirmButton: false,
             timer: 3000,
             timerProgressBar: true,
-            icon: 'success',
-            title: 'Données du tableau de bord actualisées'
+            icon: 'info',
+            title: 'Actualisation des données...'
         });
     }
 
@@ -91,12 +82,7 @@ export class GbatcarDashboardComponent implements OnInit {
         this.advContractType = '';
         this.advClientStatus = '';
 
-        // Reset to original mock data
-        this.stats = { ...MOCK_DASHBOARD_STATS };
-        this.clientsChartOptions.series[0].data = [110, 115, 112, 118, 120, 122, 124];
-        this.vehiclesChartOptions.series[0].data = [140, 142, 145, 148, 149, 150, 150];
-
-        this.applyAdvancedFilters(); // Recalculate with default empty filters (simulated)
+        this.applyAdvancedFilters();
     }
 
     public clientsChartOptions: ApexOptions | any;
@@ -111,12 +97,48 @@ export class GbatcarDashboardComponent implements OnInit {
     constructor() { }
 
     ngOnInit(): void {
+        this.updateCharts(); // Initialize with empty values to avoid HTML errors
+        this.fetchDashboardData();
+    }
+
+    fetchDashboardData() {
+        const filters = {
+            period: this.advPeriod,
+            dateMin: this.advDateMin,
+            dateMax: this.advDateMax,
+            category: this.advVehicleCategory,
+            contractType: this.advContractType
+        };
+
+        this.dashboardService.getDashboardData(filters).subscribe({
+            next: (res) => {
+                if (res) {
+                    this.stats = res.stats || this.stats;
+                    this.recentOnboardings = res.recentOnboardings || [];
+                    this.maintenanceAlerts = res.maintenanceAlerts || [];
+                    this.expiringContracts = res.expiringContracts || [];
+                    this.recentActivity = res.recentActivity || [];
+                    this.riskDistribution = res.riskDistribution || [];
+                    this.urgentActions = res.urgentActions || [];
+                    this.monthlySalesData = res.monthlySalesData || [];
+                    this.revenueChartData = res.revenueChartData || [];
+
+                    this.updateCharts();
+                }
+            },
+            error: (err) => {
+                console.error('Erreur chargement dashboard', err);
+            }
+        });
+    }
+
+    updateCharts() {
         this.clientsChartOptions = this.getClientsChartOptions(this.themeCssVariables);
         this.vehiclesChartOptions = this.getVehiclesChartOptions(this.themeCssVariables);
         this.revenueMiniChartOptions = this.getRevenueMiniChartOptions(this.themeCssVariables);
         this.revenueChartOptions = this.getRevenueChartOptions(this.themeCssVariables);
         this.vehicleSalesChartOptions = this.getVehicleSalesChartOptions(this.themeCssVariables);
-        this.fleetStatusChartOptions = this.getFleetStatusChartOptions(this.themeCssVariables);
+        this.fleetStatusChartOptions = this.getRiskDistributionChartOptions(this.themeCssVariables);
     }
 
     exportData() {
@@ -173,8 +195,8 @@ export class GbatcarDashboardComponent implements OnInit {
     }
 
     getRevenueChartOptions(themeVariables: ThemeCssVariablesType) {
-        const dates = MOCK_REVENUE_CHART_DATA.map(d => d.date);
-        const amounts = MOCK_REVENUE_CHART_DATA.map(d => d.amount);
+        const dates = this.revenueChartData.map(d => d.date);
+        const amounts = this.revenueChartData.map(d => d.amount);
 
         return {
             series: [{
@@ -239,8 +261,8 @@ export class GbatcarDashboardComponent implements OnInit {
     }
 
     getVehicleSalesChartOptions(themeVariables: ThemeCssVariablesType) {
-        const categories = MOCK_MONTHLY_SALES_DATA.map(d => d.month);
-        const data = MOCK_MONTHLY_SALES_DATA.map(d => d.sales);
+        const categories = this.monthlySalesData.map(d => d.month);
+        const data = this.monthlySalesData.map(d => d.sales);
 
         return {
             series: [{
@@ -306,15 +328,15 @@ export class GbatcarDashboardComponent implements OnInit {
         }
     }
 
-    getFleetStatusChartOptions(themeVariables: ThemeCssVariablesType) {
+    getRiskDistributionChartOptions(themeVariables: ThemeCssVariablesType) {
         return {
-            series: MOCK_FLEET_STATUS.map(s => s.value),
+            series: this.riskDistribution.map(s => s.value),
             chart: {
                 height: 300,
                 type: 'donut',
             },
-            labels: MOCK_FLEET_STATUS.map(s => s.label),
-            colors: [themeVariables.primary, themeVariables.success, themeVariables.danger],
+            labels: this.riskDistribution.map(s => s.label),
+            colors: [themeVariables.success, themeVariables.warning, themeVariables.danger],
             stroke: {
                 colors: ['#fff']
             },

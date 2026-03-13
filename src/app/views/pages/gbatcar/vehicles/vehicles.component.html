@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
     <div>
-        <h4 class="mb-3 mb-md-0">Parc Automobile</h4>
-        <p class="text-secondary">Gérez l'ensemble des véhicules de la flotte GbatCar.</p>
+        <h4 class="mb-3 mb-md-0">Flotte Active</h4>
+        <p class="text-secondary">Tableau de bord opérationnel des véhicules en circulation & contrats en cours.</p>
     </div>
     <div class="d-flex align-items-center flex-wrap text-nowrap">
         <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0 me-2"
@@ -13,6 +13,62 @@
             <i data-feather="plus-circle" appFeatherIcon class="btn-icon-prepend"></i>
             Nouveau Véhicule
         </button>
+    </div>
+</div>
+
+<!-- KPI Row -->
+<div class="row mb-4">
+    <div class="col-md-3 col-6 mb-3 mb-md-0">
+        <div class="card border-left-success h-100" style="border-left: 4px solid #2ecc71;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Flotte Totale</p>
+                        <h4 class="fw-bold mb-0">{{ vehicles.length }}</h4>
+                    </div>
+                    <i data-feather="truck" appFeatherIcon class="icon-lg text-success"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #3498db;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Assignés</p>
+                        <h4 class="fw-bold mb-0">{{ vehicles | countWhere:'status':'Assigné' }}</h4>
+                    </div>
+                    <i data-feather="user-check" appFeatherIcon class="icon-lg text-primary"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card h-100" style="border-left: 4px solid #e74c3c;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">En Alerte Paiement</p>
+                        <h4 class="fw-bold mb-0 text-danger">{{ alertCount }}</h4>
+                    </div>
+                    <i data-feather="alert-triangle" appFeatherIcon class="icon-lg text-danger"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card h-100" style="border-left: 4px solid #f39c12;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Entretien Imminent</p>
+                        <h4 class="fw-bold mb-0 text-warning">{{ maintenanceAlertCount }}</h4>
+                    </div>
+                    <i data-feather="tool" appFeatherIcon class="icon-lg text-warning"></i>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -29,12 +85,12 @@
                         <input type="text" class="form-control form-control-sm" placeholder="Marque, Modèle, Plaque..."
                             [(ngModel)]="advSearchTerm">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label fs-12px text-secondary mb-1">Assignation (Client)</label>
                         <input type="text" class="form-control form-control-sm" placeholder="Nom du client ou 'Aucun'"
                             [(ngModel)]="advAssignedClient">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label fs-12px text-secondary mb-1">Statut du Véhicule</label>
                         <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
                             <option value="">Tous</option>
@@ -42,6 +98,15 @@
                             <option value="Assigné">Assigné</option>
                             <option value="En Maintenance">En Maintenance</option>
                             <option value="Hors Service">Hors Service</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fs-12px text-secondary mb-1">Santé Paiement</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="advPaymentFilter">
+                            <option value="">Tous</option>
+                            <option value="À jour">À jour</option>
+                            <option value="En retard">En retard</option>
+                            <option value="Critique">Critique</option>
                         </select>
                     </div>
 
@@ -98,8 +163,39 @@
     <div class="col-md-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
+                <!-- Vue Onglets : Tous / Bons Payeurs / En Alerte / À Récupérer -->
+                <ul class="nav nav-tabs nav-tabs-line mb-3" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link" [class.active]="activeTab==='all'" (click)="setTab('all')"
+                            style="cursor:pointer">
+                            Tous <span class="badge bg-secondary ms-1">{{ vehicles.length }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" [class.active]="activeTab==='ok'" (click)="setTab('ok')"
+                            style="cursor:pointer">
+                            <i data-feather="check-circle" appFeatherIcon class="icon-xs me-1 text-success"></i>
+                            Bons Payeurs <span class="badge bg-success ms-1">{{ goodPayersCount }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" [class.active]="activeTab==='alert'" (click)="setTab('alert')"
+                            style="cursor:pointer">
+                            <i data-feather="alert-circle" appFeatherIcon class="icon-xs me-1 text-warning"></i>
+                            En Alerte <span class="badge bg-warning text-dark ms-1">{{ alertCount }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" [class.active]="activeTab==='critical'"
+                            (click)="setTab('critical')" style="cursor:pointer">
+                            <i data-feather="alert-octagon" appFeatherIcon class="icon-xs me-1"></i>
+                            À Récupérer <span class="badge bg-danger ms-1">{{ criticalCount }}</span>
+                        </a>
+                    </li>
+                </ul>
+
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="card-title mb-0">Flotte GbatCar ({{ filteredVehicles.length }})</h6>
+                    <h6 class="card-title mb-0">{{ tabLabel }} ({{ filteredVehicles.length }})</h6>
                     <div class="d-flex align-items-center">
                         <input type="text" class="form-control form-control-sm me-2"
                             placeholder="Recherche par plaque, marque..." style="width: 250px;"
@@ -114,24 +210,35 @@
                         </select>
                     </div>
                 </div>
+
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover align-middle">
                         <thead>
                             <tr>
-                                <th>Véhicule (Marque & Modèle)</th>
+                                <th>Véhicule</th>
                                 <th>Immatriculation</th>
-                                <th>Année</th>
                                 <th>Kilométrage</th>
-                                <th>Statut</th>
-                                <th>Assignation</th>
+                                <th>Statut Opérationnel</th>
+                                <th>Locataire</th>
+                                <th>Santé Contrat</th>
+                                <th>Progression Remboursement</th>
+                                <th>GPS</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let vehicle of filteredVehicles">
-                                <td class="fw-medium text-dark">{{ vehicle.brand }} {{ vehicle.model }}</td>
+                            <tr *ngFor="let vehicle of filteredVehicles"
+                                [class.table-danger]="vehicle.paymentStatus === 'Critique'"
+                                [class.table-warning]="vehicle.paymentStatus === 'En retard'">
+                                <td>
+                                    <div class="fw-medium text-dark">{{ vehicle.brand }} {{ vehicle.model }}</div>
+                                    <small class="text-muted">{{ vehicle.trim }} • {{ vehicle.year }}</small>
+                                    <!-- Alerte entretien -->
+                                    <span class="badge bg-warning text-dark ms-1" *ngIf="vehicle.maintenanceAlert">
+                                        <i data-feather="tool" appFeatherIcon class="icon-xs"></i> Entretien
+                                    </span>
+                                </td>
                                 <td class="fw-bold text-primary">{{ vehicle.licensePlate }}</td>
-                                <td>{{ vehicle.year }}</td>
                                 <td>{{ vehicle.mileage | number }} km</td>
                                 <td>
                                     <span class="badge" [ngClass]="{
@@ -148,19 +255,69 @@
                                         {{ vehicle.assignedClient }}
                                     </span>
                                 </td>
+                                <!-- Santé financière du contrat -->
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary me-2"
-                                        [routerLink]="['details', vehicle.id]">
+                                    <span *ngIf="vehicle.paymentStatus !== '-'" class="badge" [ngClass]="{
+                                        'bg-success': vehicle.paymentStatus === 'À jour',
+                                        'bg-warning text-dark': vehicle.paymentStatus === 'En retard',
+                                        'bg-danger': vehicle.paymentStatus === 'Critique',
+                                        'bg-secondary': vehicle.paymentStatus === 'Soldé'
+                                    }">
+                                        {{ vehicle.paymentStatus }}
+                                        <span *ngIf="vehicle.daysLate > 0"> (J+{{ vehicle.daysLate }})</span>
+                                    </span>
+                                    <span *ngIf="vehicle.paymentStatus === '-'" class="text-muted fst-italic">-</span>
+                                </td>
+                                <!-- Barre de progression remboursement -->
+                                <td style="min-width: 150px;">
+                                    <div *ngIf="vehicle.totalContractAmount > 0">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <small class="text-muted">{{ vehicle.contractProgress }}%</small>
+                                            <small class="text-muted">{{ vehicle.paidAmount | number }} / {{
+                                                vehicle.totalContractAmount | number }} FCFA</small>
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar" [ngClass]="{
+                                                'bg-success': vehicle.contractProgress > 50,
+                                                'bg-primary': vehicle.contractProgress > 20 && vehicle.contractProgress <= 50,
+                                                'bg-warning': vehicle.contractProgress <= 20,
+                                                'bg-danger': vehicle.paymentStatus === 'Critique'
+                                            }" role="progressbar" [style.width.%]="vehicle.contractProgress"></div>
+                                        </div>
+                                    </div>
+                                    <span *ngIf="vehicle.totalContractAmount === 0"
+                                        class="text-muted fst-italic small">Pas de contrat actif</span>
+                                </td>
+                                <!-- Statut GPS -->
+                                <td>
+                                    <span class="badge rounded-pill" [ngClass]="{
+                                        'bg-success': vehicle.gpsStatus === 'Connecté',
+                                        'bg-danger': vehicle.gpsStatus === 'Déconnecté',
+                                        'bg-secondary': vehicle.gpsStatus === 'Non installé'
+                                    }">
+                                        <i data-feather="map-pin" appFeatherIcon class="icon-xs me-1"></i>
+                                        {{ vehicle.gpsStatus }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1"
+                                        [routerLink]="['details', vehicle.id]" title="Voir détails">
                                         <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-secondary"
-                                        [routerLink]="['edit', vehicle.id]">
+                                    <button class="btn btn-sm btn-outline-secondary me-1"
+                                        [routerLink]="['edit', vehicle.id]" title="Éditer">
                                         <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" title="Immobiliser (GPS)"
+                                        *ngIf="vehicle.paymentStatus === 'Critique' && vehicle.gpsStatus === 'Connecté'">
+                                        <i data-feather="zap-off" appFeatherIcon class="icon-sm"></i>
                                     </button>
                                 </td>
                             </tr>
                             <tr *ngIf="filteredVehicles.length === 0">
-                                <td colspan="7" class="text-center py-4 text-muted">
+                                <td colspan="9" class="text-center py-4 text-muted">
+                                    <i data-feather="inbox" appFeatherIcon
+                                        class="icon-lg d-block mx-auto mb-2 text-muted"></i>
                                     Aucun véhicule trouvé avec ces critères.
                                 </td>
                             </tr>

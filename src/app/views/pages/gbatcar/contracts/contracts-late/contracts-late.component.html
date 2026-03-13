@@ -12,6 +12,50 @@
     </div>
 </div>
 
+<!-- Recovery Dashboard KPIs -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #e74c3c;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Total Arriérés (En souffrance)</p>
+                        <h3 class="fw-bold mb-0 text-danger">{{ totalArrears | number }} <small
+                                class="fs-14px">FCFA</small></h3>
+                    </div>
+                    <i data-feather="trending-down" appFeatherIcon class="icon-lg text-danger"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #f39c12;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Cas Critiques (30j+)</p>
+                        <h4 class="fw-bold mb-0 text-dark">{{ criticalCasesCount }} dossiers</h4>
+                    </div>
+                    <i data-feather="alert-octagon" appFeatherIcon class="icon-lg text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100" style="border-left: 4px solid #2ecc71;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Promesses de Paiement</p>
+                        <h4 class="fw-bold mb-0 text-dark">{{ promiseToPayCount }} en attente</h4>
+                    </div>
+                    <i data-feather="calendar" appFeatherIcon class="icon-lg text-success"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Filtres Avancés -->
 <div class="row mb-3" *ngIf="showAdvancedFilters">
     <div class="col-md-12">
@@ -78,49 +122,72 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover align-middle">
                         <thead>
                             <tr>
-                                <th>N° Contrat</th>
                                 <th>Client (Locataire)</th>
-                                <th>Véhicule Associé</th>
-                                <th>Retard (Est.)</th>
-                                <th>Niveau d'Alerte</th>
-                                <th>Actions Requises</th>
+                                <th>Détails Contrat</th>
+                                <th>Retard</th>
+                                <th>Segment (Aging)</th>
+                                <th>Montant Dû</th>
+                                <th>Actions de Recouvrement</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr *ngFor="let contract of filteredContracts">
-                                <td class="fw-medium text-dark">{{ contract.id }}</td>
                                 <td>
                                     <a [routerLink]="['/gbatcar/clients/details', contract.clientId]"
-                                        class="text-primary fw-medium">{{ contract.clientName }}</a>
+                                        class="text-primary fw-medium d-block">{{ contract.clientName }}</a>
+                                    <span class="text-muted tx-11">{{ contract.clientId }}</span>
                                 </td>
-                                <td>{{ contract.vehicle }}</td>
                                 <td>
-                                    <span class="text-danger fw-bold">{{ calculateLateDays() }} jours</span>
+                                    <div class="tx-13 fw-medium">{{ contract.id }}</div>
+                                    <div class="text-muted tx-11">{{ contract.vehicle }}</div>
+                                </td>
+                                <td>
+                                    <span class="text-danger fw-bold fs-14px">{{ calculateLateDays(contract.id) }}
+                                        jours</span>
+                                    <i data-feather="trending-up" appFeatherIcon class="icon-xs text-danger ms-1"></i>
                                 </td>
                                 <td>
                                     <span class="badge" [ngClass]="{
-                                        'bg-warning text-dark': contract.paymentStatus === 'En retard',
-                                        'bg-danger': contract.paymentStatus === 'Impayé définitif'
+                                        'bg-info-subtle text-info border border-info': getAgingSegment(contract) === '1-7j',
+                                        'bg-warning-subtle text-warning border border-warning': getAgingSegment(contract) === '8-15j',
+                                        'bg-orange-subtle text-orange border border-orange': getAgingSegment(contract) === '16-30j',
+                                        'bg-danger text-white': getAgingSegment(contract) === '30j+'
                                     }">
-                                        {{ contract.paymentStatus === 'En retard' ? 'Risque Modéré' : 'Critique' }}
+                                        {{ getAgingSegment(contract) }}
                                     </span>
                                 </td>
+                                <td class="fw-bold text-dark">
+                                    {{ (contract.totalAmount - contract.paidAmount) | number }} <small>FCFA</small>
+                                </td>
                                 <td>
-                                    <button class="btn btn-xs btn-outline-warning me-2" title="Relancer par SMS">
-                                        <i data-feather="message-circle" appFeatherIcon class="icon-sm"></i> SMS
-                                    </button>
-                                    <button class="btn btn-xs btn-outline-danger" title="Mise en demeure">
-                                        <i data-feather="alert-triangle" appFeatherIcon class="icon-sm"></i> Pénalité
-                                    </button>
+                                    <div class="btn-group">
+                                        <button class="btn btn-icon btn-xs btn-outline-info" title="Journal d'appels">
+                                            <i data-feather="phone" appFeatherIcon class="icon-xs"></i>
+                                        </button>
+                                        <button class="btn btn-icon btn-xs btn-outline-warning"
+                                            title="Envoi SMS Relance">
+                                            <i data-feather="message-square" appFeatherIcon class="icon-xs"></i>
+                                        </button>
+                                        <button class="btn btn-icon btn-xs btn-outline-danger"
+                                            title="Inhiber GPS / Coupure Moteur"
+                                            *ngIf="calculateLateDays(contract.id) > 15">
+                                            <i data-feather="power" appFeatherIcon class="icon-xs"></i>
+                                        </button>
+                                        <button class="btn btn-icon btn-xs btn-outline-secondary"
+                                            title="Plus d'actions">
+                                            <i data-feather="more-vertical" appFeatherIcon class="icon-xs"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             <tr *ngIf="filteredContracts.length === 0">
-                                <td colspan="6" class="text-center py-4 text-success fw-medium">
-                                    <i data-feather="check-circle" appFeatherIcon class="me-2 mb-1"></i>
-                                    Excellente nouvelle : Aucun retard de paiement détecté !
+                                <td colspan="6" class="text-center py-5 text-success fw-medium bg-light">
+                                    <i data-feather="shield-check" appFeatherIcon class="me-2 mb-1"
+                                        style="width: 30px; height: 30px;"></i>
+                                    <div class="mt-2">Excellent : Aucun retard de paiement détecté sur la flotte !</div>
                                 </td>
                             </tr>
                         </tbody>

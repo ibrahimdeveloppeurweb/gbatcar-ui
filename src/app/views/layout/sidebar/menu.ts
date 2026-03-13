@@ -17,12 +17,25 @@ export const MENU: MenuItem[] = [
   {
     label: 'Clients et Locataires',
     icon: 'users',
-    link: '/gbatcar/clients'
+    subItems: [
+      {
+        label: 'Tableau de bord',
+        link: '/gbatcar/clients/dashboard',
+      },
+      {
+        label: 'Tous les Clients',
+        link: '/gbatcar/clients',
+      }
+    ]
   },
   {
     label: 'Parc Automobile',
     icon: 'truck',
     subItems: [
+      {
+        label: 'Tableau de bord',
+        link: '/gbatcar/vehicles/dashboard',
+      },
       {
         label: 'Catalogue & Arrivages',
         link: '/gbatcar/vehicles/catalog',
@@ -42,6 +55,10 @@ export const MENU: MenuItem[] = [
     icon: 'file-text',
     subItems: [
       {
+        label: 'Tableau de bord',
+        link: '/gbatcar/contracts/dashboard',
+      },
+      {
         label: 'Tous les Contrats',
         link: '/gbatcar/contracts',
       },
@@ -60,6 +77,10 @@ export const MENU: MenuItem[] = [
     icon: 'dollar-sign',
     subItems: [
       {
+        label: 'Tableau de bord',
+        link: '/gbatcar/payments/dashboard',
+      },
+      {
         label: 'Encaissements',
         link: '/gbatcar/payments',
       },
@@ -70,9 +91,13 @@ export const MENU: MenuItem[] = [
     ]
   },
   {
-    label: 'Maintenance VTC',
+    label: 'Maintenance',
     icon: 'tool',
     subItems: [
+      {
+        label: 'Tableau de bord',
+        link: '/gbatcar/maintenance/dashboard',
+      },
       {
         label: 'Interventions',
         link: '/gbatcar/maintenance',
@@ -95,8 +120,16 @@ export const MENU: MenuItem[] = [
     icon: 'settings',
     subItems: [
       {
+        label: 'Tableau de bord',
+        link: '/gbatcar/admin/dashboard',
+      },
+      {
         label: 'Collaborateurs',
         link: '/gbatcar/admin/users',
+      },
+      {
+        label: 'Permissions',
+        link: '/gbatcar/admin/permissions',
       },
       {
         label: 'Paramètres Globaux',

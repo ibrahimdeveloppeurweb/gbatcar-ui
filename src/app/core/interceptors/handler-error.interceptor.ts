@@ -3,7 +3,7 @@ import { HttpInterceptorFn, HttpResponse, HttpErrorResponse } from '@angular/com
 import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 import Swal from 'sweetalert2';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../services/auth/auth.service';
 
 /**
  * handlerErrorInterceptor — Intercepte les réponses HTTP pour :

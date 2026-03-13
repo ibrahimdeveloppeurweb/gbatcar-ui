@@ -15,6 +15,11 @@ import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon
 export class ClientsComponent implements OnInit {
   clients = MOCK_CLIENTS;
 
+  // KPI computed properties
+  get activeCount(): number { return this.clients.filter(c => c.status === 'Actif').length; }
+  get lateCount(): number { return this.clients.filter(c => c.status === 'Actif (Retard)').length; }
+  get pendingCount(): number { return this.clients.filter(c => c.status === 'En Attente Validation').length; }
+
   // 1. Quick Filters (Inside table header)
   quickSearchTerm: string = '';
   quickStatusFilter: string = '';

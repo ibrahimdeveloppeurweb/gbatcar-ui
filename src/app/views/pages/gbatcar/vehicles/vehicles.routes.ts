@@ -5,6 +5,10 @@ import { VehicleDetailsComponent } from './vehicle-details/vehicle-details.compo
 
 export const vehiclesRoutes: Routes = [
     {
+        path: 'dashboard',
+        loadComponent: () => import('./vehicle-dashboard/vehicle-dashboard.component').then(m => m.VehicleDashboardComponent)
+    },
+    {
         path: '',
         component: VehiclesComponent
     },
@@ -15,6 +19,14 @@ export const vehiclesRoutes: Routes = [
     {
         path: 'compliance',
         loadComponent: () => import('./compliance/compliance.component').then(m => m.ComplianceComponent)
+    },
+    {
+        path: 'compliance/add',
+        loadComponent: () => import('./compliance/compliance-add/compliance-add.component').then(m => m.ComplianceAddComponent)
+    },
+    {
+        path: 'compliance/details/:id',
+        loadComponent: () => import('./compliance/compliance-details/compliance-details.component').then(m => m.ComplianceDetailsComponent)
     },
     {
         path: 'new',

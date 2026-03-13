@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ThemeModeService } from '../../../core/services/theme-mode.service';
-import { AuthService, UserSession } from '../../../core/services/auth.service';
+import { AuthService, UserSession } from '../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-navbar',

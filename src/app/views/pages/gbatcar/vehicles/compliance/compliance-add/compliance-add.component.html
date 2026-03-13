@@ -1,0 +1,86 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div>
+        <h4 class="mb-3 mb-md-0">Nouveau Document de Conformité</h4>
+        <nav class="page-breadcrumb mb-0">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a routerLink="/gbatcar/vehicles/compliance">Conformité</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Nouveau Document</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Informations du Document</h6>
+                <form>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="mb-3">
+                                <label class="form-label">Véhicule</label>
+                                <select class="form-select">
+                                    <option value="" disabled selected>Sélectionner un véhicule...</option>
+                                    <option *ngFor="let v of vehicles" [value]="v.id">{{v.vehicle}} ({{v.licensePlate}})
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="mb-3">
+                                <label class="form-label">Type de Document</label>
+                                <select class="form-select">
+                                    <option value="insurance">Assurance (Tous Risques)</option>
+                                    <option value="roadTax">Carte Grise</option>
+                                    <option value="transportLicense">Contrat Location-Vente</option>
+                                    <option value="technicalInspection">Visite Technique</option>
+                                    <option value="fireExtinguisher">Extincteur & Sécurité</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="mb-3">
+                                <label class="form-label">Date de délivrance / Début</label>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="mb-3">
+                                <label class="form-label">Date d'expiration / Fin</label>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="mb-3">
+                                <label class="form-label">Fichier Scanné (PDF/IMG)</label>
+                                <input type="file" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="mb-3">
+                                <label class="form-label">Notes et Observations</label>
+                                <textarea class="form-control" rows="4"
+                                    placeholder="Saisir des détails optionnels..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-3"
+                        routerLink="/gbatcar/vehicles/compliance">Enregistrer le document</button>
+                    <button type="button" class="btn btn-outline-secondary mt-3 ms-2"
+                        routerLink="/gbatcar/vehicles/compliance">Annuler</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

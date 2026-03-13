@@ -7,6 +7,14 @@ import { MaintenanceDetailsComponent } from './maintenance-details/maintenance-d
 
 export const maintenanceRoutes: Routes = [
     {
+        path: 'dashboard',
+        loadComponent: () => import('./maintenance-dashboard/maintenance-dashboard.component').then(m => m.MaintenanceDashboardComponent)
+    },
+    {
+        path: 'new',
+        loadComponent: () => import('./maintenance-form/maintenance-form.component').then(m => m.MaintenanceFormComponent)
+    },
+    {
         path: '',
         component: MaintenanceComponent
     },

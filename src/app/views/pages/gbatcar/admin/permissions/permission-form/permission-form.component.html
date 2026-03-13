@@ -1,0 +1,129 @@
+<div class="row">
+    <div class="col-md-12 stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">{{ isEditMode ? 'Modifier' : 'Nouveau' }} Rôle / Profil</h6>
+                <p class="text-muted mb-4">Gérez les informations du rôle et définissez ses permissions détaillées
+                    d'accès aux différents modules de la plateforme GbatCar.</p>
+
+                <form (ngSubmit)="savePermission()">
+                    <!-- Informations Générales du Rôle -->
+                    <div class="row mb-4 pb-3 border-bottom">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nom du Profil / Rôle *</label>
+                            <input type="text" class="form-control" [(ngModel)]="roleName" name="roleName"
+                                placeholder="ex: Admin, Gérant, Comptable..." required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" [(ngModel)]="roleDescription" name="roleDescription" rows="1"
+                                placeholder="Courte description des attributions de ce rôle"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Matrice des Permissions (Accès Modulaires) -->
+                    <h6 class="card-title mb-3 text-secondary">Matrice des Permissions</h6>
+                    <p class="fs-13px text-muted mb-3">Cochez les droits d'accès accordés à ce rôle pour chaque module et
+                        sous-module. Les actions disponibles dépendent de l'API rattachée.</p>
+
+                    <div class="row">
+                        <!-- Itération sur les Modules Principaux -->
+                        <div *ngFor="let mod of modules; let i = index" class="col-12 mb-3">
+                            <div class="card border shadow-none" style="border-radius: 8px;">
+                                <!-- En-tête du Module Principal -->
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center py-2"
+                                    style="border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                                    <div class="d-flex align-items-center">
+                                        <!-- Utilisation d'une icône par défaut ou dynamique si dispo -->
+                                        <i data-feather="grid" appFeatherIcon class="icon-md me-2 text-primary"></i>
+                                        <h5 class="mb-0 fs-15px fw-bold">{{ mod.name }}</h5>
+                                        <span class="badge bg-primary ms-3 rounded-pill bg-opacity-10 text-primary">{{ mod.subItems?.length || 0 }} sous-menus</span>
+                                    </div>
+
+                                    <!-- Switch global pour "Tout sélectionner" le module et ses enfants -->
+                                    <div class="form-check form-switch m-0 d-flex align-items-center">
+                                        <input type="checkbox" class="form-check-input mt-0 me-2"
+                                            style="cursor: pointer;" (change)="toggleAll(mod, $event)"
+                                            id="selectAll_{{ mod.id }}">
+                                        <label class="form-check-label fs-12px text-muted fw-bold"
+                                            for="selectAll_{{ mod.id }}" style="cursor: pointer;">SélectionGlobale</label>
+                                    </div>
+                                </div>
+
+                                <div class="card-body py-3">
+                                    <!-- If there are subItems, iterate over them -->
+                                    <ng-container *ngIf="mod.subItems && mod.subItems.length > 0; else noSubItems">
+                                        <div *ngFor="let child of mod.subItems" class="mb-4">
+
+                                            <!-- En-tête du sous-menu -->
+                                            <div
+                                                class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                                                <h6 class="mb-0 fs-13px text-primary"><i data-feather="corner-down-right"
+                                                        appFeatherIcon class="icon-sm me-1"></i> {{ child.name }}</h6>
+                                            </div>
+
+                                            <div class="row g-3 ps-3">
+                                                <!-- Actions Dynamiques -->
+                                                <div *ngIf="child.actions && child.actions.length > 0; else noChildActions" class="col-12">
+                                                    <div class="row g-3">
+                                                        <div *ngFor="let action of child.actions; trackBy: trackByActionId" class="col-md-3 col-sm-4 col-6">
+                                                            <div class="form-check d-flex align-items-center">
+                                                                <input type="checkbox"
+                                                                    class="form-check-input custom-checkbox me-2 mt-0"
+                                                                    [(ngModel)]="action.checked"
+                                                                    [name]="'check_' + action.id"
+                                                                    [id]="'check_' + action.id">
+                                                                <label class="form-check-label fs-12px" [for]="'check_' + action.id" [class.text-muted]="!action.checked">{{ action.name }}</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <ng-template #noChildActions>
+                                                    <div class="col-12">
+                                                        <p class="text-muted fs-12px fst-italic mb-0">Aucune permission spécifique pour ce sous-menu.</p>
+                                                    </div>
+                                                </ng-template>
+                                            </div>
+                                        </div>
+                                    </ng-container>
+
+                                    <!-- Else branch for top-level menus without children (like Dashboard, Chat, Calendar) -->
+                                    <ng-template #noSubItems>
+                                      <div *ngIf="mod.actions && mod.actions.length > 0; else noModActions" class="row g-3">
+                                          <div *ngFor="let action of mod.actions; trackBy: trackByActionId" class="col-md-3 col-sm-4 col-6">
+                                              <div class="form-check d-flex align-items-center">
+                                                  <input type="checkbox"
+                                                      class="form-check-input custom-checkbox me-2 mt-0"
+                                                      [(ngModel)]="action.checked"
+                                                      [name]="'check_mod_' + action.id"
+                                                      [id]="'check_mod_' + action.id">
+                                                  <label class="form-check-label fs-13px"
+                                                      [for]="'check_mod_' + action.id" [class.text-muted]="!action.checked">{{ action.name }}</label>
+                                              </div>
+                                          </div>
+                                      </div>
+                                      <ng-template #noModActions>
+                                          <div class="col-12">
+                                              <p class="text-muted fs-13px fst-italic mb-0">Aucune permission spécifique pour ce menu.</p>
+                                          </div>
+                                      </ng-template>
+                                    </ng-template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+                            <button type="button" class="btn btn-light me-2" (click)="cancel()">Annuler</button>
+                            <button type="submit" class="btn btn-primary d-flex align-items-center">
+                                <i data-feather="save" appFeatherIcon class="icon-sm me-2"></i>
+                                Enregistrer le rôle
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

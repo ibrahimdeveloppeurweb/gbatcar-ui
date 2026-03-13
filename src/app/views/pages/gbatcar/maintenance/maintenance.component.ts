@@ -14,7 +14,12 @@ import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon
 })
 export class MaintenanceComponent implements OnInit {
 
-  maintenance = MOCK_MAINTENANCE;
+  maintenanceItems = MOCK_MAINTENANCE;
+
+  // KPI computed properties
+  get plannedCount(): number { return this.maintenanceItems.filter(m => m.status === 'Planifié').length; }
+  get inProgressCount(): number { return this.maintenanceItems.filter(m => m.status === 'En cours').length; }
+  get totalCost(): number { return this.maintenanceItems.reduce((sum, m) => sum + m.cost, 0); }
 
   showAdvancedFilters: boolean = true;
 
@@ -51,7 +56,7 @@ export class MaintenanceComponent implements OnInit {
   ngOnInit(): void { }
 
   get filteredMaintenance() {
-    let result = this.maintenance.filter(mnt => {
+    let result = this.maintenanceItems.filter(mnt => {
       // 1. Text Search (ID, Vehicle, Type, Provider)
       const searchStr = `${mnt.id} ${mnt.vehicle} ${mnt.provider} ${mnt.type}`.toLowerCase();
       const matchesSearch = !this.appliedSearchTerm || searchStr.includes(this.appliedSearchTerm.toLowerCase());

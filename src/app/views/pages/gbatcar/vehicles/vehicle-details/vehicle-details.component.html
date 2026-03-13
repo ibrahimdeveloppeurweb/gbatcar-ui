@@ -23,6 +23,33 @@
     </div>
 </div>
 
+<!-- Financial Health Alert Banner (shown only when vehicle is assigned and has a payment issue) -->
+<div class="alert border-0 mb-4 d-flex align-items-center justify-content-between"
+    *ngIf="vehicle && vehicle.paymentStatus && vehicle.paymentStatus !== 'À jour' && vehicle.assignedClient !== 'Aucun'"
+    [ngClass]="{
+        'alert-danger': vehicle.paymentStatus === 'Critique',
+        'alert-warning': vehicle.paymentStatus === 'En retard'
+    }">
+    <div class="d-flex align-items-center">
+        <i data-feather="alert-triangle" appFeatherIcon class="icon-md me-3"></i>
+        <div>
+            <strong>Alerte Financière :</strong>
+            <span *ngIf="vehicle.paymentStatus === 'En retard'"> Ce véhicule présente un retard de paiement de
+                <strong>{{ vehicle.daysLate }} jours</strong>. Contacter le locataire immédiatement.</span>
+            <span *ngIf="vehicle.paymentStatus === 'Critique'"> Ce véhicule est en situation <strong>CRITIQUE</strong>.
+                Retard de <strong>{{ vehicle.daysLate }} jours</strong>. Procédure de récupération à engager.</span>
+        </div>
+    </div>
+    <div class="d-flex gap-2 flex-shrink-0 ms-3">
+        <button class="btn btn-sm btn-outline-dark" title="Contacter le locataire">
+            <i data-feather="phone" appFeatherIcon class="icon-sm me-1"></i> Contacter
+        </button>
+        <button class="btn btn-sm btn-danger" *ngIf="vehicle.paymentStatus === 'Critique'" title="Immobiliser via GPS">
+            <i data-feather="zap-off" appFeatherIcon class="icon-sm me-1"></i> Immobiliser GPS
+        </button>
+    </div>
+</div>
+
 <div class="row" *ngIf="vehicle">
     <!-- Colonne Gauche : Profil & Stats -->
     <div class="col-md-4 grid-margin stretch-card">
@@ -106,9 +133,10 @@
         </div>
     </div>
 
-    <!-- Colonne Droite : Assignation & Maintenance -->
+    <!-- Colonne Droite : Affectation, Santé Financière & Maintenance -->
     <div class="col-md-8">
         <div class="row">
+            <!-- Affectation -->
             <div class="col-md-6 grid-margin stretch-card">
                 <div class="card">
                     <div class="card-body">
@@ -124,11 +152,29 @@
                                 </h3>
                                 <p class="text-muted mt-2">Redevance journalière : <span class="fw-bold text-dark">{{
                                         vehicle.dailyRate | number }} FCFA</span></p>
+                                <!-- GPS Status Badge -->
+                                <div class="mt-2" *ngIf="vehicle.gpsStatus">
+                                    <span class="badge rounded-pill" [ngClass]="{
+                                        'bg-success': vehicle.gpsStatus === 'Connecté',
+                                        'bg-danger': vehicle.gpsStatus === 'Déconnecté',
+                                        'bg-secondary': vehicle.gpsStatus === 'Non installé'
+                                    }">
+                                        <i data-feather="map-pin" appFeatherIcon class="icon-xs me-1"></i>
+                                        GPS : {{ vehicle.gpsStatus }}
+                                    </span>
+                                </div>
+                                <!-- Contract End Date -->
+                                <div class="mt-2" *ngIf="vehicle.contractEndDate">
+                                    <small class="text-muted">Fin contrat : <strong>{{ vehicle.contractEndDate |
+                                            date:'dd/MM/yyyy' }}</strong></small>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Suivi Kilométrique -->
             <div class="col-md-6 grid-margin stretch-card">
                 <div class="card">
                     <div class="card-body">
@@ -159,6 +205,66 @@
             </div>
         </div>
 
+        <!-- Santé Financière du Contrat (NEW) -->
+        <div class="card grid-margin" *ngIf="vehicle.paymentStatus && vehicle.assignedClient !== 'Aucun'">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="card-title mb-0">SANTÉ FINANCIÈRE DU CONTRAT</h6>
+                    <span class="badge" [ngClass]="{
+                        'bg-success': vehicle.paymentStatus === 'À jour',
+                        'bg-warning text-dark': vehicle.paymentStatus === 'En retard',
+                        'bg-danger': vehicle.paymentStatus === 'Critique'
+                    }">{{ vehicle.paymentStatus }}</span>
+                </div>
+
+                <!-- Contract Progress Bar -->
+                <div *ngIf="vehicle.contractProgress !== undefined">
+                    <div class="d-flex justify-content-between tx-12 mb-1">
+                        <span class="fw-medium">Remboursement du contrat</span>
+                        <span class="text-muted">{{ vehicle.paidAmount | number }} FCFA / {{ vehicle.totalContractAmount
+                            | number }} FCFA</span>
+                    </div>
+                    <div class="progress mb-1" style="height: 10px;">
+                        <div class="progress-bar" role="progressbar" [style.width.%]="vehicle.contractProgress"
+                            [ngClass]="{
+                                'bg-success': vehicle.paymentStatus === 'À jour',
+                                'bg-warning': vehicle.paymentStatus === 'En retard',
+                                'bg-danger': vehicle.paymentStatus === 'Critique'
+                            }">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between tx-12">
+                        <span class="text-muted">{{ vehicle.contractProgress }}% payé</span>
+                        <span class="text-muted">Reste : {{ (vehicle.totalContractAmount - vehicle.paidAmount) | number
+                            }} FCFA</span>
+                    </div>
+                </div>
+
+                <!-- Late payment details -->
+                <div class="mt-3 p-2 rounded bg-danger bg-opacity-10 border border-danger" *ngIf="vehicle.daysLate > 0">
+                    <div class="d-flex align-items-center">
+                        <i data-feather="clock" appFeatherIcon class="icon-sm text-danger me-2"></i>
+                        <span class="text-danger fw-medium fs-13px">Retard de paiement : <strong>{{ vehicle.daysLate }}
+                                jours</strong></span>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="d-flex gap-2 mt-3 flex-wrap">
+                    <a class="btn btn-sm btn-outline-primary" [routerLink]="['/gbatcar/contracts']">
+                        <i data-feather="file-text" appFeatherIcon class="icon-sm me-1"></i> Voir le Contrat
+                    </a>
+                    <a class="btn btn-sm btn-outline-success" [routerLink]="['/gbatcar/payments']">
+                        <i data-feather="dollar-sign" appFeatherIcon class="icon-sm me-1"></i> Historique Paiements
+                    </a>
+                    <a class="btn btn-sm btn-outline-warning" [routerLink]="['/gbatcar/payments/penalties']">
+                        <i data-feather="alert-octagon" appFeatherIcon class="icon-sm me-1"></i> Amendes & Pénalités
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dossier Véhicule & Maintenance -->
         <div class="card grid-margin">
             <div class="card-body">
                 <h6 class="card-title mb-4">DOSSIER VÉHICULE & MAINTENANCE</h6>
@@ -214,11 +320,11 @@
                                     <p class="text-muted tx-12 mb-2">Valide</p>
                                     <button class="btn btn-outline-primary btn-xs">Voir Doc</button>
                                 </div>
-                                <div class="col-sm-4 border rounded p-3 text-center mb-3 mb-sm-0 me-3">
-                                    <i data-feather="shield" appFeatherIcon class="text-success mb-2 wd-30 ht-30"></i>
+                                <div class="col-sm-4 border rounded p-3 text-center mb-3 mb-sm-0 me-3 border-warning">
+                                    <i data-feather="shield" appFeatherIcon class="text-warning mb-2 wd-30 ht-30"></i>
                                     <h6 class="mb-1">Assurance Tous Risques</h6>
-                                    <p class="text-muted tx-12 mb-2 text-danger">Exp. dans 45 jours</p>
-                                    <button class="btn btn-outline-primary btn-xs">Voir Doc</button>
+                                    <p class="text-danger tx-12 mb-2">Exp. dans 45 jours</p>
+                                    <button class="btn btn-warning btn-xs text-dark">Renouveler</button>
                                 </div>
                                 <div class="col-sm-4 border rounded p-3 text-center">
                                     <i data-feather="check-square" appFeatherIcon
@@ -226,6 +332,43 @@
                                     <h6 class="mb-1">Visite Technique</h6>
                                     <p class="text-muted tx-12 mb-2">Valide</p>
                                     <button class="btn btn-outline-primary btn-xs">Voir Doc</button>
+                                </div>
+                            </div>
+                        </ng-template>
+                    </li>
+                    <li [ngbNavItem]="3">
+                        <a ngbNavLink>
+                            <i data-feather="map-pin" appFeatherIcon class="icon-xs me-1"></i>
+                            Tracker GPS
+                        </a>
+                        <ng-template ngbNavContent>
+                            <div class="text-center py-4">
+                                <div class="mb-3">
+                                    <span class="badge rounded-pill fs-5 px-4 py-2" *ngIf="vehicle.gpsStatus" [ngClass]="{
+                                            'bg-success': vehicle.gpsStatus === 'Connecté',
+                                            'bg-danger': vehicle.gpsStatus === 'Déconnecté',
+                                            'bg-secondary': vehicle.gpsStatus === 'Non installé'
+                                        }">
+                                        <i data-feather="map-pin" appFeatherIcon class="icon-sm me-2"></i>
+                                        {{ vehicle.gpsStatus }}
+                                    </span>
+                                </div>
+                                <p class="text-muted mb-1">Dernière position connue</p>
+                                <h5 class="fw-bold text-dark">Abidjan, Plateau</h5>
+                                <p class="text-muted tx-12">Mise à jour : il y a 5 min</p>
+                                <div class="d-flex justify-content-center gap-2 mt-3 flex-wrap">
+                                    <button class="btn btn-sm btn-outline-primary"
+                                        *ngIf="vehicle.gpsStatus === 'Connecté'">
+                                        <i data-feather="map" appFeatherIcon class="icon-sm me-1"></i> Voir sur la carte
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" *ngIf="vehicle.paymentStatus === 'Critique'">
+                                        <i data-feather="zap-off" appFeatherIcon class="icon-sm me-1"></i> Immobiliser
+                                        le moteur
+                                    </button>
+                                    <button class="btn btn-sm btn-success" *ngIf="vehicle.gpsStatus === 'Non installé'">
+                                        <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Planifier pose
+                                        GPS
+                                    </button>
                                 </div>
                             </div>
                         </ng-template>

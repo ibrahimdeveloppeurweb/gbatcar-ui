@@ -3,8 +3,12 @@ import { Routes } from '@angular/router';
 export default [
     {
         path: '',
-        redirectTo: 'users',
+        redirectTo: 'dashboard',
         pathMatch: 'full'
+    },
+    {
+        path: 'dashboard',
+        loadComponent: () => import('./admin-dashboard/admin-dashboard.component').then(c => c.AdminDashboardComponent)
     },
     {
         path: 'users',
@@ -29,5 +33,21 @@ export default [
     {
         path: 'notifications',
         loadComponent: () => import('./notifications/notifications.component').then(c => c.NotificationsComponent)
+    },
+    {
+        path: 'permissions',
+        loadComponent: () => import('./permissions/permissions-list/permissions-list.component').then(c => c.PermissionsListComponent)
+    },
+    {
+        path: 'permissions/add',
+        loadComponent: () => import('./permissions/permission-form/permission-form.component').then(c => c.PermissionFormComponent)
+    },
+    {
+        path: 'permissions/edit/:id',
+        loadComponent: () => import('./permissions/permission-form/permission-form.component').then(c => c.PermissionFormComponent)
+    },
+    {
+        path: 'permissions/details/:id',
+        loadComponent: () => import('./permissions/permission-details/permission-details.component').then(c => c.PermissionDetailsComponent)
     }
 ] as Routes;

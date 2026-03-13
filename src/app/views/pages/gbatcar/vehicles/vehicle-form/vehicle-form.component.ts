@@ -26,23 +26,40 @@ export class VehicleFormComponent implements OnInit {
     private route: ActivatedRoute
   ) {
     this.vehicleForm = this.formBuilder.group({
+      // Base Info
       brand: ['', Validators.required],
       model: ['', Validators.required],
-      trim: [''], // Finition (ex: LE, GLS)
+      trim: [''],
       transmission: ['Automatique', Validators.required],
       fuelType: ['Essence', Validators.required],
       year: ['', [Validators.required, Validators.min(1990), Validators.max(2030)]],
-      color: ['', Validators.required],
-      licensePlate: ['', Validators.required],
-      chassisNumber: ['', Validators.required],
-      mileage: [0, Validators.required],
+      color: [''],
+      seats: ['5'],
       status: ['Disponible', Validators.required],
-      dailyRate: [15000, Validators.required],
+      // Technical ID
+      licensePlate: ['', Validators.required],
+      chassisNumber: [''],
+      mileage: [0],
+      nextMaintenanceMileage: [''],
+      lastMaintenance: [''],
+      gpsStatus: ['Non installé'],
+      // TCO
+      purchasePrice: [null],
+      customsFees: [null],
+      transitFees: [null],
+      preparationCost: [null],
+      gpsInstallationCost: [null],
+      otherCosts: [null],
+      // Commercial Offer
       totalPrice: ['', Validators.required],
-      depositPercentage: ['', [Validators.required, Validators.min(0), Validators.max(100)]],
-      durationInMonths: ['', [Validators.required, Validators.min(1)]],
+      depositPercentage: ['', [Validators.min(0), Validators.max(100)]],
+      durationInMonths: ['', [Validators.min(1)]],
+      dailyRate: [15000],
+      intendedUse: ['VTC'],
       includingInsurance: [false],
-      includingGPS: [false]
+      includingGPS: [false],
+      // Misc
+      notes: ['']
     });
   }
 
@@ -70,10 +87,24 @@ export class VehicleFormComponent implements OnInit {
         chassisNumber: vehicle.chassisNumber,
         mileage: vehicle.mileage,
         status: vehicle.status,
-        dailyRate: vehicle.dailyRate
+        dailyRate: vehicle.dailyRate,
+        totalPrice: vehicle.totalPrice,
+        depositPercentage: vehicle.depositPercentage,
+        durationInMonths: vehicle.durationInMonths,
+        includingInsurance: vehicle.includingInsurance,
+        includingGPS: vehicle.includingGPS,
+        gpsStatus: vehicle.gpsStatus || 'Non installé',
+        nextMaintenanceMileage: vehicle.nextMaintenanceMileage,
+        lastMaintenance: vehicle.lastMaintenance,
+        purchasePrice: (vehicle as any).tco?.purchasePrice || null,
+        customsFees: (vehicle as any).tco?.customs || null,
+        transitFees: (vehicle as any).tco?.transport || null,
+        preparationCost: (vehicle as any).tco?.preparation || null,
+        gpsInstallationCost: (vehicle as any).tco?.gpsInstallation || null,
       });
     }
   }
+
 
   saveVehicle() {
     if (this.vehicleForm.valid) {

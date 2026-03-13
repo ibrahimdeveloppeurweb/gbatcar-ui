@@ -10,6 +10,7 @@ import { MenuItem } from './menu.model';
 
 import { FeatherIconDirective } from '../../../core/feather-icon/feather-icon.directive';
 import { ThemeModeService } from '../../../core/services/theme-mode.service';
+import { PathService } from '../../../core/services/path/path.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -34,7 +35,13 @@ export class SidebarComponent implements OnInit, AfterViewInit {
 
   currentTheme: string;
 
-  constructor(@Inject(DOCUMENT) private document: Document, private renderer: Renderer2, router: Router, private themeModeService: ThemeModeService) {
+  constructor(
+    @Inject(DOCUMENT) private document: Document,
+    private renderer: Renderer2,
+    router: Router,
+    private themeModeService: ThemeModeService,
+    private pathService: PathService
+  ) {
     this.themeModeService.currentTheme.subscribe((theme) => {
       this.currentTheme = theme;
     });
@@ -59,7 +66,9 @@ export class SidebarComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    // Par défaut, on peut charger le menu complet, puis on le filtrera
     this.menuItems = MENU;
+    // this.loadAllowedMenus();
 
     /**
      * Sidebar-folded on desktop (min-width:992px and max-width: 1199px)
@@ -71,11 +80,57 @@ export class SidebarComponent implements OnInit, AfterViewInit {
     this.iconSidebar(desktopMedium);
   }
 
+  // loadAllowedMenus() {
+  //   this.pathService.getAdminPaths().subscribe({
+  //     next: (paths: any[]) => {
+  //       // Option 1 : Filtrer MENU avec les paths retournés par l'API
+  //       // Les paths contiennent 'libelle' (label) et 'chemin' (link)
+  //       const allowedLinks = paths.map(p => p.chemin);
+  //       const allowedLabels = paths.map(p => p.libelle);
+
+  //       this.menuItems = this.filterMenu(MENU, allowedLinks, allowedLabels);
+
+  //       // Re-init MetisMenu après modification asynchrone du DOM
+  //       setTimeout(() => {
+  //         new MetisMenu(this.sidebarMenu.nativeElement);
+  //         this._activateMenuDropdown();
+  //       });
+  //     },
+  //     error: (err) => {
+  //       console.error("Erreur lors de la récupération des menus autorisés", err);
+  //     }
+  //   });
+  // }
+
+  filterMenu(items: MenuItem[], allowedLinks: string[], allowedLabels: string[]): MenuItem[] {
+    return items.filter(item => {
+      if (item.isTitle) return true; // Les titres sont toujours gardés (ou filtrés plus tard si viides)
+
+      let hasAccess = false;
+      if (item.link && allowedLinks.includes(item.link)) {
+        hasAccess = true;
+      } else if (item.label && allowedLabels.includes(item.label)) {
+        hasAccess = true;
+      }
+
+      // Si c'est un parent avec des enfants, vérifier les enfants
+      if (item.subItems && item.subItems.length > 0) {
+        item.subItems = this.filterMenu(item.subItems, allowedLinks, allowedLabels);
+        if (item.subItems.length > 0) {
+          hasAccess = true; // Si au moins un enfant est autorisé, le parent l'est aussi
+        }
+      }
+
+      return hasAccess;
+    });
+  }
+
   ngAfterViewInit() {
     // activate menu items
-    new MetisMenu(this.sidebarMenu.nativeElement);
-
-    this._activateMenuDropdown();
+    if (this.menuItems.length > 0) {
+      new MetisMenu(this.sidebarMenu.nativeElement);
+      this._activateMenuDropdown();
+    }
   }
 
   /**

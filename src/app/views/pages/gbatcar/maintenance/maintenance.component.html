@@ -9,11 +9,68 @@
             <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
             {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
         </button>
-        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0">
+        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" routerLink="/gbatcar/maintenance/new">
             <i data-feather="tool" appFeatherIcon class="btn-icon-prepend"></i> Nouvelle Intervention
         </button>
     </div>
 </div>
+
+<!-- KPI Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 col-6 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #6c757d;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Total Interventions</p>
+                        <h4 class="fw-bold mb-0">{{ maintenanceItems.length }}</h4>
+                    </div>
+                    <i data-feather="tool" appFeatherIcon class="icon-lg text-secondary"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #3498db;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Planifiées</p>
+                        <h4 class="fw-bold mb-0 text-info">{{ plannedCount }}</h4>
+                    </div>
+                    <i data-feather="calendar" appFeatherIcon class="icon-lg text-info"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card h-100" style="border-left: 4px solid #f39c12;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">En Cours</p>
+                        <h4 class="fw-bold mb-0 text-warning">{{ inProgressCount }}</h4>
+                    </div>
+                    <i data-feather="settings" appFeatherIcon class="icon-lg text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card h-100" style="border-left: 4px solid #e74c3c;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Coût Total (Mois)</p>
+                        <h4 class="fw-bold mb-0 text-danger">{{ totalCost | number }} FCFA</h4>
+                    </div>
+                    <i data-feather="trending-down" appFeatherIcon class="icon-lg text-danger"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <!-- Filtres Avancés -->
 <div class="row mb-3" *ngIf="showAdvancedFilters">

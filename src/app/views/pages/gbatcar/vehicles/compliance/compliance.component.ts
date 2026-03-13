@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -19,11 +19,36 @@ export class ComplianceComponent implements OnInit {
   typeFilter: string = '';
 
   activeTab: string = 'legal';
+  selectedItem: any;
+  showFilters: boolean = true;
+
+  // KPI computed properties
+  get expiredCount(): number {
+    return this.complianceList.filter(item =>
+      item.insurance.status === 'Expired' || item.technicalInspection.status === 'Expired' ||
+      item.roadTax.status === 'Expired' || item.transportLicense.status === 'Expired' ||
+      item.fireExtinguisher.status === 'Expired' || item.preventiveMaintenance.status === 'Expired'
+    ).length;
+  }
+  get expiringSoonCount(): number {
+    return this.complianceList.filter(item =>
+      item.insurance.status === 'Expiring Soon' || item.technicalInspection.status === 'Expiring Soon' ||
+      item.roadTax.status === 'Expiring Soon' || item.transportLicense.status === 'Expiring Soon' ||
+      item.fireExtinguisher.status === 'Expiring Soon' || item.preventiveMaintenance.status === 'Expiring Soon'
+    ).length;
+  }
+  get validCount(): number {
+    return this.complianceList.filter(item =>
+      item.insurance.status === 'Valid' && item.technicalInspection.status === 'Valid' &&
+      item.roadTax.status === 'Valid' && item.transportLicense.status === 'Valid'
+    ).length;
+  }
 
   constructor() { }
 
   ngOnInit(): void {
   }
+
 
   get filteredCompliance() {
     return this.complianceList.filter(item => {
@@ -53,5 +78,11 @@ export class ComplianceComponent implements OnInit {
 
   abs(value: number): number {
     return Math.abs(value);
+  }
+
+  deleteDoc(item: any): void {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {
+      this.complianceList = this.complianceList.filter(c => c.id !== item.id);
+    }
   }
 }

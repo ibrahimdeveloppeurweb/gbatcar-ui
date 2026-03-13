@@ -16,10 +16,43 @@ export class ContractsComponent implements OnInit {
 
   contracts = MOCK_CONTRACTS;
 
-  showAdvancedFilters: boolean = true;
+  // KPI computed properties
+  get activeContractsCount(): number { return this.contracts.filter(c => c.status === 'En cours').length; }
+  get lateContractsCount(): number { return this.contracts.filter(c => c.paymentStatus === 'En retard' || c.paymentStatus === 'Impayé définitif').length; }
+  get closedContractsCount(): number { return this.contracts.filter(c => c.status === 'Soldé' || c.status === 'Résilié').length; }
+
+  get maturingSoonCount(): number {
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+    return this.contracts.filter(c => {
+      const endDate = new Date(c.endDate);
+      return c.status === 'En cours' && endDate <= thirtyDaysFromNow;
+    }).length;
+  }
+
+  get incompleteDossiersCount(): number {
+    // Simulation: contracts in 'En Attente' are considered incomplete
+    return this.contracts.filter(c => c.status === 'En Attente').length;
+  }
+
+  showAdvancedFilters: boolean = false;
 
   toggleAdvancedFilters() {
     this.showAdvancedFilters = !this.showAdvancedFilters;
+  }
+
+  getRiskLevel(contract: any): { label: string, class: string } {
+    if (contract.paymentStatus === 'Impayé définitif') return { label: 'Critique', class: 'text-danger' };
+    if (contract.paymentStatus === 'En retard') return { label: 'Élevé', class: 'text-warning' };
+    if (contract.paidAmount / contract.totalAmount > 0.5) return { label: 'Bas', class: 'text-success' };
+    return { label: 'Moyen', class: 'text-info' };
+  }
+
+  getDaysUntilDeadline(dateStr: string): number {
+    const today = new Date();
+    const deadline = new Date(dateStr);
+    const diffTime = deadline.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
 
   // 1. Quick Filters

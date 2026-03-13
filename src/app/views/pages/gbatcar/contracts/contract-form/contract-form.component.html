@@ -22,14 +22,16 @@
 </div>
 
 <div class="row">
-    <div class="col-md-12 stretch-card">
-        <div class="card">
+    <div class="col-md-8">
+        <div class="card mb-4">
             <div class="card-body">
-                <h6 class="card-title">Informations Générales</h6>
+                <h6 class="card-title mb-4"><i data-feather="file-text" appFeatherIcon class="icon-sm me-2"></i>
+                    Informations du Contrat & Usage</h6>
                 <form [formGroup]="contractForm">
                     <div class="row">
                         <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Client / Locataire</label>
+                            <label class="form-label text-secondary fs-12px mb-1 text-uppercase fw-bold">Locataire
+                                (Client)</label>
                             <select class="form-select" formControlName="clientId"
                                 [ngClass]="{'is-invalid': contractForm.get('clientId')?.invalid && contractForm.get('clientId')?.touched}">
                                 <option value="">Sélectionnez un client...</option>
@@ -39,68 +41,190 @@
                             </select>
                         </div>
                         <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Véhicule Assigné</label>
+                            <label class="form-label text-secondary fs-12px mb-1 text-uppercase fw-bold">Véhicule
+                                Assigné</label>
                             <select class="form-select" formControlName="vehicleId"
                                 [ngClass]="{'is-invalid': contractForm.get('vehicleId')?.invalid && contractForm.get('vehicleId')?.touched}">
                                 <option value="">Sélectionnez un véhicule...</option>
                                 <option value="VHC-1002">Hyundai Accent - 5678 CD 01 (Disponible)</option>
-                                <option value="VHC-1005">Toyota Corolla - 7890 IJ 01 (Hors Service)</option>
+                                <option value="VHC-1005">Toyota Corolla - 7890 IJ 01 (Disponible)</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="row">
+                    <div class="row mb-4">
                         <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Date de Prise d'Effet (Livraison)</label>
-                            <input type="date" class="form-control" formControlName="startDate"
-                                [ngClass]="{'is-invalid': contractForm.get('startDate')?.invalid && contractForm.get('startDate')?.touched}">
+                            <label class="form-label text-secondary fs-12px mb-1 text-uppercase fw-bold">Type
+                                d'Usage</label>
+                            <div class="d-flex gap-3 mt-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" value="VTC" formControlName="usageType"
+                                        id="vtc">
+                                    <label class="form-check-label" for="vtc">VTC (Yango/Heetch)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" value="Taxi"
+                                        formControlName="usageType" id="taxi">
+                                    <label class="form-check-label" for="taxi">Taxi Compteur</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" value="Perso"
+                                        formControlName="usageType" id="perso">
+                                    <label class="form-check-label" for="perso">Personnel / Privé</label>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Durée d'Amortissement (Mois)</label>
-                            <input type="number" class="form-control" formControlName="duration"
-                                [ngClass]="{'is-invalid': contractForm.get('duration')?.invalid && contractForm.get('duration')?.touched}"
-                                placeholder="Ex: 36 (Durée avant transfert de propriété)">
+                            <label class="form-label text-secondary fs-12px mb-1 text-uppercase fw-bold">Date de
+                                signature & Livraison</label>
+                            <input type="date" class="form-control" formControlName="startDate">
+                        </div>
+                    </div>
+
+                    <h6 class="card-title mb-4 border-top pt-4"><i data-feather="dollar-sign" appFeatherIcon
+                            class="icon-sm me-2"></i> Structure Financière (Location-Vente)</h6>
+                    <div class="row">
+                        <div class="col-sm-4 mb-3">
+                            <label class="form-label text-secondary fs-12px mb-1 text-uppercase fw-bold">Fréquence de
+                                Paiement</label>
+                            <select class="form-select" formControlName="paymentFrequency">
+                                <option value="Daily">Quotidien</option>
+                                <option value="Weekly">Hebdomadaire</option>
+                                <option value="Monthly">Mensuel</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-4 mb-3">
+                            <label class="form-label text-secondary fs-12px mb-1 text-uppercase fw-bold">Redevance Jour
+                                (FCFA)</label>
+                            <input type="number" class="form-control" formControlName="dailyRate">
+                        </div>
+                        <div class="col-sm-4 mb-3">
+                            <label class="form-label text-secondary fs-12px mb-1 text-uppercase fw-bold">Durée
+                                (Mois)</label>
+                            <input type="number" class="form-control" formControlName="duration">
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-secondary fs-12px mb-1 text-uppercase fw-bold">Apport Initial
+                                / Garantie (FCFA)</label>
+                            <input type="number" class="form-control" formControlName="cautionAmount">
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-secondary fs-12px mb-1 text-uppercase fw-bold">Entretien &
+                                Assurance</label>
+                            <select class="form-select" formControlName="insuranceSplit">
+                                <option value="Included">Inclus dans la redevance (Full Service)</option>
+                                <option value="Partial">Partagé (Assurance incluse, Entretien client)</option>
+                                <option value="Customer">À la charge exclusive du client</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h6 class="card-title mb-4 border-top pt-4"><i data-feather="shield" appFeatherIcon
+                            class="icon-sm me-2"></i> Gestion des Risques & Recouvrement</h6>
+                    <div class="row mb-4">
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-secondary fs-12px mb-1 text-uppercase fw-bold">Délai de Grâce
+                                (Jours)</label>
+                            <input type="number" class="form-control" formControlName="gracePeriod"
+                                placeholder="Ex: 2 jours avant alerte">
+                            <small class="text-muted tx-11">Nombre de jours de retard toléré avant pénalités.</small>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-secondary fs-12px mb-1 text-uppercase fw-bold">Taux de
+                                Pénalité (%)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" formControlName="penaltyRate">
+                                <span class="input-group-text">% par jour</span>
+                            </div>
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Versement Journalier (Location-Vente)</label>
-                            <input type="number" class="form-control" formControlName="dailyRate"
-                                [ngClass]="{'is-invalid': contractForm.get('dailyRate')?.invalid && contractForm.get('dailyRate')?.touched}"
-                                placeholder="15000">
-                        </div>
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Dépôt de Garantie (Apport initial)</label>
-                            <input type="number" class="form-control" formControlName="cautionAmount"
-                                [ngClass]="{'is-invalid': contractForm.get('cautionAmount')?.invalid && contractForm.get('cautionAmount')?.touched}"
-                                placeholder="Ex: 500000">
-                        </div>
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Montant Total Estimé (FCFA)</label>
-                            <input type="number" class="form-control" formControlName="totalAmount" readonly
-                                value="7500000">
-                        </div>
-                    </div>
-
-                    <hr>
-                    <h6 class="card-title mt-4">Conditions & Pièces Jointes</h6>
-
-                    <div class="row">
-                        <div class="col-sm-12 mb-3">
-                            <label class="form-label text-dark fw-medium">Contrat Signé Scanné (PDF)</label>
-                            <input type="file" class="form-control">
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-sm-12 mb-3">
-                            <label class="form-label text-dark fw-medium">Notes additionnelles</label>
+                        <div class="col-sm-12">
+                            <label class="form-label text-secondary fs-12px mb-1 text-uppercase fw-bold">Observations
+                                particulières</label>
                             <textarea class="form-control" formControlName="notes" rows="3"
-                                placeholder="Particularités du contrat..."></textarea>
+                                placeholder="Clauses spécifiques, état initial..."></textarea>
                         </div>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar: Financial Preview -->
+    <div class="col-md-4">
+        <div class="card border-primary border-top-0 border-end-0 border-bottom-0 border-4 shadow-sm mb-4 sticky-top"
+            style="top: 20px;">
+            <div class="card-body">
+                <h6 class="card-title text-primary"><i data-feather="pie-chart" appFeatherIcon class="icon-sm me-2"></i>
+                    Simulation Financière</h6>
+                <div class="d-flex flex-column gap-3 mt-4">
+                    <div class="p-3 bg-primary-subtle rounded border border-primary-subtle">
+                        <p class="text-primary fs-12px mb-1 text-uppercase fw-bold">Valeur Totale du Contrat</p>
+                        <h3 class="fw-bold mb-0 text-primary">{{ contractForm.get('totalAmount')?.value | number }}
+                            <small class="fs-14px">FCFA</small></h3>
+                        <p class="tx-11 text-muted mt-1">Sur {{ contractForm.get('duration')?.value }} mois amortis</p>
+                    </div>
+
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item px-0 d-flex justify-content-between">
+                            <span class="text-muted">Apport Initial :</span>
+                            <span class="fw-bold">{{ contractForm.get('cautionAmount')?.value | number }} FCFA</span>
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between">
+                            <span class="text-muted">Montant Recouvré / Mois :</span>
+                            <span class="fw-bold text-success">{{ (contractForm.get('dailyRate')?.value * 30) | number
+                                }} FCFA</span>
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between">
+                            <span class="text-muted">Marge Brute Projetée :</span>
+                            <span class="fw-bold text-info">+ {{ contractForm.get('projectedMargin')?.value | number }}
+                                FCFA</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info py-2 px-3 tx-11 mb-2">
+                        <i data-feather="info" appFeatherIcon class="icon-xs me-2"></i>
+                        Transfert de carte grise estimé en : <strong>{{ contractForm.get('duration')?.value }}
+                            mois</strong> si 0 défaut de paiement.
+                    </div>
+
+                    <button class="btn btn-primary w-100 py-2 fw-bold mt-2 shadow-sm" [disabled]="contractForm.invalid">
+                        <i data-feather="check-circle" appFeatherIcon class="icon-sm me-2"></i> VALIDER CE CONTRAT
+                    </button>
+                    <button class="btn btn-outline-secondary w-100 py-2 mt-1">
+                        <i data-feather="printer" appFeatherIcon class="icon-sm me-2"></i> APERÇU PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-warning">
+            <div class="card-body py-3">
+                <h6 class="card-title text-warning fs-13px mb-3"><i data-feather="alert-triangle" appFeatherIcon
+                        class="icon-sm me-2"></i> Checklist Dossier</h6>
+                <div class="tx-12">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="check1" checked>
+                        <label class="form-check-label" for="check1">CNI / Passeport (Valide)</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="check2" checked>
+                        <label class="form-check-label" for="check2">Permis de Conduire</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="check3">
+                        <label class="form-check-label" for="check3">Justificatif de domicile</label>
+                    </div>
+                    <div class="form-check mb-0 text-muted">
+                        <input class="form-check-input" type="checkbox" id="check4">
+                        <label class="form-check-label" for="check4">Casier Judiciaire</label>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

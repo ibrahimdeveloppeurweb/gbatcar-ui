@@ -16,11 +16,19 @@ export class PenaltiesComponent implements OnInit {
 
   penalties = MOCK_PENALTIES;
 
+  // KPI computed properties
+  get unrecoveredTotal(): number {
+    return this.penalties.filter(p => p.status !== 'Payé').reduce((sum, p) => sum + p.amount, 0);
+  }
+  get criticalCount(): number { return this.penalties.filter(p => p.status === 'Impayé' || p.status === 'Non payé').length; }
+  get recoveredCount(): number { return this.penalties.filter(p => p.status === 'Payé').length; }
+
   showAdvancedFilters: boolean = true;
 
   toggleAdvancedFilters() {
     this.showAdvancedFilters = !this.showAdvancedFilters;
   }
+
 
   // 1. Quick Filters
   quickSearchTerm: string = '';

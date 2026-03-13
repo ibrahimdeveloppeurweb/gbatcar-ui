@@ -14,84 +14,109 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title">{{ pageTitle }}</h6>
-                <form [formGroup]="vehicleForm" (ngSubmit)="saveVehicle()">
+<form [formGroup]="vehicleForm" (ngSubmit)="saveVehicle()">
+    <div class="row">
 
-                    <h5 class="mb-3">Informations de Base</h5>
+        <!-- LEFT COLUMN: Identity & Commercial Offer -->
+        <div class="col-md-8">
+
+            <!-- Section 1: Informations de Base -->
+            <div class="card grid-margin">
+                <div class="card-body">
+                    <h6 class="card-title fw-bold text-uppercase mb-4">
+                        <i data-feather="truck" appFeatherIcon class="icon-sm me-2 text-primary"></i>
+                        Informations de Base
+                    </h6>
                     <div class="row mb-3">
                         <div class="col-sm-6">
-                            <label class="form-label text-dark fw-medium">Marque</label>
+                            <label class="form-label text-dark fw-medium">Marque <span
+                                    class="text-danger">*</span></label>
                             <input type="text" class="form-control" formControlName="brand" placeholder="Ex: Toyota"
                                 [ngClass]="{'is-invalid': vehicleForm.get('brand')?.invalid && vehicleForm.get('brand')?.touched}">
+                            <div class="invalid-feedback">Marque requise.</div>
                         </div>
                         <div class="col-sm-6">
-                            <label class="form-label text-dark fw-medium">Modèle</label>
+                            <label class="form-label text-dark fw-medium">Modèle <span
+                                    class="text-danger">*</span></label>
                             <input type="text" class="form-control" formControlName="model" placeholder="Ex: Yaris"
                                 [ngClass]="{'is-invalid': vehicleForm.get('model')?.invalid && vehicleForm.get('model')?.touched}">
+                            <div class="invalid-feedback">Modèle requis.</div>
                         </div>
                     </div>
-
                     <div class="row mb-3">
-                        <div class="col-sm-4">
-                            <label class="form-label text-dark fw-medium">Année</label>
-                            <input type="number" class="form-control" formControlName="year" placeholder="Ex: 2021"
+                        <div class="col-sm-3">
+                            <label class="form-label text-dark fw-medium">Année <span
+                                    class="text-danger">*</span></label>
+                            <input type="number" class="form-control" formControlName="year" placeholder="Ex: 2022"
                                 [ngClass]="{'is-invalid': vehicleForm.get('year')?.invalid && vehicleForm.get('year')?.touched}">
                         </div>
-                        <div class="col-sm-4">
+                        <div class="col-sm-3">
                             <label class="form-label text-dark fw-medium">Couleur</label>
-                            <input type="text" class="form-control" formControlName="color" placeholder="Ex: Blanc"
-                                [ngClass]="{'is-invalid': vehicleForm.get('color')?.invalid && vehicleForm.get('color')?.touched}">
+                            <input type="text" class="form-control" formControlName="color" placeholder="Ex: Blanc">
                         </div>
-                        <div class="col-sm-4">
-                            <label class="form-label text-dark fw-medium">Initiale statutaire</label>
-                            <select class="form-select" formControlName="status"
-                                [ngClass]="{'is-invalid': vehicleForm.get('status')?.invalid && vehicleForm.get('status')?.touched}">
+                        <div class="col-sm-3">
+                            <label class="form-label text-dark fw-medium">Finition / Version</label>
+                            <input type="text" class="form-control" formControlName="trim" placeholder="Ex: LE, GLS">
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label text-dark fw-medium">Statut Initial <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" formControlName="status">
                                 <option value="Disponible">Disponible (Sur Parc)</option>
+                                <option value="En transit">En Transit</option>
+                                <option value="En dédouanement">En Dédouanement</option>
+                                <option value="En atelier">En Atelier (Préparation)</option>
                                 <option value="Assigné">Assigné à un client</option>
                                 <option value="En Maintenance">En Maintenance</option>
                                 <option value="Hors Service">Hors Service</option>
                             </select>
                         </div>
                     </div>
-
-                    <div class="row mb-3">
-                        <div class="col-sm-4">
-                            <label class="form-label text-dark fw-medium">Finition / Version</label>
-                            <input type="text" class="form-control" formControlName="trim"
-                                placeholder="Ex: LE, GLS, AWD"
-                                [ngClass]="{'is-invalid': vehicleForm.get('trim')?.invalid && vehicleForm.get('trim')?.touched}">
-                        </div>
+                    <div class="row mb-0">
                         <div class="col-sm-4">
                             <label class="form-label text-dark fw-medium">Boîte de vitesses</label>
-                            <select class="form-select" formControlName="transmission"
-                                [ngClass]="{'is-invalid': vehicleForm.get('transmission')?.invalid && vehicleForm.get('transmission')?.touched}">
+                            <select class="form-select" formControlName="transmission">
                                 <option value="Automatique">Automatique</option>
                                 <option value="Manuelle">Manuelle</option>
                             </select>
                         </div>
                         <div class="col-sm-4">
                             <label class="form-label text-dark fw-medium">Carburant</label>
-                            <select class="form-select" formControlName="fuelType"
-                                [ngClass]="{'is-invalid': vehicleForm.get('fuelType')?.invalid && vehicleForm.get('fuelType')?.touched}">
+                            <select class="form-select" formControlName="fuelType">
                                 <option value="Essence">Essence</option>
                                 <option value="Diesel">Diesel</option>
                                 <option value="Hybride">Hybride</option>
                                 <option value="Électrique">Électrique</option>
                             </select>
                         </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Nombre de places</label>
+                            <select class="form-select" formControlName="seats">
+                                <option value="4">4 places</option>
+                                <option value="5">5 places</option>
+                                <option value="7">7 places</option>
+                                <option value="9">9 places</option>
+                            </select>
+                        </div>
                     </div>
+                </div>
+            </div>
 
-                    <h5 class="mb-3 mt-4 border-top pt-4">Identification et Technique</h5>
+            <!-- Section 2: Identification Technique -->
+            <div class="card grid-margin">
+                <div class="card-body">
+                    <h6 class="card-title fw-bold text-uppercase mb-4">
+                        <i data-feather="hash" appFeatherIcon class="icon-sm me-2 text-info"></i>
+                        Identification & Technique
+                    </h6>
                     <div class="row mb-3">
                         <div class="col-sm-6">
-                            <label class="form-label text-dark fw-medium">Immatriculation (Plaque)</label>
+                            <label class="form-label text-dark fw-medium">Immatriculation (Plaque) <span
+                                    class="text-danger">*</span></label>
                             <input type="text" class="form-control" formControlName="licensePlate"
                                 placeholder="Ex: 1234 AB 01"
                                 [ngClass]="{'is-invalid': vehicleForm.get('licensePlate')?.invalid && vehicleForm.get('licensePlate')?.touched}">
+                            <div class="invalid-feedback">Plaque d'immatriculation requise.</div>
                         </div>
                         <div class="col-sm-6">
                             <label class="form-label text-dark fw-medium">Numéro de Châssis (VIN)</label>
@@ -100,33 +125,102 @@
                                 [ngClass]="{'is-invalid': vehicleForm.get('chassisNumber')?.invalid && vehicleForm.get('chassisNumber')?.touched}">
                         </div>
                     </div>
-
                     <div class="row mb-3">
                         <div class="col-sm-6">
                             <label class="form-label text-dark fw-medium">Kilométrage Actuel (km)</label>
-                            <input type="number" class="form-control" formControlName="mileage" placeholder="0"
-                                [ngClass]="{'is-invalid': vehicleForm.get('mileage')?.invalid && vehicleForm.get('mileage')?.touched}">
+                            <input type="number" class="form-control" formControlName="mileage" placeholder="0">
                         </div>
                         <div class="col-sm-6">
-                            <label class="form-label text-dark fw-medium">Versement Journalier (Location-Vente)</label>
-                            <input type="number" class="form-control" formControlName="dailyRate" placeholder="15000"
-                                [ngClass]="{'is-invalid': vehicleForm.get('dailyRate')?.invalid && vehicleForm.get('dailyRate')?.touched}">
+                            <label class="form-label text-dark fw-medium">Prochain entretien (km)</label>
+                            <input type="number" class="form-control" formControlName="nextMaintenanceMileage"
+                                placeholder="Ex: 35000">
+                            <div class="form-text text-muted">Kilométrage prévu pour la prochaine maintenance.</div>
                         </div>
                     </div>
+                    <div class="row mb-0">
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Date Dernière Maintenance</label>
+                            <input type="date" class="form-control" formControlName="lastMaintenance">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Statut GPS Tracker</label>
+                            <select class="form-select" formControlName="gpsStatus">
+                                <option value="Non installé">Non installé</option>
+                                <option value="Installé en attente activation">Installé – En attente activation</option>
+                                <option value="Connecté">Connecté & Actif</option>
+                                <option value="Déconnecté">Déconnecté (Problème)</option>
+                            </select>
+                            <div class="form-text text-muted">Requis avant toute affectation à un client.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                    <h5 class="mb-3 mt-4 border-top pt-4">Offre Commerciale (Location-Vente)</h5>
+            <!-- Section 3: TCO – Coût Total d'Acquisition -->
+            <div class="card grid-margin border-start border-warning border-3">
+                <div class="card-body">
+                    <h6 class="card-title fw-bold text-uppercase mb-1">
+                        <i data-feather="box" appFeatherIcon class="icon-sm me-2 text-warning"></i>
+                        TCO – Coût Total d'Acquisition
+                    </h6>
+                    <p class="text-secondary fs-12px mb-4">Ces coûts permettent de calculer la rentabilité réelle du
+                        véhicule (marge brute).</p>
                     <div class="row mb-3">
                         <div class="col-sm-4">
-                            <label class="form-label text-dark fw-medium">Prix de Vente Total (FCFA)</label>
+                            <label class="form-label text-dark fw-medium">Prix d'achat (FCFA)</label>
+                            <input type="number" class="form-control" formControlName="purchasePrice"
+                                placeholder="Ex: 4000000">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Frais de Douane (FCFA)</label>
+                            <input type="number" class="form-control" formControlName="customsFees"
+                                placeholder="Ex: 500000">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Frais de Transport / Transit</label>
+                            <input type="number" class="form-control" formControlName="transitFees"
+                                placeholder="Ex: 150000">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Préparation / Carrosserie (FCFA)</label>
+                            <input type="number" class="form-control" formControlName="preparationCost"
+                                placeholder="Ex: 80000">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Pose GPS + Activation (FCFA)</label>
+                            <input type="number" class="form-control" formControlName="gpsInstallationCost"
+                                placeholder="Ex: 50000">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Autres Frais (FCFA)</label>
+                            <input type="number" class="form-control" formControlName="otherCosts"
+                                placeholder="Ex: 20000">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Offre Commerciale -->
+            <div class="card grid-margin border-start border-danger border-3">
+                <div class="card-body">
+                    <h6 class="card-title fw-bold text-uppercase mb-4">
+                        <i data-feather="tag" appFeatherIcon class="icon-sm me-2 text-danger"></i>
+                        Offre Commerciale (Location-Vente)
+                    </h6>
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <label class="form-label text-dark fw-medium">Prix de Vente Total (FCFA) <span
+                                    class="text-danger">*</span></label>
                             <input type="number" class="form-control" formControlName="totalPrice"
-                                placeholder="Ex: 5000000"
+                                placeholder="Ex: 5800000"
                                 [ngClass]="{'is-invalid': vehicleForm.get('totalPrice')?.invalid && vehicleForm.get('totalPrice')?.touched}">
                         </div>
                         <div class="col-sm-4">
                             <label class="form-label text-dark fw-medium">Apport Initial Requis (%)</label>
                             <input type="number" class="form-control" formControlName="depositPercentage"
-                                placeholder="Ex: 20"
-                                [ngClass]="{'is-invalid': vehicleForm.get('depositPercentage')?.invalid && vehicleForm.get('depositPercentage')?.touched}">
+                                placeholder="Ex: 20">
                             <div class="form-text text-muted"
                                 *ngIf="vehicleForm.get('totalPrice')?.value && vehicleForm.get('depositPercentage')?.value">
                                 Soit env. {{ formatCurrency((vehicleForm.get('totalPrice')?.value || 0) *
@@ -136,11 +230,26 @@
                         <div class="col-sm-4">
                             <label class="form-label text-dark fw-medium">Durée du contrat (Mois)</label>
                             <input type="number" class="form-control" formControlName="durationInMonths"
-                                placeholder="Ex: 24"
-                                [ngClass]="{'is-invalid': vehicleForm.get('durationInMonths')?.invalid && vehicleForm.get('durationInMonths')?.touched}">
+                                placeholder="Ex: 36">
                         </div>
                     </div>
                     <div class="row mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Versement Journalier (FCFA)</label>
+                            <input type="number" class="form-control" formControlName="dailyRate" placeholder="15000">
+                            <div class="form-text text-muted">Montant quotidien attendu du locataire.</div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label text-dark fw-medium">Usage prévu</label>
+                            <select class="form-select" formControlName="intendedUse">
+                                <option value="VTC">VTC (Taxi de ville)</option>
+                                <option value="Taxi">Taxi ordinaire</option>
+                                <option value="Transport Personnel">Transport Personnel</option>
+                                <option value="Livraison">Livraison</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-0">
                         <div class="col-sm-6">
                             <div class="form-check mb-2">
                                 <input type="checkbox" class="form-check-input" id="includeInsurance"
@@ -157,37 +266,116 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <h5 class="mb-3 mt-4 border-top pt-4">Documents Numériques</h5>
-                    <p class="text-muted tx-12 mb-3">Ces documents seront associés au dossier administratif du véhicule.
-                    </p>
-                    <div class="row mb-3">
-                        <div class="col-sm-4">
-                            <label class="form-label text-dark fw-medium">Carte Grise</label>
-                            <input type="file" class="form-control">
-                        </div>
-                        <div class="col-sm-4">
-                            <label class="form-label text-dark fw-medium">Attestation d'Assurance</label>
-                            <input type="file" class="form-control">
-                        </div>
-                        <div class="col-sm-4">
-                            <label class="form-label text-dark fw-medium">Technique de visite</label>
-                            <input type="file" class="form-control">
-                        </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Documents & Summary -->
+        <div class="col-md-4">
+
+            <!-- Financial Summary Card (live preview) -->
+            <div class="card grid-margin border-start border-success border-3">
+                <div class="card-body">
+                    <h6 class="card-title fw-bold text-uppercase mb-3">
+                        <i data-feather="trending-up" appFeatherIcon class="icon-sm me-2 text-success"></i>
+                        Aperçu Rentabilité
+                    </h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted fs-12px">Prix de vente</span>
+                        <strong>{{ (vehicleForm.get('totalPrice')?.value || 0) | number }} FCFA</strong>
                     </div>
-
-                    <!-- Actions -->
-                    <div class="mt-4 border-top pt-4 text-end">
-                        <button type="button" class="btn btn-secondary me-2" routerLink="/gbatcar/vehicles">
-                            Annuler
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            {{ isEditMode ? 'Enregistrer les Modifications' : 'Enregistrer le Véhicule' }}
-                        </button>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted fs-12px">TCO estimé</span>
+                        <strong class="text-danger">
+                            {{ ((vehicleForm.get('purchasePrice')?.value || 0) +
+                            (vehicleForm.get('customsFees')?.value || 0) +
+                            (vehicleForm.get('transitFees')?.value || 0) +
+                            (vehicleForm.get('preparationCost')?.value || 0) +
+                            (vehicleForm.get('gpsInstallationCost')?.value || 0) +
+                            (vehicleForm.get('otherCosts')?.value || 0)) | number }} FCFA
+                        </strong>
                     </div>
+                    <div class="d-flex justify-content-between mb-2 pt-2 border-top">
+                        <span class="fw-bold">Marge Brute Prévisionnelle</span>
+                        <strong class="text-success">
+                            {{ ((vehicleForm.get('totalPrice')?.value || 0) -
+                            ((vehicleForm.get('purchasePrice')?.value || 0) +
+                            (vehicleForm.get('customsFees')?.value || 0) +
+                            (vehicleForm.get('transitFees')?.value || 0) +
+                            (vehicleForm.get('preparationCost')?.value || 0) +
+                            (vehicleForm.get('gpsInstallationCost')?.value || 0) +
+                            (vehicleForm.get('otherCosts')?.value || 0))) | number }} FCFA
+                        </strong>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1 pt-2 border-top"
+                        *ngIf="vehicleForm.get('totalPrice')?.value && vehicleForm.get('depositPercentage')?.value && vehicleForm.get('durationInMonths')?.value">
+                        <span class="text-muted fs-12px">Mensualité locataire</span>
+                        <strong class="text-primary">
+                            {{ ((vehicleForm.get('totalPrice')?.value - (vehicleForm.get('totalPrice')?.value *
+                            vehicleForm.get('depositPercentage')?.value / 100)) /
+                            vehicleForm.get('durationInMonths')?.value) | number:'1.0-0' }} FCFA/mois
+                        </strong>
+                    </div>
+                </div>
+            </div>
 
-                </form>
+            <!-- Documents Numériques -->
+            <div class="card grid-margin">
+                <div class="card-body">
+                    <h6 class="card-title fw-bold text-uppercase mb-4">
+                        <i data-feather="file-text" appFeatherIcon class="icon-sm me-2 text-secondary"></i>
+                        Documents Numériques
+                    </h6>
+                    <p class="text-muted tx-12 mb-3">Associés au dossier administratif du véhicule.</p>
+                    <div class="mb-3">
+                        <label class="form-label text-dark fw-medium">Carte Grise</label>
+                        <input type="file" class="form-control form-control-sm">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-dark fw-medium">Attestation d'Assurance</label>
+                        <input type="file" class="form-control form-control-sm">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label text-dark fw-medium">Rapport Visite Technique</label>
+                        <input type="file" class="form-control form-control-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes & Observations -->
+            <div class="card grid-margin">
+                <div class="card-body">
+                    <h6 class="card-title fw-bold text-uppercase mb-3">
+                        <i data-feather="edit-3" appFeatherIcon class="icon-sm me-2 text-secondary"></i>
+                        Notes & Observations
+                    </h6>
+                    <textarea class="form-control" rows="4"
+                        placeholder="Notes internes sur le véhicule, état à l'arrivée, travaux effectués..."
+                        formControlName="notes"></textarea>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="card">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <div class="text-muted fs-13px">
+                <i data-feather="info" appFeatherIcon class="icon-sm me-1"></i>
+                Les champs marqués <span class="text-danger">*</span> sont obligatoires.
+            </div>
+            <div>
+                <button type="button" class="btn btn-secondary me-2" routerLink="/gbatcar/vehicles">
+                    <i data-feather="x" appFeatherIcon class="icon-sm me-1"></i> Annuler
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i data-feather="save" appFeatherIcon class="icon-sm me-1"></i>
+                    {{ isEditMode ? 'Enregistrer les Modifications' : 'Enregistrer le Véhicule' }}
+                </button>
             </div>
         </div>
     </div>
-</div>
+
+</form>

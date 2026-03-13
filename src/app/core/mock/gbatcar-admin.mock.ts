@@ -251,7 +251,16 @@ export const MOCK_VEHICLES = [
         includingGPS: true,
         assignedClient: 'Jean Dubois',
         lastMaintenance: '2024-02-15',
-        nextMaintenanceMileage: 50000
+        nextMaintenanceMileage: 50000,
+        // --- Santé financière du contrat ---
+        paymentStatus: 'À jour',       // 'À jour' | 'En retard' | 'Critique' | 'Soldé' | '-'
+        paidAmount: 967000,
+        totalContractAmount: 7665000,
+        contractProgress: 13,          // percentage paid
+        daysLate: 0,
+        gpsStatus: 'Connecté',         // 'Connecté' | 'Déconnecté' | 'Non installé'
+        contractEndDate: '2025-01-15',
+        maintenanceAlert: false
     },
     {
         id: 'VHC-1002',
@@ -274,7 +283,15 @@ export const MOCK_VEHICLES = [
         includingGPS: false,
         assignedClient: 'Aucun',
         lastMaintenance: '2024-01-10',
-        nextMaintenanceMileage: 35000
+        nextMaintenanceMileage: 35000,
+        paymentStatus: '-',
+        paidAmount: 0,
+        totalContractAmount: 0,
+        contractProgress: 0,
+        daysLate: 0,
+        gpsStatus: 'Non installé',
+        contractEndDate: null,
+        maintenanceAlert: true  // next maintenance imminent
     },
     {
         id: 'VHC-1003',
@@ -297,7 +314,15 @@ export const MOCK_VEHICLES = [
         includingGPS: false,
         assignedClient: 'Paul Yao',
         lastMaintenance: '2024-03-01',
-        nextMaintenanceMileage: 75000
+        nextMaintenanceMileage: 75000,
+        paymentStatus: 'En retard',
+        paidAmount: 150000,
+        totalContractAmount: 5000000,
+        contractProgress: 3,
+        daysLate: 7,
+        gpsStatus: 'Déconnecté',
+        contractEndDate: '2026-03-01',
+        maintenanceAlert: true
     },
     {
         id: 'VHC-1004',
@@ -320,7 +345,15 @@ export const MOCK_VEHICLES = [
         includingGPS: true,
         assignedClient: 'Marie Koné',
         lastMaintenance: '2023-11-20',
-        nextMaintenanceMileage: 25000
+        nextMaintenanceMileage: 25000,
+        paymentStatus: 'Critique',
+        paidAmount: 0,
+        totalContractAmount: 5500000,
+        contractProgress: 0,
+        daysLate: 45,
+        gpsStatus: 'Connecté',
+        contractEndDate: '2027-01-10',
+        maintenanceAlert: true  // next maintenance already passed km
     },
     {
         id: 'VHC-1005',
@@ -343,7 +376,15 @@ export const MOCK_VEHICLES = [
         includingGPS: true,
         assignedClient: 'Aucun',
         lastMaintenance: '2023-09-05',
-        nextMaintenanceMileage: 115000
+        nextMaintenanceMileage: 115000,
+        paymentStatus: '-',
+        paidAmount: 3500000,
+        totalContractAmount: 8000000,
+        contractProgress: 44,
+        daysLate: 0,
+        gpsStatus: 'Connecté',
+        contractEndDate: '2022-12-15',
+        maintenanceAlert: false
     }
 ];
 

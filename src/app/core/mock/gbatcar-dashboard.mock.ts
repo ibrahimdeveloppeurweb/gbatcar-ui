@@ -6,7 +6,15 @@ export const MOCK_DASHBOARD_STATS = {
     monthlyRevenue: 15400000, // in FCFA
     monthlyRevenueGrowth: 12.5,
     pendingPaymentsCount: 8,
-    pendingPaymentsAmount: 640000
+    pendingPaymentsAmount: 640000,
+
+    // Nouveaux KPIs Rent-to-Own
+    portfolioValue: 325400000, // Valeur totale du parc sous contrat FCFA
+    portfolioValueGrowth: 2.1,
+    collectionRate: 92.4, // Taux de recouvrement %
+    collectionRateTarget: 95,
+    idleRate: 17.3, // Taux d'inactivité % (26 dispos / 150)
+    idleRateTrend: 'down' // 'up' or 'down'
 };
 
 export const MOCK_REVENUE_CHART_DATA = [
@@ -77,10 +85,18 @@ export const MOCK_MONTHLY_SALES_DATA = [
     { month: '12/01/2024', sales: 124 }
 ];
 
-export const MOCK_FLEET_STATUS = [
-    { label: 'En Location', value: 105, color: '#D80010' }, // Primary
-    { label: 'Au Parking (Dispo)', value: 26, color: '#05a34a' }, // Success
-    { label: 'En Panne/Maintenance', value: 19, color: '#ff3366' }, // Danger
+// Anciennement MOCK_FLEET_STATUS, maintenant orienté Risque Financier
+export const MOCK_RISK_DISTRIBUTION = [
+    { label: 'À Jour (Sain)', value: 110, color: '#05a34a' }, // Success
+    { label: 'Retard < 15j', value: 9, color: '#ffb822' },   // Warning
+    { label: 'Critique > 15j', value: 5, color: '#ff3366' },  // Danger
+];
+
+export const MOCK_URGENT_ACTIONS = [
+    { client: 'Koffi Marc', vehicle: 'Toyota Vitz', delay: 22, amount: 150000, action: 'Coupure Moteur' },
+    { client: 'Bamba Ali', vehicle: 'Hyundai Accent', delay: 18, amount: 95000, action: 'Appel Urgent' },
+    { client: 'Zongo Paul', vehicle: 'Renault Logan', delay: 35, amount: 240000, action: 'Saisie' },
+    { client: 'Touré SITA', vehicle: 'Peugeot 308', delay: 16, amount: 110000, action: 'Appel Urgent' }
 ];
 
 export const MOCK_MAINTENANCE_ALERTS = [

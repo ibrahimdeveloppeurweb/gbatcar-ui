@@ -16,11 +16,36 @@ export class PaymentsComponent implements OnInit {
 
   payments = MOCK_PAYMENTS;
 
+  // KPI computed properties (dynamic, from data)
+  get totalValidated(): number {
+    return this.payments.filter(p => p.status === 'Validé').reduce((sum, p) => sum + p.amount, 0);
+  }
+  get pendingPaymentsTotal(): number {
+    return this.payments.filter(p => p.status === 'En attente').reduce((sum, p) => sum + p.amount, 0);
+  }
+  get pendingPaymentsCount(): number {
+    return this.payments.filter(p => p.status === 'En attente').length;
+  }
+  get dominantMethod(): string {
+    const counts: Record<string, number> = {};
+    this.payments.forEach(p => { counts[p.method] = (counts[p.method] || 0) + 1; });
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'N/A';
+  }
+  get dominantMethodPercent(): number {
+    const total = this.payments.length;
+    if (total === 0) return 0;
+    const counts: Record<string, number> = {};
+    this.payments.forEach(p => { counts[p.method] = (counts[p.method] || 0) + 1; });
+    const max = Math.max(...Object.values(counts));
+    return Math.round((max / total) * 100);
+  }
+
   showAdvancedFilters: boolean = true;
 
   toggleAdvancedFilters() {
     this.showAdvancedFilters = !this.showAdvancedFilters;
   }
+
 
   // 1. Quick Filters
   quickSearchTerm: string = '';

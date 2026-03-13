@@ -16,6 +16,63 @@
     </div>
 </div>
 
+<!-- KPI Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 col-6 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #6c757d;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Total Clients</p>
+                        <h4 class="fw-bold mb-0">{{ clients.length }}</h4>
+                    </div>
+                    <i data-feather="users" appFeatherIcon class="icon-lg text-secondary"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #2ecc71;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Clients Actifs</p>
+                        <h4 class="fw-bold mb-0 text-success">{{ activeCount }}</h4>
+                    </div>
+                    <i data-feather="user-check" appFeatherIcon class="icon-lg text-success"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card h-100" style="border-left: 4px solid #e74c3c;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">En Retard Paiement</p>
+                        <h4 class="fw-bold mb-0 text-danger">{{ lateCount }}</h4>
+                    </div>
+                    <i data-feather="alert-triangle" appFeatherIcon class="icon-lg text-danger"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card h-100" style="border-left: 4px solid #f39c12;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">En Attente Validation</p>
+                        <h4 class="fw-bold mb-0 text-warning">{{ pendingCount }}</h4>
+                    </div>
+                    <i data-feather="clock" appFeatherIcon class="icon-lg text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <!-- Filtres Avancés -->
 <div class="row mb-3" *ngIf="showAdvancedFilters">
     <div class="col-md-12">

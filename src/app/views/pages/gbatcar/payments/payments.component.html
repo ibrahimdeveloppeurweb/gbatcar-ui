@@ -100,61 +100,52 @@
     </div>
 </div>
 
-<div class="row">
-    <!-- Summary Cards -->
-    <div class="col-md-4 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-baseline">
-                    <h6 class="card-title mb-0">Total Encaissé (Ce mois)</h6>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-6 col-md-12 col-xl-5">
-                        <h3 class="mb-2">1,250,000</h3>
-                        <div class="d-flex align-items-baseline">
-                            <p class="text-success"><span>+3.3%</span> <i data-feather="arrow-up" appFeatherIcon
-                                    class="icon-sm mb-1"></i></p>
-                        </div>
+<!-- Summary KPI Cards -->
+<div class="row mb-4">
+    <div class="col-md-4 col-6 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #2ecc71;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Total Encaissé (Validé)</p>
+                        <h4 class="fw-bold mb-0 text-success">{{ totalValidated | number }} FCFA</h4>
+                        <small class="text-muted">{{ payments.length }} transactions</small>
                     </div>
+                    <i data-feather="trending-up" appFeatherIcon class="icon-lg text-success"></i>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-baseline">
-                    <h6 class="card-title mb-0">Transactions En Attente</h6>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-6 col-md-12 col-xl-5">
-                        <h3 class="mb-2 text-warning">45,000</h3>
-                        <div class="d-flex align-items-baseline">
-                            <p class="text-muted tx-13">Virements à valider</p>
-                        </div>
+    <div class="col-md-4 col-6 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #f39c12;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">En Attente de Validation</p>
+                        <h4 class="fw-bold mb-0 text-warning">{{ pendingPaymentsTotal | number }} FCFA</h4>
+                        <small class="text-muted">{{ pendingPaymentsCount }} virement(s) à valider</small>
                     </div>
+                    <i data-feather="clock" appFeatherIcon class="icon-lg text-warning"></i>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-baseline">
-                    <h6 class="card-title mb-0">Moyen Principal</h6>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h3 class="mb-2 text-primary">Mobile Money</h3>
-                        <div class="d-flex align-items-baseline">
-                            <p class="text-muted tx-13">Représente 72% des flux</p>
-                        </div>
+    <div class="col-md-4 col-6">
+        <div class="card h-100" style="border-left: 4px solid #3498db;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Moyen Principal</p>
+                        <h4 class="fw-bold mb-0 text-primary">{{ dominantMethod }}</h4>
+                        <small class="text-muted">Représente {{ dominantMethodPercent }}% des flux</small>
                     </div>
+                    <i data-feather="pie-chart" appFeatherIcon class="icon-lg text-primary"></i>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 
 <div class="row">
     <div class="col-md-12 grid-margin stretch-card">

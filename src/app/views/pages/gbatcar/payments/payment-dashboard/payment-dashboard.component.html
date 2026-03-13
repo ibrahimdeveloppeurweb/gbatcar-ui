@@ -1,0 +1,218 @@
+<!-- ==================== HEADER ==================== -->
+<div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+        <h4 class="mb-1 text-dark fw-bold">Tableau de Bord : Paiements & Trésorerie</h4>
+        <p class="text-muted fs-13px mb-0">Vue financière globale – encaissements, impayés & prévisions de trésorerie.
+        </p>
+    </div>
+    <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end gap-2">
+        <button class="btn btn-primary btn-sm d-flex align-items-center">
+            <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Enregistrer Paiement
+        </button>
+        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center bg-white">
+            <i data-feather="download" appFeatherIcon class="icon-sm me-1"></i> Exporter
+        </button>
+    </div>
+</div>
+
+<!-- ==================== KPI CARDS ==================== -->
+<div class="row mb-4">
+    <!-- MRR Attendu -->
+    <div class="col-md-3 col-6 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #3498db;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">MRR Attendu (Mois)</p>
+                        <h4 class="fw-bold mb-0 text-primary">{{ formatCurrency(stats.mrr) }}</h4>
+                        <small class="text-muted fs-11px">Encaissé: {{ formatCurrency(stats.mrrCollected) }}</small>
+                    </div>
+                    <i data-feather="trending-up" appFeatherIcon class="icon-lg text-primary"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Taux de Recouvrement -->
+    <div class="col-md-3 col-6 mb-3 mb-md-0">
+        <div class="card h-100" style="border-left: 4px solid #2ecc71;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Taux de Recouvrement</p>
+                        <h4 class="fw-bold mb-0"
+                            [ngClass]="stats.collectionRate >= 90 ? 'text-success' : 'text-warning'">
+                            {{ stats.collectionRate }}%
+                        </h4>
+                        <small class="text-muted fs-11px">Objectif: 95%</small>
+                    </div>
+                    <i data-feather="percent" appFeatherIcon class="icon-lg text-success"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Impayés -->
+    <div class="col-md-3 col-6">
+        <div class="card h-100" style="border-left: 4px solid #e74c3c;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Total Impayés</p>
+                        <h4 class="fw-bold mb-0 text-danger">{{ formatCurrency(stats.totalOverdue) }}</h4>
+                        <small class="text-muted fs-11px">{{ stats.overdueCount }} dossiers en retard</small>
+                    </div>
+                    <i data-feather="alert-circle" appFeatherIcon class="icon-lg text-danger"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trésorerie Disponible -->
+    <div class="col-md-3 col-6">
+        <div class="card h-100" style="border-left: 4px solid #f39c12;">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-secondary fs-12px mb-1">Trésorerie Disponible</p>
+                        <h4 class="fw-bold mb-0 text-dark">{{ formatCurrency(stats.cashBalance) }}</h4>
+                        <small class="text-muted fs-11px">Prévision: {{ formatCurrency(stats.nextMonthForecast)
+                            }}</small>
+                    </div>
+                    <i data-feather="dollar-sign" appFeatherIcon class="icon-lg text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== CHARTS ==================== -->
+<div class="row">
+    <!-- Chart: Cashflow Encaissements vs MRR -->
+    <div class="col-lg-8 grid-margin stretch-card">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-baseline mb-3">
+                    <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">
+                        Encaissements Réalisés vs Prévision MRR
+                    </h6>
+                    <div ngbDropdown class="mb-2">
+                        <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownPayChart">
+                            <i class="icon-md text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+                        </a>
+                        <div ngbDropdownMenu aria-labelledby="dropdownPayChart">
+                            <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false">
+                                <i data-feather="calendar" appFeatherIcon class="icon-sm me-2"></i>
+                                <span>Détail Mensuel</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <apx-chart [series]="cashflowChartOptions.series" [chart]="cashflowChartOptions.chart"
+                    [colors]="cashflowChartOptions.colors" [stroke]="cashflowChartOptions.stroke"
+                    [fill]="cashflowChartOptions.fill" [xaxis]="cashflowChartOptions.xaxis"
+                    [yaxis]="cashflowChartOptions.yaxis" [grid]="cashflowChartOptions.grid"
+                    [legend]="cashflowChartOptions.legend" [dataLabels]="cashflowChartOptions.dataLabels"
+                    [tooltip]="cashflowChartOptions.tooltip">
+                </apx-chart>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart: Modes de Paiement (Donut) -->
+    <div class="col-lg-4 grid-margin stretch-card">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">Modes de Paiement</h6>
+                <apx-chart [series]="paymentMethodChartOptions.series" [chart]="paymentMethodChartOptions.chart"
+                    [labels]="paymentMethodChartOptions.labels" [colors]="paymentMethodChartOptions.colors"
+                    [stroke]="paymentMethodChartOptions.stroke" [legend]="paymentMethodChartOptions.legend"
+                    [dataLabels]="paymentMethodChartOptions.dataLabels"
+                    [plotOptions]="paymentMethodChartOptions.plotOptions">
+                </apx-chart>
+                <!-- Extra stats -->
+                <div class="d-flex justify-content-around mt-2 pt-2 border-top">
+                    <div class="text-center">
+                        <h6 class="fw-bold mb-0 text-dark">{{ stats.activePenalties }}</h6>
+                        <small class="text-danger fs-11px">Pénalités actives</small>
+                    </div>
+                    <div class="text-center">
+                        <h6 class="fw-bold mb-0 text-dark">{{ formatCurrency(stats.penaltiesAmount) }}</h6>
+                        <small class="text-muted fs-11px">Total pénalités</small>
+                    </div>
+                    <div class="text-center">
+                        <h6 class="fw-bold mb-0 text-dark">{{ stats.avgPaymentDelay }}j</h6>
+                        <small class="text-muted fs-11px">Retard moyen</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== PAIEMENTS RÉCENTS ==================== -->
+<div class="row">
+    <div class="col-12 grid-margin stretch-card">
+        <div class="card border-0 shadow-sm border-top border-primary border-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="card-title mb-0 fs-13px fw-bold text-uppercase text-primary">
+                        <i data-feather="credit-card" appFeatherIcon class="icon-sm me-1"></i>
+                        Paiements Récents
+                    </h6>
+                    <a href="/gbatcar/payments" class="btn btn-sm btn-outline-primary">Voir tous</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">Réf.</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">Client</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">Contrat</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">Montant</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">Date</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">Mode</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">Statut</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let pay of recentPayments">
+                                <td class="fw-bold text-dark fs-12px">{{ pay.id }}</td>
+                                <td class="text-primary fw-medium">{{ pay.client }}</td>
+                                <td class="text-muted fs-12px">{{ pay.contractId }}</td>
+                                <td class="fw-bold text-dark">{{ formatCurrency(pay.amount) }}</td>
+                                <td class="text-muted fs-12px">{{ pay.date | date:'dd/MM/yyyy' }}</td>
+                                <td>
+                                    <span class="d-flex align-items-center">
+                                        <i [attr.data-feather]="getMethodIcon(pay.method)" appFeatherIcon
+                                            class="icon-xs me-1 text-muted"></i>
+                                        <span class="fs-12px">{{ pay.method }}</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-pill" [ngClass]="getStatusClass(pay.status)">
+                                        {{ pay.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <button class="btn btn-icon btn-xs btn-outline-primary" title="Voir détails">
+                                            <i data-feather="eye" appFeatherIcon class="icon-xs"></i>
+                                        </button>
+                                        <button class="btn btn-icon btn-xs btn-outline-success" title="Valider">
+                                            <i data-feather="check-square" appFeatherIcon class="icon-xs"></i>
+                                        </button>
+                                        <button class="btn btn-icon btn-xs btn-outline-warning" title="Modifier">
+                                            <i data-feather="edit-2" appFeatherIcon class="icon-xs"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

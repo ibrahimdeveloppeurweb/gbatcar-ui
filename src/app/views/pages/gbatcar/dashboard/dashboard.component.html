@@ -88,6 +88,8 @@
   <div class="col-12 col-xl-12 stretch-card">
     <div class="row flex-grow-1">
 
+      <!-- ================= ORIGINAL CARDS RESTORED ================= -->
+
       <!-- Card 1: Clients Actifs -->
       <div class="col-md-4 grid-margin stretch-card">
         <div class="card">
@@ -95,10 +97,10 @@
             <div class="d-flex justify-content-between align-items-baseline">
               <h6 class="card-title mb-0">Clients Actifs</h6>
               <div ngbDropdown class="mb-2">
-                <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton">
+                <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButtonClients">
                   <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
                 </a>
-                <div ngbDropdownMenu aria-labelledby="dropdownMenuButton">
+                <div ngbDropdownMenu aria-labelledby="dropdownMenuButtonClients">
                   <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i data-feather="eye"
                       appFeatherIcon class="icon-sm me-2"></i> <span class="">Voir Profils</span></a>
                 </div>
@@ -133,10 +135,10 @@
             <div class="d-flex justify-content-between align-items-baseline">
               <h6 class="card-title mb-0">Flotte GbatCar</h6>
               <div ngbDropdown class="mb-2">
-                <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton1">
+                <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButtonFleet">
                   <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
                 </a>
-                <div ngbDropdownMenu aria-labelledby="dropdownMenuButton1">
+                <div ngbDropdownMenu aria-labelledby="dropdownMenuButtonFleet">
                   <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i data-feather="eye"
                       appFeatherIcon class="icon-sm me-2"></i> <span class="">Voir tous</span></a>
                 </div>
@@ -170,10 +172,10 @@
             <div class="d-flex justify-content-between align-items-baseline">
               <h6 class="card-title mb-0">Rendement Mensuel</h6>
               <div ngbDropdown class="mb-2">
-                <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton2">
+                <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButtonRev">
                   <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
                 </a>
-                <div ngbDropdownMenu aria-labelledby="dropdownMenuButton2">
+                <div ngbDropdownMenu aria-labelledby="dropdownMenuButtonRev">
                   <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i data-feather="eye"
                       appFeatherIcon class="icon-sm me-2"></i> <span class="">Détails</span></a>
                 </div>
@@ -194,6 +196,136 @@
                   <apx-chart [series]="revenueMiniChartOptions.series" [chart]="revenueMiniChartOptions.chart"
                     [colors]="revenueMiniChartOptions.colors" [xaxis]="revenueMiniChartOptions.xaxis"
                     [stroke]="revenueMiniChartOptions.stroke" [markers]="revenueMiniChartOptions.markers"></apx-chart>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div> <!-- End Original Row -->
+
+<!-- ================= NEW RENT-TO-OWN KPIs ================= -->
+<div class="row">
+  <div class="col-12 col-xl-12 stretch-card">
+    <div class="row flex-grow-1">
+
+      <!-- Card 1: Valeur du Portefeuille -->
+      <div class="col-md-4 grid-margin stretch-card">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-baseline">
+              <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">Valeur du Portefeuille</h6>
+              <div ngbDropdown class="mb-2">
+                <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton">
+                  <i class="icon-md text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+                </a>
+                <div ngbDropdownMenu aria-labelledby="dropdownMenuButton">
+                  <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i
+                      data-feather="file-text" appFeatherIcon class="icon-sm me-2"></i> <span>Détail Contrats</span></a>
+                </div>
+              </div>
+            </div>
+            <div class="row align-items-center mt-2">
+              <div class="col-12">
+                <h3 class="mb-2 fw-bolder text-dark">{{ formatCurrency(stats.portfolioValue) }}</h3>
+                <div class="d-flex align-items-center">
+                  <span class="badge bg-success-subtle text-success fw-bold px-2 py-1 me-2 rounded-pill">
+                    <i data-feather="trending-up" appFeatherIcon class="icon-sm me-1"></i>+{{ stats.portfolioValueGrowth
+                    }}%
+                  </span>
+                  <p class="text-muted fs-12px mb-0">Total attendu sur la flotte engagée</p>
+                </div>
+              </div>
+            </div>
+            <!-- Progress Bar pour visuel -->
+            <div class="progress mt-3" style="height: 4px;">
+              <div class="progress-bar bg-primary" role="progressbar" style="width: 100%;" aria-valuenow="100"
+                aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Taux de Recouvrement -->
+      <div class="col-md-4 grid-margin stretch-card">
+        <div class="card border-0 shadow-sm"
+          [ngClass]="{'border-start border-warning border-3': stats.collectionRate < stats.collectionRateTarget}">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-baseline">
+              <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">Taux de Recouvrement (Mois)</h6>
+              <div ngbDropdown class="mb-2">
+                <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton1">
+                  <i class="icon-md text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+                </a>
+                <div ngbDropdownMenu aria-labelledby="dropdownMenuButton1">
+                  <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i
+                      data-feather="bar-chart-2" appFeatherIcon class="icon-sm me-2"></i> <span>Historique
+                      Mensuel</span></a>
+                </div>
+              </div>
+            </div>
+            <div class="row align-items-center mt-2">
+              <div class="col-12">
+                <h3 class="mb-2 fw-bolder"
+                  [ngClass]="stats.collectionRate >= stats.collectionRateTarget ? 'text-success' : 'text-warning'">
+                  {{ stats.collectionRate }}%
+                </h3>
+                <div class="d-flex align-items-center">
+                  <p class="text-muted fs-12px mb-0">
+                    Encaissements réels / Échéances exigibles. <br>
+                    Objectif : <strong>{{ stats.collectionRateTarget }}%</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <!-- Progress Bar interactive -->
+            <div class="progress mt-3" style="height: 6px;">
+              <div class="progress-bar"
+                [ngClass]="stats.collectionRate >= stats.collectionRateTarget ? 'bg-success' : 'bg-warning'"
+                role="progressbar" [style.width]="stats.collectionRate + '%'"
+                [attr.aria-valuenow]="stats.collectionRate" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Taux d'Inactivité (Idle Rate) -->
+      <div class="col-md-4 grid-margin stretch-card">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-baseline">
+              <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">Idle Rate (Inactivité Flotte)</h6>
+              <div ngbDropdown class="mb-2">
+                <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButton2">
+                  <i class="icon-md text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+                </a>
+                <div ngbDropdownMenu aria-labelledby="dropdownMenuButton2">
+                  <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i data-feather="truck"
+                      appFeatherIcon class="icon-sm me-2"></i> <span>Véhicules Dispos</span></a>
+                </div>
+              </div>
+            </div>
+            <div class="row align-items-center mt-2">
+              <div class="col-7">
+                <h3 class="mb-2 fw-bolder text-danger">{{ stats.idleRate }}%</h3>
+                <div class="d-flex align-items-center">
+                  <span class="badge bg-danger-subtle text-danger fw-bold px-2 py-1 me-2 rounded-pill"
+                    *ngIf="stats.idleRateTrend === 'up'">
+                    <i data-feather="arrow-up-right" appFeatherIcon class="icon-sm me-1"></i>Hausse
+                  </span>
+                  <span class="badge bg-success-subtle text-success fw-bold px-2 py-1 me-2 rounded-pill"
+                    *ngIf="stats.idleRateTrend === 'down'">
+                    <i data-feather="arrow-down-right" appFeatherIcon class="icon-sm me-1"></i>Baisse
+                  </span>
+                </div>
+              </div>
+              <div class="col-5 text-end">
+                <div class="bg-light rounded p-2 text-center border">
+                  <span class="d-block fs-4 fw-bolder text-dark">{{ stats.availableVehicles }}</span>
+                  <span class="text-muted fs-11px text-uppercase">Au Parking</span>
                 </div>
               </div>
             </div>
@@ -277,22 +409,23 @@
     </div>
   </div>
 
-  <!-- Fleet Status Donut Chart -->
+  <!-- Risk Distribution Donut Chart -->
   <div class="col-lg-4 grid-margin stretch-card">
-    <div class="card">
+    <div class="card border-0 shadow-sm">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-baseline mb-2">
-          <h6 class="card-title mb-0">État de la Flotte</h6>
+          <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">Répartition des Risques</h6>
           <div ngbDropdown class="mb-2">
             <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuFleet">
-              <i class="icon-lg text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
+              <i class="icon-md text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
             </a>
             <div ngbDropdownMenu aria-labelledby="dropdownMenuFleet">
-              <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i data-feather="eye"
-                  appFeatherIcon class="icon-sm me-2"></i> <span class="">Voir véhicules</span></a>
+              <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i data-feather="filter"
+                  appFeatherIcon class="icon-sm me-2"></i> <span>Filtrer par risque</span></a>
             </div>
           </div>
         </div>
+        <p class="text-secondary fs-13px mb-3">État de santé financier du portefeuille actif.</p>
         <apx-chart [series]="fleetStatusChartOptions.series" [chart]="fleetStatusChartOptions.chart"
           [colors]="fleetStatusChartOptions.colors" [plotOptions]="fleetStatusChartOptions.plotOptions"
           [stroke]="fleetStatusChartOptions.stroke" [labels]="fleetStatusChartOptions.labels"
@@ -401,24 +534,42 @@
   </div>
 </div>
 
-<div class="row">
-  <!-- Retards & Impayés Alert -->
+<div class="row mt-4">
+  <!-- Actions d'Urgence Recouvrement -->
   <div class="col-lg-5 col-xl-4 grid-margin stretch-card">
-    <div class="card">
+    <div class="card border-0 shadow-sm border-top border-danger border-3">
       <div class="card-body">
-        <div class="d-flex justify-content-between align-items-baseline mb-2">
-          <h6 class="card-title text-danger mb-0">Alerte Retards & Impayés</h6>
+        <div class="d-flex justify-content-between align-items-baseline mb-3">
+          <h6 class="card-title text-danger mb-0 fs-13px fw-bold text-uppercase">Actions d'Urgence</h6>
+          <span class="badge bg-danger rounded-pill">{{ stats.pendingPaymentsCount }} Dossiers</span>
         </div>
-        <p class="text-secondary mb-4">Ces clients ont manqué leur date d'échéance de paiement.</p>
+        <p class="text-secondary fs-12px mb-3">Interventions prioritaires pour limiter les pertes.</p>
 
-        <div class="d-flex flex-column text-center justify-content-center h-50">
-          <h1 class="display-3 text-danger fw-bolder">{{ stats.pendingPaymentsCount }}</h1>
-          <p class="fs-4 fw-bold text-dark mt-2">Dossiers concernés</p>
-          <h3 class="mt-4">{{ formatCurrency(stats.pendingPaymentsAmount) }}</h3>
-          <p class="text-muted">Total estimé des impayés</p>
+        <div class="d-flex flex-column mt-2">
+          <div *ngFor="let act of urgentActions" class="p-3 border rounded mb-2 bg-light">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-bold fs-13px text-dark">{{ act.client }}</span>
+              <span class="text-danger fw-bolder fs-13px">{{ act.delay }}j retard</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-secondary fs-11px"><i data-feather="truck" appFeatherIcon class="icon-xs me-1"></i>{{
+                act.vehicle }}</span>
+              <span class="text-dark fw-bold fs-12px">{{ formatCurrency(act.amount) }}</span>
+            </div>
+            <div class="d-grid mt-2 gap-2 d-md-block text-end">
+              <button class="btn btn-xs me-1 px-3"
+                [ngClass]="act.action === 'Coupure Moteur' ? 'btn-danger' : 'btn-outline-primary'">
+                {{ act.action }}
+              </button>
+              <button class="btn btn-xs btn-light btn-icon" title="Détails du contrat">
+                <i data-feather="file-text" appFeatherIcon class="icon-sm"></i>
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="d-grid mt-4">
-          <button class="btn btn-danger">Lancer les relances SMS</button>
+
+        <div class="d-grid mt-3">
+          <button class="btn btn-outline-danger btn-sm">Voir tous les impayés</button>
         </div>
       </div>
     </div>

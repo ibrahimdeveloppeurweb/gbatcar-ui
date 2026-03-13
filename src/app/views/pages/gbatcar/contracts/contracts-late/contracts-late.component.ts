@@ -16,10 +16,33 @@ export class ContractsLateComponent implements OnInit {
 
   contracts = MOCK_CONTRACTS.filter(c => c.paymentStatus === 'En retard' || c.paymentStatus === 'Impayé définitif');
 
-  showAdvancedFilters: boolean = true;
+  // Recovery KPIs
+  get totalArrears(): number {
+    return this.contracts.reduce((sum, c) => sum + (c.totalAmount - c.paidAmount), 0);
+  }
+
+  get criticalCasesCount(): number {
+    return this.contracts.filter(c => c.paymentStatus === 'Impayé définitif').length;
+  }
+
+  get promiseToPayCount(): number {
+    // Simulation: 20% of late contracts have a promise
+    return Math.ceil(this.contracts.length * 0.2);
+  }
+
+  showAdvancedFilters: boolean = false;
 
   toggleAdvancedFilters() {
     this.showAdvancedFilters = !this.showAdvancedFilters;
+  }
+
+  // Aging Balance Logic
+  getAgingSegment(contract: any): string {
+    const days = this.calculateLateDays(contract.id);
+    if (days > 30) return '30j+';
+    if (days > 15) return '16-30j';
+    if (days > 7) return '8-15j';
+    return '1-7j';
   }
 
   // 1. Quick Filters
@@ -88,7 +111,10 @@ export class ContractsLateComponent implements OnInit {
     this.applyAdvancedFilters();
   }
 
-  calculateLateDays(): number {
-    return Math.floor(Math.random() * 20) + 1; // Simulation du nombre de jours de retard
+  calculateLateDays(contractId: string = ''): number {
+    // Deterministic simulation based on ID for consistency in UI
+    if (contractId.includes('002')) return 5;
+    if (contractId.includes('045')) return 45;
+    return 12;
   }
 }
