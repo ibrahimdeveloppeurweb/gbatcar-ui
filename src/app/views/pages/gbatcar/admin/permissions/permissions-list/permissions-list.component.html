@@ -11,7 +11,12 @@
 </div>
 
 <div class="row">
-    <div class="col-md-12 grid-margin stretch-card">
+    <div *ngIf="loading" class="col-12 text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    <div *ngIf="!loading" class="col-md-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
                 <h6 class="card-title">Rôles existants</h6>
@@ -36,15 +41,15 @@
                         <tbody>
                             <tr *ngFor="let role of roles">
                                 <td>
-                                    <span class="badge px-3 py-2 rounded-1" [ngClass]="role.badgeClass">
-                                        {{ role.name }}
+                                    <span class="badge px-3 py-2 rounded-1 bg-primary">
+                                        {{ role.nom }}
                                     </span>
                                 </td>
                                 <td class="text-wrap text-dark fs-13px" style="max-width: 400px; line-height: 1.5;">{{
                                     role.description }}
                                 </td>
-                                <td class="text-center text-dark fw-bold fs-13px">{{ role.permissionsCount }}</td>
-                                <td class="text-center text-dark fw-bold fs-14px">{{ role.usersCount }}</td>
+                                <td class="text-center text-dark fw-bold fs-13px">{{ role.paths ? role.paths.length : 0 }} permission(s)</td>
+                                <td class="text-center text-dark fw-bold fs-14px">{{ role.usersCount || 0 }}</td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center align-items-center gap-2">
                                         <!-- View Icon (Cyan outline) -->
@@ -59,7 +64,7 @@
                                         </button>
                                         <!-- Delete Icon (Red outline square) -->
                                         <button class="btn btn-icon btn-square btn-outline-danger btn-sm"
-                                            title="Supprimer le rôle">
+                                            (click)="onDelete(role)" title="Supprimer le rôle">
                                             <i data-feather="trash-2" appFeatherIcon></i>
                                         </button>
                                     </div>

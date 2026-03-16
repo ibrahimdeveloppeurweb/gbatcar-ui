@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { MOCK_COLLABORATORS } from '../../../../../core/mock/gbatcar-admin.mock';
+import { UserService } from '../../../../../core/services/user/user.service';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import Swal from 'sweetalert2';
 
@@ -14,26 +14,85 @@ import Swal from 'sweetalert2';
 })
 export class GbatcarAdminUsersComponent implements OnInit {
 
-    collaborators = [...MOCK_COLLABORATORS];
+    collaborators: any[] = [];
+    loading: boolean = false;
+    
+    private router = inject(Router);
+    private userService = inject(UserService);
 
-    constructor(private router: Router) { }
+    constructor() { }
 
     formatPermissions(permissions: string[] | undefined): string {
         if (!permissions || permissions.length === 0) return 'Aucune permission';
         return permissions.length + ' permission' + (permissions.length > 1 ? 's' : '');
     }
 
-    ngOnInit(): void { }
+    ngOnInit(): void { 
+        this.loadUsers();
+    }
+
+    loadUsers(): void {
+        this.loading = true;
+        this.userService.getList().subscribe({
+            next: (res: any) => {
+                this.collaborators = res.data || res;
+                this.loading = false;
+            },
+            error: (err: any) => {
+                console.error('Erreur de chargement des utilisateurs', err);
+                this.loading = false;
+                Swal.fire('Erreur', 'Impossible de charger les utilisateurs.', 'error');
+            }
+        });
+    }
 
     navigateToAdd() {
         this.router.navigate(['/gbatcar/admin/users/add']);
     }
 
+    navigateToDetails(user: any) {
+        this.router.navigate(['/gbatcar/admin/users/details', user.uuid]);
+    }
+
     navigateToEdit(user: any) {
-        this.router.navigate(['/gbatcar/admin/users/edit', user.id]);
+        this.router.navigate(['/gbatcar/admin/users/edit', user.uuid]);
     }
 
     toggleStatus(user: any) {
-        user.status = user.status === 'Actif' ? 'Inactif' : 'Actif';
+        const action = user.isEnabled ? 'désactiver' : 'activer';
+        const actionLabel = user.isEnabled ? 'Désactiver' : 'Activer';
+        const iconColor = user.isEnabled ? '#d33' : '#28a745';
+        
+        Swal.fire({
+            title: `${actionLabel} ce compte ?`,
+            text: `Vous êtes sur le point de ${action} le compte de ${user.prenom || ''} ${user.nom}.`,
+            icon: user.isEnabled ? 'warning' : 'question',
+            showCancelButton: true,
+            reverseButtons: true,
+            confirmButtonColor: iconColor,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `<i class="fa fa-check"></i> Oui, ${action}`,
+            cancelButtonText: '<i class="fa fa-times"></i> Annuler'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.userService.toggle(user.uuid).subscribe({
+                    next: (res: any) => {
+                        user.isEnabled = res.isEnabled;
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: res.message,
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                    },
+                    error: () => {
+                        Swal.fire('Erreur', 'Impossible de changer le statut du compte.', 'error');
+                    }
+                });
+            }
+        });
     }
 }

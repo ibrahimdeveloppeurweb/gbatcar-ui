@@ -1,150 +1,186 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MOCK_COLLABORATORS } from '../../../../../../core/mock/gbatcar-admin.mock';
-import Swal from 'sweetalert2';
+import { PermissionService } from '../../../../../../core/services/permission/permission.service';
+import { UserService } from '../../../../../../core/services/user/user.service';
+import { Role } from '../../../../../../core/models/permission.model';
+import Swal from 'sweetalert2/dist/sweetalert2.js';
+import { NgSelectModule } from '@ng-select/ng-select';
+import { FeatherIconDirective } from '../../../../../../core/feather-icon/feather-icon.directive';
 
 @Component({
   selector: 'app-user-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, NgSelectModule, FeatherIconDirective],
   templateUrl: './user-form.component.html',
   styleUrl: './user-form.component.scss'
 })
 export class UserFormComponent implements OnInit {
-  userForm: FormGroup;
+  private formBuild = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private permissionService = inject(PermissionService);
+  private userService = inject(UserService);
+
+  form!: FormGroup;
   isEditMode = false;
-  currentUserId: number | null = null;
-  collaborators = MOCK_COLLABORATORS;
+  currentUserId: string | null = null;
+  submit: boolean = false;
+  loading: boolean = false;
+  isPasswordVisible: boolean = false;
 
-  availablePermissions = [
-    { id: 'dashboard_view', label: 'Voir le Tableau de Bord' },
-    { id: 'clients_manage', label: 'Gérer les Clients' },
-    { id: 'vehicles_manage', label: 'Gérer les Véhicules' },
-    { id: 'payments_manage', label: 'Gérer les Paiements' },
-    { id: 'settings_manage', label: 'Gérer les Paramètres' }
-  ];
+  availableRoles: Role[] = [];
 
-  constructor(
-    private formBuilder: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router
-  ) {
-    this.userForm = this.formBuilder.group({
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      role: ['Service Client', Validators.required],
-      password: [''],
-      permissions: this.formBuilder.array([])
-    });
-
-    this.addCheckboxes();
-  }
-
-  get permissionsFormArray() {
-    return this.userForm.controls['permissions'] as any;
-  }
-
-  private addCheckboxes() {
-    this.availablePermissions.forEach(() => this.permissionsFormArray.push(this.formBuilder.control(false)));
+  constructor() {
+    this.newForm();
   }
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
-      const id = params.get('id');
-      if (id) {
-        this.isEditMode = true;
-        this.currentUserId = +id;
-        this.loadUserData(this.currentUserId);
-      } else {
-        this.isEditMode = false;
-        this.userForm.get('password')?.setValidators(Validators.required);
-        this.userForm.get('password')?.updateValueAndValidity();
+    // Load available roles from the API
+    this.permissionService.getList().subscribe({
+      next: (res: any) => {
+        this.availableRoles = res.data || res;
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des rôles', err);
       }
+    });
+
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.isEditMode = true;
+      this.currentUserId = id;
+      this.loadUserData(this.currentUserId);
+    } else {
+      this.isEditMode = false;
+      this.form.get('password')?.setValidators(Validators.required);
+      this.form.get('password')?.updateValueAndValidity();
+    }
+  }
+
+  newForm() {
+    this.form = this.formBuild.group({
+      uuid: [null],
+      firstName: [null, Validators.required],
+      lastName: [null, Validators.required],
+      email: [null, [Validators.required, Validators.email]],
+      contact: [null, Validators.required],
+      roles: [[], Validators.required], // Tableau de rôles
+      password: [null]
     });
   }
 
-  loadUserData(id: number) {
-    const user = this.collaborators.find(c => c.id === id);
-    if (user) {
-      this.userForm.patchValue({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        role: user.role,
-        password: '' // Don't show password on edit
+  editForm(userData: any) {
+    if (this.isEditMode) {
+      this.form.patchValue({
+        uuid: userData.uuid,
+        firstName: userData.prenom, // Mapping prenom backend -> firstName form
+        lastName: userData.nom,     // Mapping nom backend -> lastName form
+        email: userData.email,
+        contact: userData.telephone, // Mapping telephone backend -> contact form
+        username: userData.email,
+        roles: userData.droits ? userData.droits.map((r: any) => r.uuid || r) : [], // Extraire les UUIDs
+        password: null // Ne pas afficher ou requérir le mot de passe en édition
       });
 
-      // Set permissions based on existing data
-      this.permissionsFormArray.clear();
-      this.availablePermissions.forEach((perm) => {
-        const hasPerm = user.permissions ? user.permissions.includes(perm.id) : false;
-        this.permissionsFormArray.push(this.formBuilder.control(hasPerm));
-      });
-
-      // Optionally remove password requirement on edit
-      this.userForm.get('password')?.clearValidators();
-      this.userForm.get('password')?.updateValueAndValidity();
+      this.form.get('password')?.clearValidators();
+      this.form.get('password')?.updateValueAndValidity();
     }
+  }
+
+  loadUserData(uuid: string) {
+    this.loading = true;
+    this.userService.getSingle(uuid).subscribe({
+      next: (res: any) => {
+        const user = res.data || res;
+        this.editForm(user);
+        this.loading = false;
+      },
+      error: (err: any) => {
+        console.error('Erreur lors du chargement de l\'utilisateur', err);
+        this.toast('Erreur lors du chargement de l\'utilisateur', 'Erreur', 'error');
+        this.loading = false;
+        this.navigateBack();
+      }
+    });
   }
 
   navigateBack() {
     this.router.navigate(['/gbatcar/admin/users']);
   }
 
-  saveUser() {
-    if (this.userForm.invalid) {
-      this.userForm.markAllAsTouched();
+  onConfirme() {
+    this.submit = true;
+    if (this.form.invalid) {
+      this.toast('Veuillez remplir correctement les champs obligatoires.', 'Erreur', 'warning');
       return;
     }
 
-    const formData = this.userForm.value;
-    const selectedPermissions = this.userForm.value.permissions
-      .map((checked: boolean, i: number) => checked ? this.availablePermissions[i].id : null)
-      .filter((v: any) => v !== null);
-
-    if (this.isEditMode && this.currentUserId) {
-      // Update fake data
-      const index = this.collaborators.findIndex(c => c.id === this.currentUserId);
-      if (index > -1) {
-        this.collaborators[index] = {
-          ...this.collaborators[index],
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          role: formData.role,
-          permissions: selectedPermissions
-        };
+    Swal.fire({
+      title: '',
+      text: this.isEditMode ? "Confirmez-vous la modification de cet utilisateur ?" : "Confirmez-vous l'enregistrement de ce nouvel utilisateur ?",
+      icon: 'warning',
+      showCancelButton: true,
+      showCloseButton: true,
+      confirmButtonText: 'Confirmer <i class="fas fa-check"></i>',
+      cancelButtonText: 'Annuler <i class="feather icon-x-circle"></i>',
+      confirmButtonColor: '#1bc943',
+      reverseButtons: true
+    }).then((result: any) => {
+      if (result.isConfirmed) {
+        this.saveData();
       }
-      Swal.fire({
-        icon: 'success',
-        title: 'Succès',
-        text: 'Collaborateur mis à jour avec succès.',
-        timer: 2000,
-        showConfirmButton: false
-      }).then(() => this.navigateBack());
-    } else {
-      // Create new
-      const newUser = {
-        id: Math.floor(Math.random() * 1000) + 5,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        role: formData.role,
-        status: 'Actif',
-        lastLogin: 'Jamais',
-        permissions: selectedPermissions
-      };
-      this.collaborators.unshift(newUser);
-      Swal.fire({
-        icon: 'success',
-        title: 'Succès',
-        text: 'Nouveau collaborateur ajouté avec succès.',
-        timer: 2000,
-        showConfirmButton: false
-      }).then(() => this.navigateBack());
-    }
+    });
+  }
+
+  saveData() {
+    const data = this.form.getRawValue();
+
+    // Formatter le payload pour l'API Symfony (UserManager attend nom, prenom, email, password, roles)
+    const payload = {
+      uuid: data.uuid,
+      nom: data.lastName,
+      prenom: data.firstName,
+      email: data.email,
+      contact: data.contact,
+      username: data.email,
+      password: data.password,
+      // Symfony attend un tableau d'objets avec uuid pour la relation
+      roles: data.roles ? data.roles.map((uuid: string) => ({ uuid: uuid })) : []
+    };
+
+    console.log("Payload à envoyer : ", payload);
+
+    this.userService.add(payload as any).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.toast(this.isEditMode ? 'Utilisateur modifié avec succès' : 'Utilisateur créé avec succès', 'Succès', 'success');
+        this.navigateBack();
+      },
+      error: (err) => {
+        this.loading = false;
+        console.error("Erreur création utilisateur", err);
+        this.toast(err.error?.msg || "Une erreur est survenue lors de l'enregistrement.", 'Erreur', 'error');
+      }
+    });
+  }
+
+  toast(msg: string, title: string, type: string) {
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+    });
+
+    const iconType = (type === 'error' || type === 'success' || type === 'warning' || type === 'info' || type === 'question')
+      ? type : 'info';
+
+    Toast.fire({
+      icon: iconType,
+      title: title ? `${title} - ${msg}` : msg
+    });
   }
 }

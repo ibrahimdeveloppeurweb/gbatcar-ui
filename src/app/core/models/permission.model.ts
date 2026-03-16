@@ -13,18 +13,19 @@ export interface Permission {
 }
 
 export interface Role {
+    id?: number;
     uuid?: string;
-    id?: string;
-    name?: string; // e.g., 'Super-Admin', 'Gérant'
+
+    nom?: string;
     description?: string;
+    isAdmin?: boolean;
 
-    // UI Metadata
+    paths?: Path[];
+    users?: any[]; // We can keep any[] here to avoid circular dependency with user.model.ts
     usersCount?: number;
-    permissionsCount?: string; // e.g., 'Toutes les permissions', '12 permissions'
-    badgeClass?: string;
-
-    permissions?: Permission[];
 
     createdAt?: string;
     updatedAt?: string;
+    create?: string;
+    update?: string;
 }

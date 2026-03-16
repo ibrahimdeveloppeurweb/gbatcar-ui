@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
-import { MOCK_CATALOG } from '../../../../../core/mock/gbatcar-catalog.mock';
+import { VehicleService } from '../../../../../core/services/vehicle/vehicle.service';
+import { environment } from '../../../../../../environments/environment';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-catalog',
@@ -14,12 +16,18 @@ import { MOCK_CATALOG } from '../../../../../core/mock/gbatcar-catalog.mock';
 })
 export class CatalogComponent implements OnInit {
 
-  catalogItems = MOCK_CATALOG;
-  // 1. Quick Filters
+  private vehicleService = inject(VehicleService);
+
+  catalogItems: any[] = [];
+  loading: boolean = false;
+
+  baseUrl = environment.serverUrl.replace('/api', '');
+
+  // Quick Filters
   quickSearchTerm: string = '';
   quickStatusFilter: string = '';
 
-  // 2. Advanced Filters Form State
+  // Advanced Filters
   advSearchTerm: string = '';
   advStatusFilter: string = '';
   advYearMin: number | null = null;
@@ -27,91 +35,202 @@ export class CatalogComponent implements OnInit {
   advPriceMin: number | null = null;
   advPriceMax: number | null = null;
 
-  // 3. ACTUALLY APPLIED Filters
-  appliedSearchTerm: string = '';
-  appliedStatusFilter: string = '';
-  appliedYearMin: number | null = null;
-  appliedYearMax: number | null = null;
-  appliedPriceMin: number | null = null;
-  appliedPriceMax: number | null = null;
-
   showAdvancedFilters: boolean = true;
 
-  constructor() { }
+  // ─── Lightbox state ─────────────────────────────────────────────────────────
+  lightboxOpen = false;
+  lightboxVehicle: any = null;
+  lightboxIndex = 0;
 
-  ngOnInit(): void {
+  get lightboxPhotos(): string[] {
+    if (!this.lightboxVehicle) return [];
+    return this.lightboxVehicle.photos || [];
   }
 
-  toggleAdvancedFilters() {
-    this.showAdvancedFilters = !this.showAdvancedFilters;
+  get lightboxCurrentPhoto(): string {
+    return this.lightboxPhotos[this.lightboxIndex] || '';
   }
 
-  get filteredCatalog() {
-    return this.catalogItems.filter(item => {
-      // 1. Text Search
-      const searchStr = `${item.brand} ${item.model} ${item.year}`.toLowerCase();
-      const matchSearch = !this.appliedSearchTerm || searchStr.includes(this.appliedSearchTerm.toLowerCase());
+  openLightbox(vehicle: any, index: number, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.lightboxVehicle = vehicle;
+    this.lightboxIndex = index;
+    this.lightboxOpen = true;
+  }
 
-      // 2. Status
-      const matchStatus = !this.appliedStatusFilter || item.status === this.appliedStatusFilter;
+  closeLightbox(): void {
+    this.lightboxOpen = false;
+    this.lightboxVehicle = null;
+    this.lightboxIndex = 0;
+  }
 
-      // 3. Range: Year
-      const matchYearMin = this.appliedYearMin === null || item.year >= this.appliedYearMin;
-      const matchYearMax = this.appliedYearMax === null || item.year <= this.appliedYearMax;
-      const matchYear = matchYearMin && matchYearMax;
+  prevPhoto(event: Event): void {
+    event.stopPropagation();
+    if (this.lightboxIndex > 0) this.lightboxIndex--;
+  }
 
-      // 4. Range: Price
-      const matchPriceMin = this.appliedPriceMin === null || item.commercialOffer.totalPrice >= this.appliedPriceMin;
-      const matchPriceMax = this.appliedPriceMax === null || item.commercialOffer.totalPrice <= this.appliedPriceMax;
-      const matchPrice = matchPriceMin && matchPriceMax;
+  nextPhoto(event: Event): void {
+    event.stopPropagation();
+    if (this.lightboxIndex < this.lightboxPhotos.length - 1) this.lightboxIndex++;
+  }
 
-      return matchSearch && matchStatus && matchYear && matchPrice;
+  getVehicleCoverUrl(vehicle: any): string {
+    const photos: string[] = vehicle.photos || [];
+    const cover = vehicle.photo || (photos.length > 0 ? photos[0] : null);
+    return cover ? this.baseUrl + cover : 'assets/images/placeholder.jpg';
+  }
+
+  setAsCover(event: Event): void {
+    event.stopPropagation();
+    const photo = this.lightboxCurrentPhoto;
+    if (!photo || !this.lightboxVehicle) return;
+
+    console.log('Setting cover:', photo, 'for vehicle:', this.lightboxVehicle.id);
+
+    this.vehicleService.setCoverImage(this.lightboxVehicle.id, photo).subscribe({
+      next: (res: any) => {
+        console.log('Cover set success:', res);
+        this.lightboxVehicle.photo = photo;
+        if (res.photos && Array.isArray(res.photos)) {
+          this.lightboxVehicle.photos = res.photos;
+        } else {
+          const idx = this.lightboxVehicle.photos?.indexOf(photo);
+          if (idx !== undefined && idx > -1) {
+            this.lightboxVehicle.photos.splice(idx, 1);
+            this.lightboxVehicle.photos.unshift(photo);
+          }
+        }
+        this.lightboxIndex = 0;
+        Swal.fire({
+          title: 'Couverture définie !',
+          text: 'L\'image apparaîtra désormais en premier.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      },
+      error: (err) => {
+        console.error('Error setting cover:', err);
+        Swal.fire({ title: 'Erreur', text: 'Impossible de définir la couverture.', icon: 'error', timer: 2000, showConfirmButton: false });
+      }
     });
   }
 
-  applyQuickFilters() {
-    this.appliedSearchTerm = this.quickSearchTerm;
-    this.appliedStatusFilter = this.quickStatusFilter;
+  deletePhoto(event: Event): void {
+    event.stopPropagation();
+    const photo = this.lightboxCurrentPhoto;
+    if (!photo || !this.lightboxVehicle) return;
 
+    this.vehicleService.removeGalleryImage(this.lightboxVehicle.id, photo).subscribe({
+      next: (res: any) => {
+        console.log('Deletion success:', res);
+        // Suppression locale
+        const idx = this.lightboxVehicle.photos?.indexOf(photo);
+        if (idx > -1) {
+          this.lightboxVehicle.photos.splice(idx, 1);
+        }
+
+        // Ajustement de l'index
+        if (this.lightboxIndex >= this.lightboxPhotos.length) {
+          this.lightboxIndex = Math.max(0, this.lightboxPhotos.length - 1);
+        }
+
+        // Fermer si plus de photos
+        if (this.lightboxPhotos.length === 0) {
+          this.closeLightbox();
+        }
+
+        Swal.fire({
+          title: 'Supprimée !',
+          icon: 'success',
+          timer: 1200,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
+      },
+      error: (err) => {
+        console.error('Deletion error:', err);
+        Swal.fire({ title: 'Erreur', text: 'Impossible de supprimer la photo.', icon: 'error', timer: 2000, showConfirmButton: false });
+      }
+    });
+
+    // Swal.fire({
+    //   title: 'Supprimer cette photo ?',
+    //   text: 'Cette action retirera la photo de ce véhicule.',
+    //   icon: 'warning',
+    //   showCancelButton: true,
+    //   confirmButtonText: 'Oui, supprimer',
+    //   cancelButtonText: 'Annuler',
+    //   confirmButtonColor: '#d33',
+    //   cancelButtonColor: '#6c757d',
+    // }).then((result) => {
+    //   if (result.isConfirmed) {
+    //     console.log('Confirmed deletion of:', photo, 'for vehicle:', this.lightboxVehicle.id);
+
+
+    //   }
+    // });
+  }
+
+  // ─── Catalog loading & filters ────────────────────────────────────────────
+  constructor() { }
+
+  ngOnInit(): void {
+    this.loadCatalog();
+  }
+
+  loadCatalog() {
+    this.loading = true;
+    const filters: any = {};
+    if (this.advSearchTerm) filters.search = this.advSearchTerm;
+    if (this.advStatusFilter) filters.status = this.advStatusFilter;
+    if (this.advYearMin) filters.yearMin = this.advYearMin;
+    if (this.advYearMax) filters.yearMax = this.advYearMax;
+    if (this.advPriceMin) filters.priceMin = this.advPriceMin;
+    if (this.advPriceMax) filters.priceMax = this.advPriceMax;
+
+    this.vehicleService.getCatalog(filters).subscribe({
+      next: (res: any) => { this.catalogItems = res; this.loading = false; },
+      error: (err) => { console.error('Erreur catalogue', err); this.loading = false; }
+    });
+  }
+
+  toggleAdvancedFilters() { this.showAdvancedFilters = !this.showAdvancedFilters; }
+
+  applyQuickFilters() {
     this.advSearchTerm = this.quickSearchTerm;
     this.advStatusFilter = this.quickStatusFilter;
+    this.loadCatalog();
   }
 
   applyAdvancedFilters() {
-    this.appliedSearchTerm = this.advSearchTerm;
-    this.appliedStatusFilter = this.advStatusFilter;
-    this.appliedYearMin = this.advYearMin;
-    this.appliedYearMax = this.advYearMax;
-    this.appliedPriceMin = this.advPriceMin;
-    this.appliedPriceMax = this.advPriceMax;
-
     this.quickSearchTerm = this.advSearchTerm;
     this.quickStatusFilter = this.advStatusFilter;
+    this.loadCatalog();
   }
 
   resetFilters() {
-    this.advSearchTerm = '';
-    this.advStatusFilter = '';
-    this.advYearMin = null;
-    this.advYearMax = null;
-    this.advPriceMin = null;
-    this.advPriceMax = null;
-
-    this.quickSearchTerm = '';
-    this.quickStatusFilter = '';
-
-    this.applyAdvancedFilters();
+    this.advSearchTerm = ''; this.advStatusFilter = '';
+    this.advYearMin = null; this.advYearMax = null;
+    this.advPriceMin = null; this.advPriceMax = null;
+    this.quickSearchTerm = ''; this.quickStatusFilter = '';
+    this.loadCatalog();
   }
 
   calculateDeposit(totalPrice: number, percentage: number): number {
+    if (!totalPrice || !percentage) return 0;
     return (totalPrice * percentage) / 100;
   }
 
   calculateMonthlyPayment(totalPrice: number, deposit: number, months: number): number {
-    return (totalPrice - deposit) / months;
+    if (!totalPrice || !months || months === 0) return 0;
+    return (totalPrice - (deposit || 0)) / months;
   }
 
   formatCurrency(amount: number): string {
+    if (!amount && amount !== 0) return '0 FCFA';
     return new Intl.NumberFormat('fr-FR').format(Math.round(amount)) + ' FCFA';
   }
 }

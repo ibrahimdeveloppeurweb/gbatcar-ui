@@ -14,7 +14,16 @@
     </div>
 </div>
 
-<form [formGroup]="vehicleForm" (ngSubmit)="saveVehicle()">
+<form [formGroup]="form" (ngSubmit)="onConfirme()">
+
+    <!-- Overlay chargement -->
+    <div class="d-flex justify-content-center align-items-center position-fixed w-100 h-100 bg-white"
+        style="z-index: 9999; left:0; top:0; opacity: 0.8;" *ngIf="loading">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Chargement...</span>
+        </div>
+    </div>
+
     <div class="row">
 
         <!-- LEFT COLUMN: Identity & Commercial Offer -->
@@ -31,15 +40,15 @@
                         <div class="col-sm-6">
                             <label class="form-label text-dark fw-medium">Marque <span
                                     class="text-danger">*</span></label>
-                            <input type="text" class="form-control" formControlName="brand" placeholder="Ex: Toyota"
-                                [ngClass]="{'is-invalid': vehicleForm.get('brand')?.invalid && vehicleForm.get('brand')?.touched}">
+                            <input type="text" class="form-control" formControlName="marque" placeholder="Ex: Toyota"
+                                [ngClass]="{'is-invalid': submit && form.get('marque')?.invalid}">
                             <div class="invalid-feedback">Marque requise.</div>
                         </div>
                         <div class="col-sm-6">
                             <label class="form-label text-dark fw-medium">Modèle <span
                                     class="text-danger">*</span></label>
-                            <input type="text" class="form-control" formControlName="model" placeholder="Ex: Yaris"
-                                [ngClass]="{'is-invalid': vehicleForm.get('model')?.invalid && vehicleForm.get('model')?.touched}">
+                            <input type="text" class="form-control" formControlName="modele" placeholder="Ex: Yaris"
+                                [ngClass]="{'is-invalid': submit && form.get('modele')?.invalid}">
                             <div class="invalid-feedback">Modèle requis.</div>
                         </div>
                     </div>
@@ -47,21 +56,22 @@
                         <div class="col-sm-3">
                             <label class="form-label text-dark fw-medium">Année <span
                                     class="text-danger">*</span></label>
-                            <input type="number" class="form-control" formControlName="year" placeholder="Ex: 2022"
-                                [ngClass]="{'is-invalid': vehicleForm.get('year')?.invalid && vehicleForm.get('year')?.touched}">
+                            <input type="number" class="form-control" formControlName="annee" placeholder="Ex: 2022"
+                                [ngClass]="{'is-invalid': submit && form.get('annee')?.invalid}">
                         </div>
                         <div class="col-sm-3">
                             <label class="form-label text-dark fw-medium">Couleur</label>
-                            <input type="text" class="form-control" formControlName="color" placeholder="Ex: Blanc">
+                            <input type="text" class="form-control" formControlName="couleur" placeholder="Ex: Blanc">
                         </div>
                         <div class="col-sm-3">
                             <label class="form-label text-dark fw-medium">Finition / Version</label>
-                            <input type="text" class="form-control" formControlName="trim" placeholder="Ex: LE, GLS">
+                            <input type="text" class="form-control" formControlName="finition"
+                                placeholder="Ex: LE, GLS">
                         </div>
                         <div class="col-sm-3">
                             <label class="form-label text-dark fw-medium">Statut Initial <span
                                     class="text-danger">*</span></label>
-                            <select class="form-select" formControlName="status">
+                            <select class="form-select" formControlName="statut">
                                 <option value="Disponible">Disponible (Sur Parc)</option>
                                 <option value="En transit">En Transit</option>
                                 <option value="En dédouanement">En Dédouanement</option>
@@ -82,7 +92,7 @@
                         </div>
                         <div class="col-sm-4">
                             <label class="form-label text-dark fw-medium">Carburant</label>
-                            <select class="form-select" formControlName="fuelType">
+                            <select class="form-select" formControlName="carburant">
                                 <option value="Essence">Essence</option>
                                 <option value="Diesel">Diesel</option>
                                 <option value="Hybride">Hybride</option>
@@ -91,7 +101,7 @@
                         </div>
                         <div class="col-sm-4">
                             <label class="form-label text-dark fw-medium">Nombre de places</label>
-                            <select class="form-select" formControlName="seats">
+                            <select class="form-select" formControlName="nombrePlaces">
                                 <option value="4">4 places</option>
                                 <option value="5">5 places</option>
                                 <option value="7">7 places</option>
@@ -113,26 +123,25 @@
                         <div class="col-sm-6">
                             <label class="form-label text-dark fw-medium">Immatriculation (Plaque) <span
                                     class="text-danger">*</span></label>
-                            <input type="text" class="form-control" formControlName="licensePlate"
+                            <input type="text" class="form-control" formControlName="immatriculation"
                                 placeholder="Ex: 1234 AB 01"
-                                [ngClass]="{'is-invalid': vehicleForm.get('licensePlate')?.invalid && vehicleForm.get('licensePlate')?.touched}">
+                                [ngClass]="{'is-invalid': submit && form.get('immatriculation')?.invalid}">
                             <div class="invalid-feedback">Plaque d'immatriculation requise.</div>
                         </div>
                         <div class="col-sm-6">
                             <label class="form-label text-dark fw-medium">Numéro de Châssis (VIN)</label>
-                            <input type="text" class="form-control" formControlName="chassisNumber"
-                                placeholder="Numéro à 17 caractères"
-                                [ngClass]="{'is-invalid': vehicleForm.get('chassisNumber')?.invalid && vehicleForm.get('chassisNumber')?.touched}">
+                            <input type="text" class="form-control" formControlName="numeroChassis"
+                                placeholder="Numéro à 17 caractères">
                         </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-sm-6">
                             <label class="form-label text-dark fw-medium">Kilométrage Actuel (km)</label>
-                            <input type="number" class="form-control" formControlName="mileage" placeholder="0">
+                            <input type="number" class="form-control" formControlName="kilometrage" placeholder="0">
                         </div>
                         <div class="col-sm-6">
                             <label class="form-label text-dark fw-medium">Prochain entretien (km)</label>
-                            <input type="number" class="form-control" formControlName="nextMaintenanceMileage"
+                            <input type="number" class="form-control" formControlName="prochainEntretien"
                                 placeholder="Ex: 35000">
                             <div class="form-text text-muted">Kilométrage prévu pour la prochaine maintenance.</div>
                         </div>
@@ -213,18 +222,18 @@
                         <div class="col-sm-4">
                             <label class="form-label text-dark fw-medium">Prix de Vente Total (FCFA) <span
                                     class="text-danger">*</span></label>
-                            <input type="number" class="form-control" formControlName="totalPrice"
+                            <input type="number" class="form-control" formControlName="prixDeVente"
                                 placeholder="Ex: 5800000"
-                                [ngClass]="{'is-invalid': vehicleForm.get('totalPrice')?.invalid && vehicleForm.get('totalPrice')?.touched}">
+                                [ngClass]="{'is-invalid': submit && form.get('prixDeVente')?.invalid}">
                         </div>
                         <div class="col-sm-4">
                             <label class="form-label text-dark fw-medium">Apport Initial Requis (%)</label>
                             <input type="number" class="form-control" formControlName="depositPercentage"
                                 placeholder="Ex: 20">
                             <div class="form-text text-muted"
-                                *ngIf="vehicleForm.get('totalPrice')?.value && vehicleForm.get('depositPercentage')?.value">
-                                Soit env. {{ formatCurrency((vehicleForm.get('totalPrice')?.value || 0) *
-                                (vehicleForm.get('depositPercentage')?.value || 0) / 100) }}
+                                *ngIf="form.get('prixDeVente')?.value && form.get('depositPercentage')?.value">
+                                Soit env. {{ formatCurrency((form.get('prixDeVente')?.value || 0) *
+                                (form.get('depositPercentage')?.value || 0) / 100) }}
                             </div>
                         </div>
                         <div class="col-sm-4">
@@ -283,39 +292,60 @@
                     </h6>
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted fs-12px">Prix de vente</span>
-                        <strong>{{ (vehicleForm.get('totalPrice')?.value || 0) | number }} FCFA</strong>
+                        <strong>{{ (form.get('prixDeVente')?.value || 0) | number }} XOF</strong>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted fs-12px">TCO estimé</span>
-                        <strong class="text-danger">
-                            {{ ((vehicleForm.get('purchasePrice')?.value || 0) +
-                            (vehicleForm.get('customsFees')?.value || 0) +
-                            (vehicleForm.get('transitFees')?.value || 0) +
-                            (vehicleForm.get('preparationCost')?.value || 0) +
-                            (vehicleForm.get('gpsInstallationCost')?.value || 0) +
-                            (vehicleForm.get('otherCosts')?.value || 0)) | number }} FCFA
-                        </strong>
+                        <strong class="text-danger">{{ (form.get('tcoEstime')?.value || 0) | number }}
+                            XOF</strong>
                     </div>
                     <div class="d-flex justify-content-between mb-2 pt-2 border-top">
                         <span class="fw-bold">Marge Brute Prévisionnelle</span>
                         <strong class="text-success">
-                            {{ ((vehicleForm.get('totalPrice')?.value || 0) -
-                            ((vehicleForm.get('purchasePrice')?.value || 0) +
-                            (vehicleForm.get('customsFees')?.value || 0) +
-                            (vehicleForm.get('transitFees')?.value || 0) +
-                            (vehicleForm.get('preparationCost')?.value || 0) +
-                            (vehicleForm.get('gpsInstallationCost')?.value || 0) +
-                            (vehicleForm.get('otherCosts')?.value || 0))) | number }} FCFA
+                            {{ (form.get('margeBrutePrevisionnelle')?.value || 0) | number }} XOF
                         </strong>
                     </div>
                     <div class="d-flex justify-content-between mt-1 pt-2 border-top"
-                        *ngIf="vehicleForm.get('totalPrice')?.value && vehicleForm.get('depositPercentage')?.value && vehicleForm.get('durationInMonths')?.value">
+                        *ngIf="form.get('totalPrice')?.value && form.get('depositPercentage')?.value && form.get('durationInMonths')?.value">
                         <span class="text-muted fs-12px">Mensualité locataire</span>
                         <strong class="text-primary">
-                            {{ ((vehicleForm.get('totalPrice')?.value - (vehicleForm.get('totalPrice')?.value *
-                            vehicleForm.get('depositPercentage')?.value / 100)) /
-                            vehicleForm.get('durationInMonths')?.value) | number:'1.0-0' }} FCFA/mois
+                            {{ ((form.get('totalPrice')?.value - (form.get('totalPrice')?.value *
+                            form.get('depositPercentage')?.value / 100)) /
+                            form.get('durationInMonths')?.value) | number:'1.0-0' }} FCFA/mois
                         </strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Photo du Véhicule (Galerie par Marque) -->
+            <div class="card grid-margin border-start border-info border-3">
+                <div class="card-body">
+                    <h6 class="card-title fw-bold text-uppercase mb-4">
+                        <i data-feather="image" appFeatherIcon class="icon-sm me-2 text-info"></i>
+                        Photo du Véhicule
+                    </h6>
+                    <div class="d-flex flex-column align-items-center mb-3">
+                        <div class="row row-cols-3 g-2 w-100 mb-3" *ngIf="form.get('photos')?.value?.length > 0">
+                            <div class="col position-relative" *ngFor="let p of form.get('photos')?.value; let i = index">
+                                <img [src]="baseUrl + p" alt="Photo sélectionnée"
+                                    class="img-thumbnail rounded w-100" style="height: 100px; object-fit: cover;">
+                                <button type="button" class="btn btn-icon btn-xs btn-danger position-absolute" 
+                                        style="top: 5px; right: 8px;" (click)="removeImage(i, $event)">
+                                    <i data-feather="x" appFeatherIcon></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-center w-100 mb-3" *ngIf="!(form.get('photos')?.value?.length > 0)">
+                            <div class="bg-light text-muted d-flex align-items-center justify-content-center rounded border"
+                                style="height: 150px; width: 100%;">
+                                <i data-feather="camera-off" appFeatherIcon class="icon-lg"></i>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-info w-100" (click)="openGallery()"
+                            [disabled]="!currentBrand">
+                            <i data-feather="grid" appFeatherIcon class="icon-sm me-1"></i>
+                            Galerie de la Marque {{ currentBrand ? '(' + currentBrand + ')' : '' }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -330,15 +360,24 @@
                     <p class="text-muted tx-12 mb-3">Associés au dossier administratif du véhicule.</p>
                     <div class="mb-3">
                         <label class="form-label text-dark fw-medium">Carte Grise</label>
-                        <input type="file" class="form-control form-control-sm">
+                        <input type="file" class="form-control form-control-sm" accept="image/*,.pdf"
+                            (change)="onFileChange($event, 'carteGrise')">
+                        <small *ngIf="selectedFiles['carteGrise']" class="text-success">{{
+                            selectedFiles['carteGrise'].name }}</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-dark fw-medium">Attestation d'Assurance</label>
-                        <input type="file" class="form-control form-control-sm">
+                        <input type="file" class="form-control form-control-sm" accept="image/*,.pdf"
+                            (change)="onFileChange($event, 'assurance')">
+                        <small *ngIf="selectedFiles['assurance']" class="text-success">{{
+                            selectedFiles['assurance'].name }}</small>
                     </div>
                     <div class="mb-0">
                         <label class="form-label text-dark fw-medium">Rapport Visite Technique</label>
-                        <input type="file" class="form-control form-control-sm">
+                        <input type="file" class="form-control form-control-sm" accept="image/*,.pdf"
+                            (change)="onFileChange($event, 'visiteTechnique')">
+                        <small *ngIf="selectedFiles['visiteTechnique']" class="text-success">{{
+                            selectedFiles['visiteTechnique'].name }}</small>
                     </div>
                 </div>
             </div>
@@ -352,7 +391,7 @@
                     </h6>
                     <textarea class="form-control" rows="4"
                         placeholder="Notes internes sur le véhicule, état à l'arrivée, travaux effectués..."
-                        formControlName="notes"></textarea>
+                        formControlName="notesInternes"></textarea>
                 </div>
             </div>
         </div>
@@ -367,10 +406,10 @@
                 Les champs marqués <span class="text-danger">*</span> sont obligatoires.
             </div>
             <div>
-                <button type="button" class="btn btn-secondary me-2" routerLink="/gbatcar/vehicles">
+                <button type="button" class="btn btn-secondary me-2" (click)="navigateBack()">
                     <i data-feather="x" appFeatherIcon class="icon-sm me-1"></i> Annuler
                 </button>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" [disabled]="loading">
                     <i data-feather="save" appFeatherIcon class="icon-sm me-1"></i>
                     {{ isEditMode ? 'Enregistrer les Modifications' : 'Enregistrer le Véhicule' }}
                 </button>
@@ -379,3 +418,52 @@
     </div>
 
 </form>
+
+<!-- Modal pour la Galerie d'images par marque -->
+<div class="modal fade show" tabindex="-1" role="dialog" style="display: block; background: rgba(0,0,0,0.5);"
+    *ngIf="showGalleryModal">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Galerie d'images : {{ currentBrand }}</h5>
+                <button type="button" class="btn-close" (click)="closeGallery()" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Zone d'upload rapide -->
+                <div class="mb-4 p-3 bg-light border rounded text-center">
+                    <h6 class="fw-bold mb-2">Ajouter une nouvelle image pour {{ currentBrand }}</h6>
+                    <input type="file" id="brandImageUpload" class="d-none" accept="image/*"
+                        (change)="onGalleryUpload($event)" [disabled]="uploadingImage">
+                    <label for="brandImageUpload" class="btn btn-primary m-0"
+                        [ngClass]="{'disabled': uploadingImage}">
+                        <i data-feather="upload-cloud" appFeatherIcon class="icon-sm me-1"></i>
+                        {{ uploadingImage ? 'Envoi en cours...' : 'Uploader une image' }}
+                    </label>
+                </div>
+
+                <!-- Grille d'images -->
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+                    <div class="col" *ngFor="let img of brandImages">
+                        <div class="card h-100 border-0 shadow-sm image-card cursor-pointer"
+                            (click)="selectImage(img)" style="cursor: pointer; transition: transform 0.2s;">
+                            <img [src]="baseUrl + img" class="card-img-top" alt="Vehicle Image" style="height: 120px; object-fit: cover;">
+                            <div class="card-body p-2 text-center text-primary fw-bold"
+                                *ngIf="form.get('photos')?.value && form.get('photos')?.value.indexOf(img.replace(baseUrl, '')) > -1">
+                                <i data-feather="check-circle" appFeatherIcon class="icon-sm"></i> Sélectionné
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message si vide -->
+                <div class="text-center py-5 text-muted" *ngIf="!brandImages || brandImages.length === 0">
+                    <i data-feather="image" appFeatherIcon class="icon-xxl mb-3 text-light"></i>
+                    <p>Aucune image disponible pour la marque {{ currentBrand }}.<br> Veuillez en uploader une.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="closeGallery()">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>

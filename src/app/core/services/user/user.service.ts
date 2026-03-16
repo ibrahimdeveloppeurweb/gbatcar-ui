@@ -102,4 +102,16 @@ export class UserService {
             catchError((error: any) => throwError(error))
         );
     }
+
+    toggle(uuid: string): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+
+        return this.api._patch(`${this.url}/${uuid}/toggle`, {}).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(error))
+        );
+    }
 }

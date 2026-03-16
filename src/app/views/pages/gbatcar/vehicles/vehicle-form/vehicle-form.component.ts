@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-import Swal from 'sweetalert2';
-import { MOCK_VEHICLES } from '../../../../../core/mock/gbatcar-admin.mock';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import Swal from 'sweetalert2/dist/sweetalert2.js';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
+import { VehicleService } from '../../../../../core/services/vehicle/vehicle.service';
+import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-vehicle-form',
@@ -14,121 +15,357 @@ import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-i
   styleUrl: './vehicle-form.component.scss'
 })
 export class VehicleFormComponent implements OnInit {
+  private formBuild = inject(FormBuilder);
+  private route     = inject(ActivatedRoute);
+  private router    = inject(Router);
+  private vehicleService = inject(VehicleService);
 
-  vehicleForm: FormGroup;
-  isEditMode = false;
+  form!: FormGroup;
+  isEditMode   = false;
   vehicleId: string | null = null;
-  pageTitle = 'Nouveau Véhicule';
+  pageTitle    = 'Nouveau Véhicule';
+  submit       = false;
+  loading      = false;
 
-  constructor(
-    private formBuilder: FormBuilder,
-    private router: Router,
-    private route: ActivatedRoute
-  ) {
-    this.vehicleForm = this.formBuilder.group({
-      // Base Info
-      brand: ['', Validators.required],
-      model: ['', Validators.required],
-      trim: [''],
-      transmission: ['Automatique', Validators.required],
-      fuelType: ['Essence', Validators.required],
-      year: ['', [Validators.required, Validators.min(1990), Validators.max(2030)]],
-      color: [''],
-      seats: ['5'],
-      status: ['Disponible', Validators.required],
-      // Technical ID
-      licensePlate: ['', Validators.required],
-      chassisNumber: [''],
-      mileage: [0],
-      nextMaintenanceMileage: [''],
-      lastMaintenance: [''],
-      gpsStatus: ['Non installé'],
-      // TCO
-      purchasePrice: [null],
-      customsFees: [null],
-      transitFees: [null],
-      preparationCost: [null],
-      gpsInstallationCost: [null],
-      otherCosts: [null],
-      // Commercial Offer
-      totalPrice: ['', Validators.required],
-      depositPercentage: ['', [Validators.min(0), Validators.max(100)]],
-      durationInMonths: ['', [Validators.min(1)]],
-      dailyRate: [15000],
-      intendedUse: ['VTC'],
-      includingInsurance: [false],
-      includingGPS: [false],
-      // Misc
-      notes: ['']
-    });
+  // Base URL for Images
+  baseUrl = environment.serverUrl.replace('/api', '');
+
+  // Fichiers sélectionnés
+  selectedFiles: { [key: string]: File } = {};
+
+  // Galerie d'images par marque
+  showGalleryModal = false;
+  brandImages: string[] = [];
+  uploadingImage = false;
+
+  constructor() {
+    this.newForm();
   }
 
   ngOnInit(): void {
     this.vehicleId = this.route.snapshot.paramMap.get('id');
     if (this.vehicleId) {
       this.isEditMode = true;
-      this.pageTitle = 'Modifier le Véhicule';
+      this.pageTitle  = 'Modifier le Véhicule';
       this.loadVehicleData(this.vehicleId);
     }
+
+    // Auto-calcul du TCO depuis les composantes
+    const tcoFields = ['purchasePrice', 'customsFees', 'transitFees', 'preparationCost', 'gpsInstallationCost', 'otherCosts'];
+    tcoFields.forEach(field => {
+      this.form.get(field)?.valueChanges.subscribe(() => this.updateTco());
+    });
+
+    // Auto-calcul de la marge brute
+    this.form.get('prixDeVente')?.valueChanges.subscribe(() => this.updateMarge());
+    this.form.get('tcoEstime')?.valueChanges.subscribe(() => this.updateMarge());
   }
 
-  loadVehicleData(id: string) {
-    const vehicle = MOCK_VEHICLES.find((v: any) => v.id === id);
-    if (vehicle) {
-      this.vehicleForm.patchValue({
-        brand: vehicle.brand,
-        model: vehicle.model,
-        trim: vehicle.trim,
-        transmission: vehicle.transmission,
-        fuelType: vehicle.fuelType,
-        year: vehicle.year,
-        color: vehicle.color,
-        licensePlate: vehicle.licensePlate,
-        chassisNumber: vehicle.chassisNumber,
-        mileage: vehicle.mileage,
-        status: vehicle.status,
-        dailyRate: vehicle.dailyRate,
-        totalPrice: vehicle.totalPrice,
-        depositPercentage: vehicle.depositPercentage,
-        durationInMonths: vehicle.durationInMonths,
-        includingInsurance: vehicle.includingInsurance,
-        includingGPS: vehicle.includingGPS,
-        gpsStatus: vehicle.gpsStatus || 'Non installé',
-        nextMaintenanceMileage: vehicle.nextMaintenanceMileage,
-        lastMaintenance: vehicle.lastMaintenance,
-        purchasePrice: (vehicle as any).tco?.purchasePrice || null,
-        customsFees: (vehicle as any).tco?.customs || null,
-        transitFees: (vehicle as any).tco?.transport || null,
-        preparationCost: (vehicle as any).tco?.preparation || null,
-        gpsInstallationCost: (vehicle as any).tco?.gpsInstallation || null,
-      });
+  newForm(): void {
+    this.form = this.formBuild.group({
+      // Base Info
+      marque:           [null, Validators.required],
+      modele:           [null, Validators.required],
+      finition:         [null],
+      photo:            [null],
+      photos:           [[]],  // Tableau d'images
+      transmission:     ['Automatique', Validators.required],
+      carburant:        ['Essence', Validators.required],
+      annee:            [null, [Validators.required, Validators.min(1990), Validators.max(2030)]],
+      couleur:          [null],
+      nombrePlaces:     ['5'],
+      statut:           ['Disponible', Validators.required],
+      // Technical ID
+      immatriculation:  [null, Validators.required],
+      numeroChassis:    [null],
+      kilometrage:      [0],
+      prochainEntretien:[null],
+      lastMaintenance:  [null],
+      gpsStatus:        ['Non installé'],
+      notesInternes:    [null],
+      // Rentabilité (calculée automatiquement)
+      prixDeVente:      [null, Validators.required],
+      tcoEstime:        [null],
+      margeBrutePrevisionnelle: [null],
+      // TCO composantes (UI only → sommées dans tcoEstime)
+      purchasePrice:       [null],
+      customsFees:         [null],
+      transitFees:         [null],
+      preparationCost:     [null],
+      gpsInstallationCost: [null],
+      otherCosts:          [null],
+      // Offre Commerciale
+      totalPrice:         [null],
+      depositPercentage:  [null, [Validators.min(0), Validators.max(100)]],
+      durationInMonths:   [null, [Validators.min(1)]],
+      dailyRate:          [15000],
+      intendedUse:        ['VTC'],
+      includingInsurance: [false],
+      includingGPS:       [false],
+      // Commercial
+      prixParJour:      [null],
+      description:      [null],
+      pipelineStatus:   [null],
+    });
+  }
+
+  // ─── Calculs automatiques ────────────────────────────────────────────────
+
+  updateTco(): void {
+    const f = this.form.value;
+    const tco = (f.purchasePrice || 0) + (f.customsFees || 0) + (f.transitFees || 0)
+              + (f.preparationCost || 0) + (f.gpsInstallationCost || 0) + (f.otherCosts || 0);
+    this.form.patchValue({ tcoEstime: tco }, { emitEvent: false });
+    this.updateMarge();
+  }
+
+  updateMarge(): void {
+    const prix = this.form.get('prixDeVente')?.value || 0;
+    const tco  = this.form.get('tcoEstime')?.value || 0;
+    this.form.patchValue({ margeBrutePrevisionnelle: prix - tco }, { emitEvent: false });
+  }
+
+  // ─── Fichiers ────────────────────────────────────────────────────────────
+
+  onFileChange(event: Event, field: string): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFiles[field] = input.files[0];
     }
   }
 
+  // ─── Galerie d'images par marque ─────────────────────────────────────────
 
-  saveVehicle() {
-    if (this.vehicleForm.valid) {
-      Swal.fire({
-        position: 'center',
-        icon: 'success',
-        title: this.isEditMode ? 'Véhicule modifié avec succès !' : 'Véhicule enregistré avec succès !',
-        showConfirmButton: false,
-        timer: 1500
-      }).then(() => {
-        this.router.navigate(['/gbatcar/vehicles']);
-      });
+  get currentBrand(): string {
+    return this.form.get('marque')?.value?.trim();
+  }
+
+  openGallery(): void {
+    if (!this.currentBrand) {
+      this.toast("Veuillez d'abord saisir une marque.", 'Attention', 'warning');
+      return;
+    }
+    this.showGalleryModal = true;
+    this.loadBrandImages();
+  }
+
+  closeGallery(): void {
+    this.showGalleryModal = false;
+  }
+
+  loadBrandImages(): void {
+    this.uploadingImage = true;
+    this.vehicleService.getBrandImages(this.currentBrand).subscribe({
+      next: (images) => {
+        this.brandImages = images;
+        this.uploadingImage = false;
+      },
+      error: () => {
+        this.toast('Erreur lors du chargement des images.', 'Erreur', 'error');
+        this.uploadingImage = false;
+      }
+    });
+  }
+
+  selectImage(imgUrl: string): void {
+    // on enlève la baseUrl pour ne stocker que le chemin relatif dans la DB
+    const relativeUrl = imgUrl.replace(this.baseUrl, '');
+    
+    // Toggle logic for multiple photos array
+    const currentPhotos: string[] = this.form.get('photos')?.value || [];
+    const index = currentPhotos.indexOf(relativeUrl);
+    
+    if (index === -1) {
+      // Add if not present
+      this.form.patchValue({ photos: [...currentPhotos, relativeUrl] });
     } else {
-      this.vehicleForm.markAllAsTouched();
-      Swal.fire({
-        icon: 'error',
-        title: 'Formulaire incomplet',
-        text: 'Veuillez remplir correctement tous les champs obligatoires.',
-        confirmButtonColor: '#ff3366'
+      // Remove if already present
+      currentPhotos.splice(index, 1);
+      this.form.patchValue({ photos: [...currentPhotos] });
+    }
+  }
+
+  removeImage(index: number, event: Event): void {
+    event.stopPropagation();
+    const currentPhotos: string[] = this.form.get('photos')?.value || [];
+    currentPhotos.splice(index, 1);
+    this.form.patchValue({ photos: [...currentPhotos] });
+  }
+
+  onGalleryUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      this.uploadingImage = true;
+      this.vehicleService.uploadBrandImage(this.currentBrand, file).subscribe({
+        next: (res) => {
+          this.toast('Image ajoutée à la galerie.', 'Succès', 'success');
+          // On recharge la liste pour voir la nouvelle image
+          this.loadBrandImages();
+          // On peut aussi l'auto-sélectionner
+          this.selectImage(res.url);
+        },
+        error: () => {
+          this.toast("Erreur lors de l'upload de l'image.", 'Erreur', 'error');
+          this.uploadingImage = false;
+        }
       });
     }
+  }
+
+  // ─── Chargement en mode édition ──────────────────────────────────────────
+
+  loadVehicleData(uuid: string): void {
+    this.loading = true;
+    this.vehicleService.getSingle(uuid).subscribe({
+      next: (res: any) => {
+        const v = res.data || res;
+        this.form.patchValue({
+          marque:           v.marque,
+          modele:           v.modele,
+          finition:         v.finition,
+          transmission:     v.transmission,
+          carburant:        v.carburant,
+          annee:            v.annee,
+          couleur:          v.couleur,
+          nombrePlaces:     v.nombrePlaces,
+          statut:           v.statut,
+          immatriculation:  v.immatriculation,
+          numeroChassis:    v.numeroChassis,
+          kilometrage:      v.kilometrage,
+          prochainEntretien:v.prochainEntretien,
+          gpsStatus:        v.gpsStatus,
+          notesInternes:    v.notesInternes,
+          prixDeVente:      v.prixDeVente,
+          tcoEstime:        v.tcoEstime,
+          margeBrutePrevisionnelle: v.margeBrutePrevisionnelle,
+          includingInsurance: v.includingInsurance,
+          includingGPS:       v.includingGPS,
+          prixParJour:      v.prixParJour,
+          photo:            v.photo,
+          photos:           v.photos || [],
+          description:      v.description,
+          pipelineStatus:   v.pipelineStatus,
+          purchasePrice:    v.purchasePrice,
+          customsFees:      v.customsFees,
+          transitFees:      v.transitFees,
+          preparationCost:  v.preparationCost,
+          gpsInstallationCost: v.gpsInstallationCost,
+          otherCosts:       v.otherCosts,
+          totalPrice:       v.prixDeVente, // Le prixDeVente sert aussi de totalPrice dans la section commerciale
+          depositPercentage:v.depositPercentage,
+          durationInMonths: v.durationInMonths
+        });
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.toast('Impossible de charger les données du véhicule.', 'Erreur', 'error');
+        this.navigateBack();
+      }
+    });
+  }
+
+  // ─── Sauvegarde ──────────────────────────────────────────────────────────
+
+  onConfirme(): void {
+    this.submit = true;
+    if (this.form.invalid) {
+      this.toast('Veuillez remplir correctement les champs obligatoires.', 'Erreur', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: '',
+      text: this.isEditMode
+        ? 'Confirmez-vous la modification de ce véhicule ?'
+        : "Confirmez-vous l'enregistrement de ce nouveau véhicule ?",
+      icon: 'warning',
+      showCancelButton: true,
+      showCloseButton: true,
+      confirmButtonText: 'Confirmer <i class="fas fa-check"></i>',
+      cancelButtonText:  'Annuler <i class="feather icon-x-circle"></i>',
+      confirmButtonColor: '#1bc943',
+      reverseButtons: true
+    }).then((result: any) => {
+      if (result.isConfirmed) {
+        this.saveData();
+      }
+    });
+  }
+
+  saveData(): void {
+    this.loading = true;
+
+    // Sync prixDeVente depuis totalPrice si renseigné dans l'UI
+    const tv = this.form.get('totalPrice')?.value;
+    if (tv) this.form.patchValue({ prixDeVente: tv }, { emitEvent: false });
+    this.updateTco();
+
+    // Construction du FormData (supporte fichiers + champs)
+    const formData = new FormData();
+    const values = this.form.value;
+    Object.keys(values).forEach(key => {
+      const val = values[key];
+      if (val !== null && val !== undefined && val !== '') {
+        formData.append(key, val);
+      }
+    });
+
+    // Ajout des fichiers sélectionnés
+    Object.entries(this.selectedFiles).forEach(([field, file]) => {
+      formData.append(field, file, file.name);
+    });
+
+    // En mode édition, ajouter l'uuid pour le routage dans le service
+    if (this.isEditMode && this.vehicleId) {
+      formData.append('uuid', this.vehicleId);
+    }
+
+    this.vehicleService.add(formData as any).subscribe({
+      next: () => {
+        this.loading = false;
+        this.toast(
+          this.isEditMode ? 'Véhicule modifié avec succès' : 'Véhicule créé avec succès',
+          'Succès', 'success'
+        );
+        this.navigateBack();
+      },
+      error: (err: any) => {
+        this.loading = false;
+        this.toast(
+          err?.error?.message || err?.error?.details || "Une erreur est survenue lors de l'enregistrement.",
+          'Erreur', 'error'
+        );
+      }
+    });
+  }
+
+  navigateBack(): void {
+    this.router.navigate(['/gbatcar/vehicles']);
+  }
+
+  // ─── Utilitaires ─────────────────────────────────────────────────────────
+
+  toast(msg: string, title: string, type: string): void {
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+    });
+
+    const iconType = (['error', 'success', 'warning', 'info', 'question'].includes(type))
+      ? type as any : 'info';
+
+    Toast.fire({
+      icon: iconType,
+      title: title ? `${title} - ${msg}` : msg
+    });
   }
 
   formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('fr-FR').format(Math.round(amount)) + ' FCFA';
+    return new Intl.NumberFormat('fr-FR').format(Math.round(amount)) + ' XOF';
   }
 }

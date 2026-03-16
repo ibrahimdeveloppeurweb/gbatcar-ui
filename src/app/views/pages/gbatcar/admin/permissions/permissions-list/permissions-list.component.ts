@@ -2,6 +2,9 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FeatherIconDirective } from '../../../../../../core/feather-icon/feather-icon.directive';
+import { Role } from '../../../../../../core/models/permission.model';
+import { PermissionService } from '../../../../../../core/services/permission/permission.service';
+import Swal from 'sweetalert2/dist/sweetalert2.js';
 
 @Component({
   selector: 'app-permissions-list',
@@ -12,18 +15,31 @@ import { FeatherIconDirective } from '../../../../../../core/feather-icon/feathe
 })
 export class PermissionsListComponent implements OnInit {
   private router = inject(Router);
+  private permissionService = inject(PermissionService);
 
-  roles = [
-    { id: 1, name: 'Super-Admin', description: 'Accès total à tous les modules du système.', usersCount: 2, permissionsCount: 'Toutes les permissions', badgeClass: 'bg-danger' },
-    { id: 2, name: 'Gérant', description: 'Gestion des locations, véhicules et paiements. Pas d\'accès aux paramètres globaux.', usersCount: 3, permissionsCount: '12 permissions', badgeClass: 'bg-success' },
-    { id: 3, name: 'Comptable', description: 'Accès en lecture et écriture sur les paiements et factures uniquement.', usersCount: 1, permissionsCount: '5 permissions', badgeClass: 'bg-info' },
-    { id: 4, name: 'Mécanicien', description: 'Accès au module d\'intervention technique et historique véhicules.', usersCount: 4, permissionsCount: '2 permissions', badgeClass: 'bg-secondary' },
-    { id: 5, name: 'Service Client', description: 'Accès aux dossiers clients et suivi des contrats (lecture seule).', usersCount: 5, permissionsCount: '1 permission', badgeClass: 'bg-warning text-dark' }
-  ];
+  roles: Role[] = [];
+  loading: boolean = true;
 
   constructor() { }
 
   ngOnInit(): void {
+    this.loadRoles();
+  }
+
+  loadRoles(): void {
+    this.loading = true;
+    this.permissionService.getList().subscribe({
+      next: (res: any) => {
+        // L'API renvoie souvent le tableau de données dans res ou res.data, on s'assure de l'extraire
+        this.roles = res.data || res;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Erreur de chargement des rôles:', err);
+        this.loading = false;
+        // Optionnel : afficher un toast d'erreur
+      }
+    });
   }
 
   navigateToAdd(): void {
@@ -31,10 +47,49 @@ export class PermissionsListComponent implements OnInit {
   }
 
   navigateToEdit(role: any): void {
-    this.router.navigate(['/gbatcar/admin/permissions/edit', role.id]);
+    this.router.navigate(['/gbatcar/admin/permissions/edit', role.uuid]);
   }
 
   navigateToDetails(role: any): void {
-    this.router.navigate(['/gbatcar/admin/permissions/details', role.id]);
+    this.router.navigate(['/gbatcar/admin/permissions/details', role.uuid]);
+  }
+
+  onDelete(role: any): void {
+    Swal.fire({
+      title: 'Êtes-vous sûr ?',
+      text: `Voulez-vous vraiment supprimer le rôle "${role.nom}" ? Cette action est irréversible.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Oui, supprimer !',
+      cancelButtonText: 'Annuler'
+    }).then((result: any) => {
+      if (result.isConfirmed) {
+        this.permissionService.getDelete(role.uuid).subscribe({
+          next: () => {
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+              icon: 'success',
+              title: 'Rôle supprimé avec succès'
+            });
+            this.loadRoles();
+          },
+          error: (err: any) => {
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+              icon: 'error',
+              title: err?.error?.message || err?.message || 'Erreur lors de la suppression'
+            });
+          }
+        });
+      }
+    });
   }
 }

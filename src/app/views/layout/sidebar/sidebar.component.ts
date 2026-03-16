@@ -11,6 +11,7 @@ import { MenuItem } from './menu.model';
 import { FeatherIconDirective } from '../../../core/feather-icon/feather-icon.directive';
 import { ThemeModeService } from '../../../core/services/theme-mode.service';
 import { PathService } from '../../../core/services/path/path.service';
+import { AuthService } from '../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -40,7 +41,8 @@ export class SidebarComponent implements OnInit, AfterViewInit {
     private renderer: Renderer2,
     router: Router,
     private themeModeService: ThemeModeService,
-    private pathService: PathService
+    private pathService: PathService,
+    private authService: AuthService
   ) {
     this.themeModeService.currentTheme.subscribe((theme) => {
       this.currentTheme = theme;
@@ -67,8 +69,26 @@ export class SidebarComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     // Par défaut, on peut charger le menu complet, puis on le filtrera
-    this.menuItems = MENU;
-    // this.loadAllowedMenus();
+    const permissions = this.authService.getPermissions();
+    let filteredMenu = this.filterMenu(MENU, permissions);
+
+    // Supprimer les titres qui sont vides (sans menu en dessous)
+    filteredMenu = filteredMenu.filter((item, index, array) => {
+      if (item.isTitle) {
+        // Vérifier s'il y a un élément non-titre après ce titre, avant le titre suivant
+        for (let i = index + 1; i < array.length; i++) {
+          if (array[i].isTitle) {
+            return false; // On a rencontré un autre titre sans voir de menu normal -> vide
+          } else {
+            return true; // On a trouvé un menu normal sous ce titre -> valide
+          }
+        }
+        return false; // Fin du tableau sans trouver de menu -> vide
+      }
+      return true;
+    });
+
+    this.menuItems = filteredMenu;
 
     /**
      * Sidebar-folded on desktop (min-width:992px and max-width: 1199px)
@@ -80,42 +100,19 @@ export class SidebarComponent implements OnInit, AfterViewInit {
     this.iconSidebar(desktopMedium);
   }
 
-  // loadAllowedMenus() {
-  //   this.pathService.getAdminPaths().subscribe({
-  //     next: (paths: any[]) => {
-  //       // Option 1 : Filtrer MENU avec les paths retournés par l'API
-  //       // Les paths contiennent 'libelle' (label) et 'chemin' (link)
-  //       const allowedLinks = paths.map(p => p.chemin);
-  //       const allowedLabels = paths.map(p => p.libelle);
-
-  //       this.menuItems = this.filterMenu(MENU, allowedLinks, allowedLabels);
-
-  //       // Re-init MetisMenu après modification asynchrone du DOM
-  //       setTimeout(() => {
-  //         new MetisMenu(this.sidebarMenu.nativeElement);
-  //         this._activateMenuDropdown();
-  //       });
-  //     },
-  //     error: (err) => {
-  //       console.error("Erreur lors de la récupération des menus autorisés", err);
-  //     }
-  //   });
-  // }
-
-  filterMenu(items: MenuItem[], allowedLinks: string[], allowedLabels: string[]): MenuItem[] {
+  filterMenu(items: MenuItem[], permissions: string[]): MenuItem[] {
     return items.filter(item => {
       if (item.isTitle) return true; // Les titres sont toujours gardés (ou filtrés plus tard si viides)
 
       let hasAccess = false;
-      if (item.link && allowedLinks.includes(item.link)) {
-        hasAccess = true;
-      } else if (item.label && allowedLabels.includes(item.label)) {
+      if (item.nom && permissions.includes(item.nom)) {
         hasAccess = true;
       }
 
       // Si c'est un parent avec des enfants, vérifier les enfants
       if (item.subItems && item.subItems.length > 0) {
-        item.subItems = this.filterMenu(item.subItems, allowedLinks, allowedLabels);
+        // We filter out subItems according to permissions
+        item.subItems = this.filterMenu(item.subItems, permissions);
         if (item.subItems.length > 0) {
           hasAccess = true; // Si au moins un enfant est autorisé, le parent l'est aussi
         }

@@ -30,28 +30,28 @@
                         </thead>
                         <tbody>
                             <tr *ngFor="let user of collaborators">
-                                <td>{{ user.firstName }} {{ user.lastName }}</td>
+                                <td>{{ user.prenom }} {{ user.nom }}</td>
                                 <td>{{ user.email }}</td>
                                 <td>
-                                    <span class="badge" [ngClass]="{
-                          'bg-primary': user.role === 'Super-Admin',
-                          'bg-info': user.role === 'Comptable',
-                          'bg-warning text-dark': user.role === 'Service Client',
-                          'bg-secondary': user.role === 'Mécanicien'
-                        }">
-                                        {{ user.role }}
-                                    </span>
+                                    <ng-container *ngIf="user.droits && user.droits.length > 0; else noRole">
+                                        <span class="badge bg-primary me-1" *ngFor="let role of user.droits">
+                                            {{ role.nom }}
+                                        </span>
+                                    </ng-container>
+                                    <ng-template #noRole>
+                                        <span class="badge bg-secondary">Aucun</span>
+                                    </ng-template>
                                 </td>
                                 <td>{{ formatPermissions(user.permissions) }}</td>
-                                <td>{{ user.lastLogin | date:'dd/MM/yyyy HH:mm' }}</td>
+                                <td>{{ user.lastLogin ? (user.lastLogin | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
                                 <td>
                                     <span class="badge"
-                                        [ngClass]="user.status === 'Actif' ? 'bg-success' : 'bg-danger'">
-                                        {{ user.status }}
+                                        [ngClass]="user.isEnabled ? 'bg-success' : 'bg-danger'">
+                                        {{ user.isEnabled ? 'Actif' : 'Inactif' }}
                                     </span>
                                 </td>
                                 <td>
-                                    <button class="btn action-btn btn-view" [routerLink]="['details', user.id]"
+                                    <button class="btn action-btn btn-view" [routerLink]="['details', user.uuid]"
                                         title="Voir détails">
                                         <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
                                     </button>
@@ -61,10 +61,10 @@
                                     </button>
                                     <button class="btn action-btn btn-toggle" (click)="toggleStatus(user)"
                                         title="Désactiver/Activer">
-                                        <span *ngIf="user.status === 'Actif'" class="d-inline-flex align-items-center">
+                                        <span *ngIf="user.isEnabled" class="d-inline-flex align-items-center">
                                             <i data-feather="slash" appFeatherIcon class="icon-sm"></i>
                                         </span>
-                                        <span *ngIf="user.status !== 'Actif'" class="d-inline-flex align-items-center">
+                                        <span *ngIf="!user.isEnabled" class="d-inline-flex align-items-center">
                                             <i data-feather="check" appFeatherIcon class="icon-sm"></i>
                                         </span>
                                     </button>

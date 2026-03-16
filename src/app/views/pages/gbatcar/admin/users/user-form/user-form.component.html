@@ -9,27 +9,32 @@
 <div class="row">
     <div class="col-md-12 stretch-card">
         <div class="card">
-            <div class="card-body">
-                <form [formGroup]="userForm" (ngSubmit)="saveUser()">
+            <div class="card-body position-relative">
+                <form [formGroup]="form">
+                    
+                    <div class="d-flex justify-content-center align-items-center position-absolute w-100 h-100 bg-white" style="z-index: 10; left:0; top:0; opacity: 0.8;" *ngIf="loading">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
                     <h6 class="card-title mb-3">Informations Personnelles</h6>
                     <div class="row">
                         <!-- Prenom -->
                         <div class="col-sm-6 mb-3">
-                            <label class="form-label">Prénom</label>
+                            <label class="form-label">Prénom <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" formControlName="firstName"
-                                [ngClass]="{'is-invalid': userForm.get('firstName')?.invalid && userForm.get('firstName')?.touched}">
-                            <div *ngIf="userForm.get('firstName')?.invalid && userForm.get('firstName')?.touched"
-                                class="invalid-feedback">
+                                [ngClass]="{'is-invalid': submit && form.get('firstName')?.invalid}">
+                            <div *ngIf="submit && form.get('firstName')?.invalid" class="invalid-feedback">
                                 Le prénom est requis.
                             </div>
                         </div>
                         <!-- Nom -->
                         <div class="col-sm-6 mb-3">
-                            <label class="form-label">Nom</label>
+                            <label class="form-label">Nom <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" formControlName="lastName"
-                                [ngClass]="{'is-invalid': userForm.get('lastName')?.invalid && userForm.get('lastName')?.touched}">
-                            <div *ngIf="userForm.get('lastName')?.invalid && userForm.get('lastName')?.touched"
-                                class="invalid-feedback">
+                                [ngClass]="{'is-invalid': submit && form.get('lastName')?.invalid}">
+                            <div *ngIf="submit && form.get('lastName')?.invalid" class="invalid-feedback">
                                 Le nom est requis.
                             </div>
                         </div>
@@ -38,58 +43,66 @@
                     <div class="row">
                         <!-- Email -->
                         <div class="col-sm-6 mb-3">
-                            <label class="form-label">Email Professionnel</label>
+                            <label class="form-label">Email Professionnel <span class="text-danger">*</span></label>
                             <input type="email" class="form-control" formControlName="email"
-                                [ngClass]="{'is-invalid': userForm.get('email')?.invalid && userForm.get('email')?.touched}">
-                            <div *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched"
-                                class="invalid-feedback">
+                                [ngClass]="{'is-invalid': submit && form.get('email')?.invalid}">
+                            <div *ngIf="submit && form.get('email')?.invalid" class="invalid-feedback">
                                 Un email valide est requis.
                             </div>
                         </div>
-                        <!-- Role -->
+                        <!-- Contact / Phone -->
                         <div class="col-sm-6 mb-3">
-                            <label class="form-label">Rôle / Accès Principal</label>
-                            <select class="form-select" formControlName="role">
-                                <option value="Super-Admin">Super-Admin</option>
-                                <option value="Comptable">Comptable / Finance</option>
-                                <option value="Service Client">Service Client / Opérations</option>
-                                <option value="Mécanicien">Atelier / Mécanicien</option>
-                            </select>
+                            <label class="form-label">Contact (Téléphone) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" formControlName="contact"
+                                [ngClass]="{'is-invalid': submit && form.get('contact')?.invalid}">
+                            <div *ngIf="submit && form.get('contact')?.invalid" class="invalid-feedback d-block">
+                                Le contact téléphonique est requis.
+                            </div>
                         </div>
                     </div>
 
                     <div class="row">
+                        <!-- Role -->
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label">Rôles / Profils d'accès <span class="text-danger">*</span></label>
+                            
+                            <ng-select [items]="availableRoles" 
+                                       bindLabel="nom" 
+                                       bindValue="uuid" 
+                                       [multiple]="true" 
+                                       placeholder="Sélectionnez un ou plusieurs rôles"
+                                       formControlName="roles"
+                                       [ngClass]="{'is-invalid': submit && form.get('roles')?.invalid}">
+                            </ng-select>
+                            
+                            <div *ngIf="submit && form.get('roles')?.invalid" class="invalid-feedback d-block">
+                                Vous devez sélectionner au moins un rôle.
+                            </div>
+                        </div>
+                        
                         <!-- Password -->
                         <div class="col-sm-6 mb-3">
-                            <label class="form-label">Mot de passe {{ isEditMode ? '(laisser vide pour ne pas changer)'
-                                : '' }}</label>
-                            <input type="password" class="form-control" formControlName="password"
-                                [ngClass]="{'is-invalid': userForm.get('password')?.invalid && userForm.get('password')?.touched}">
-                        </div>
-                    </div>
-
-                    <hr class="my-4">
-                    <h6 class="card-title mb-3">Attribution des Permissions</h6>
-                    <p class="text-secondary fs-13px mb-4">Sélectionnez les modules auxquels cet utilisateur aura accès.
-                    </p>
-
-                    <div class="row" formArrayName="permissions">
-                        <div class="col-xl-3 col-sm-6 mb-3"
-                            *ngFor="let permission of availablePermissions; let i = index">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" [id]="permission.id"
-                                    [formControlName]="i">
-                                <label class="form-check-label" [for]="permission.id">
-                                    {{ permission.label }}
-                                </label>
+                            <label class="form-label">Mot de passe <span *ngIf="!isEditMode" class="text-danger">*</span> <span *ngIf="isEditMode" class="text-muted fst-italic">(laisser vide si inchangé)</span></label>
+                            
+                            <div class="input-group">
+                                <input [type]="isPasswordVisible ? 'text' : 'password'" class="form-control" formControlName="password"
+                                    [ngClass]="{'is-invalid': submit && form.get('password')?.invalid}">
+                                
+                                <button class="btn btn-outline-secondary btn-icon" type="button" (click)="isPasswordVisible = !isPasswordVisible">
+                                    <i data-feather="eye" appFeatherIcon [hidden]="isPasswordVisible"></i>
+                                    <i data-feather="eye-off" appFeatherIcon [hidden]="!isPasswordVisible"></i>
+                                </button>
+                                
+                                <div *ngIf="submit && form.get('password')?.invalid" class="invalid-feedback d-block">
+                                    Le mot de passe est requis lors de la création d'un utilisateur.
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-end mt-4 pt-4 border-top">
                         <button type="button" class="btn btn-secondary me-2" (click)="navigateBack()">Annuler</button>
-                        <button type="submit" class="btn btn-primary">{{ isEditMode ? 'Enregistrer les Modifications' :
-                            'Créer le Collaborateur' }}</button>
+                        <button type="button" class="btn btn-primary" (click)="onConfirme()">{{ isEditMode ? 'Enregistrer les Modifications' : 'Créer le Collaborateur' }}</button>
                     </div>
                 </form>
             </div>

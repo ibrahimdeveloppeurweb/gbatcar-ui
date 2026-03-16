@@ -35,15 +35,15 @@ export class VehicleService {
         }
     }
 
-    create(data: Vehicle): Observable<any> {
+    create(data: Vehicle | FormData): Observable<any> {
         return this.api._post(`${this.url}/new`, data).pipe(
             map((response: any) => response),
             catchError((error: any) => throwError(error))
         );
     }
 
-    update(data: Vehicle): Observable<any> {
-        return this.api._post(`${this.url}/${data.uuid}/edit`, data).pipe(
+    update(data: any): Observable<any> {
+        return this.api._post(`${this.url}/${data instanceof FormData ? data.get('uuid') : data.uuid}/edit`, data).pipe(
             map((response: any) => response),
             catchError((error: any) => throwError(error))
         );
@@ -58,6 +58,18 @@ export class VehicleService {
         return this.api._get(`${this.url}/`, { statut, categorie }).pipe(
             map((response: any) => response),
             catchError((error: any) => throwError(error))
+        );
+    }
+
+    getCatalog(filters?: any): Observable<Vehicle[]> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+
+        return this.api._get(`${this.url}/catalog`, filters).pipe(
+            map((response: any) => response.data || response),
+            catchError((error: any) => throwError(() => error))
         );
     }
 
@@ -105,6 +117,55 @@ export class VehicleService {
 
         return this.api._get(`${this.url}/compliance`, filters).pipe(
             map((response: any) => response.data || response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    getBrandImages(brand: string): Observable<string[]> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+
+        return this.api._get(`${this.url}/brand-images/${brand}`).pipe(
+            map((response: any) => response.data || []),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    uploadBrandImage(brand: string, file: File): Observable<{ message: string, url: string }> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        return this.api._post(`${this.url}/brand-images/${brand}`, formData).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    setCoverImage(vehicleId: number, photo: string): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._put(`${this.url}/${vehicleId}/cover-image`, { photo }).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    removeGalleryImage(vehicleId: number, photo: string): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._delete(`${this.url}/${vehicleId}/photo`, { params: { photo } }).pipe(
+            map((response: any) => response),
             catchError((error: any) => throwError(() => error))
         );
     }
