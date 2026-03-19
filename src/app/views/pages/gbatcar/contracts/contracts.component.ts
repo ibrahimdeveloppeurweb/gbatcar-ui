@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MOCK_CONTRACTS } from '../../../../core/mock/gbatcar-admin.mock';
 import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon.directive';
+import { ContractService } from '../../../../core/services/contract/contract.service';
+import { Contract } from '../../../../core/models/contract.model';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-contracts',
@@ -13,8 +15,11 @@ import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon
   styleUrl: './contracts.component.scss'
 })
 export class ContractsComponent implements OnInit {
+  MathAbs = Math.abs;
+  private contractService = inject(ContractService);
 
-  contracts = MOCK_CONTRACTS;
+  contracts: Contract[] = [];
+  loading: boolean = false;
 
   // KPI computed properties
   get activeContractsCount(): number { return this.contracts.filter(c => c.status === 'En cours').length; }
@@ -25,13 +30,13 @@ export class ContractsComponent implements OnInit {
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
     return this.contracts.filter(c => {
+      if (!c.endDate) return false;
       const endDate = new Date(c.endDate);
       return c.status === 'En cours' && endDate <= thirtyDaysFromNow;
     }).length;
   }
 
   get incompleteDossiersCount(): number {
-    // Simulation: contracts in 'En Attente' are considered incomplete
     return this.contracts.filter(c => c.status === 'En Attente').length;
   }
 
@@ -41,14 +46,18 @@ export class ContractsComponent implements OnInit {
     this.showAdvancedFilters = !this.showAdvancedFilters;
   }
 
-  getRiskLevel(contract: any): { label: string, class: string } {
+  getRiskLevel(contract: Contract): { label: string, class: string } {
     if (contract.paymentStatus === 'Impayé définitif') return { label: 'Critique', class: 'text-danger' };
     if (contract.paymentStatus === 'En retard') return { label: 'Élevé', class: 'text-warning' };
-    if (contract.paidAmount / contract.totalAmount > 0.5) return { label: 'Bas', class: 'text-success' };
+
+    const paid = contract.paidAmount || 0;
+    const total = contract.totalAmount || 1; // avoid div by 0
+    if (paid / total > 0.5) return { label: 'Bas', class: 'text-success' };
     return { label: 'Moyen', class: 'text-info' };
   }
 
-  getDaysUntilDeadline(dateStr: string): number {
+  getDaysUntilDeadline(dateStr?: string): number {
+    if (!dateStr) return 0;
     const today = new Date();
     const deadline = new Date(dateStr);
     const diffTime = deadline.getTime() - today.getTime();
@@ -67,74 +76,62 @@ export class ContractsComponent implements OnInit {
   advStartDateMax: string = '';
   advProgressMin: number | null = null;
   advProgressMax: number | null = null;
-  advCountFilter: number = 10;
-
-  // 3. ACTUALLY APPLIED Filters
-  appliedSearchTerm: string = '';
-  appliedStatusFilter: string = '';
-  appliedPaymentStatusFilter: string = '';
-  appliedStartDateMin: string = '';
-  appliedStartDateMax: string = '';
-  appliedProgressMin: number | null = null;
-  appliedProgressMax: number | null = null;
-  appliedCountFilter: number = 10;
+  advCountFilter: number = 20;
 
   constructor() { }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {
+    this.loadContracts();
+  }
 
-  get filteredContracts() {
-    let result = this.contracts.filter(contract => {
-      // 1. Text Search
-      const searchStr = `${contract.id} ${contract.clientName} ${contract.vehicle} ${contract.clientId}`.toLowerCase();
-      const matchesSearch = !this.appliedSearchTerm || searchStr.includes(this.appliedSearchTerm.toLowerCase());
+  loadContracts() {
+    this.loading = true;
+    console.log('--- DYNAMIC CONTRACTS LOADING START ---');
+    const rawFilters: any = {
+      search: this.advSearchTerm,
+      status: this.advStatusFilter,
+      paymentStatus: this.advPaymentStatusFilter,
+      startDateMin: this.advStartDateMin,
+      startDateMax: this.advStartDateMax,
+      progressMin: this.advProgressMin,
+      progressMax: this.advProgressMax,
+      count: this.advCountFilter
+    };
 
-      // 2. Exact Selectors
-      const matchesStatus = !this.appliedStatusFilter || contract.status === this.appliedStatusFilter;
-      const matchesPaymentStatus = !this.appliedPaymentStatusFilter || contract.paymentStatus === this.appliedPaymentStatusFilter;
-
-      // 3. Date Ranges (Start Date)
-      const contractDate = new Date(contract.startDate);
-      const minDate = this.appliedStartDateMin ? new Date(this.appliedStartDateMin) : null;
-      const maxDate = this.appliedStartDateMax ? new Date(this.appliedStartDateMax) : null;
-
-      const matchesStartDateMin = !minDate || contractDate >= minDate;
-      const matchesStartDateMax = !maxDate || contractDate <= maxDate;
-      const matchesDate = matchesStartDateMin && matchesStartDateMax;
-
-      // 4. Progress Range (%)
-      const progressPercent = contract.totalAmount > 0 ? (contract.paidAmount / contract.totalAmount) * 100 : 0;
-      const matchesProgressMin = this.appliedProgressMin === null || progressPercent >= this.appliedProgressMin;
-      const matchesProgressMax = this.appliedProgressMax === null || progressPercent <= this.appliedProgressMax;
-      const matchesProgress = matchesProgressMin && matchesProgressMax;
-
-      return matchesSearch && matchesStatus && matchesPaymentStatus && matchesDate && matchesProgress;
+    const filters: any = {};
+    Object.keys(rawFilters).forEach(key => {
+      if (rawFilters[key] !== null && rawFilters[key] !== undefined && rawFilters[key] !== '') {
+        filters[key] = rawFilters[key];
+      }
     });
 
-    // Apply Count Limit
-    return result.slice(0, this.appliedCountFilter);
+    this.contractService.getList(filters).subscribe({
+      next: (res: any) => {
+        this.contracts = res.data || res;
+        this.loading = false;
+      },
+      error: (err: any) => {
+        this.loading = false;
+        console.error('Error loading contracts', err);
+        Swal.fire('Erreur', 'Impossible de charger la liste des contrats', 'error');
+      }
+    });
+  }
+
+  get filteredContracts(): Contract[] {
+    return this.contracts;
   }
 
   applyQuickFilters() {
-    this.appliedSearchTerm = this.quickSearchTerm;
-    this.appliedStatusFilter = this.quickStatusFilter;
-
     this.advSearchTerm = this.quickSearchTerm;
     this.advStatusFilter = this.quickStatusFilter;
+    this.loadContracts();
   }
 
   applyAdvancedFilters() {
-    this.appliedSearchTerm = this.advSearchTerm;
-    this.appliedStatusFilter = this.advStatusFilter;
-    this.appliedPaymentStatusFilter = this.advPaymentStatusFilter;
-    this.appliedStartDateMin = this.advStartDateMin;
-    this.appliedStartDateMax = this.advStartDateMax;
-    this.appliedProgressMin = this.advProgressMin;
-    this.appliedProgressMax = this.advProgressMax;
-    this.appliedCountFilter = this.advCountFilter;
-
     this.quickSearchTerm = this.advSearchTerm;
     this.quickStatusFilter = this.advStatusFilter;
+    this.loadContracts();
   }
 
   resetFilters() {
@@ -145,11 +142,35 @@ export class ContractsComponent implements OnInit {
     this.advStartDateMax = '';
     this.advProgressMin = null;
     this.advProgressMax = null;
-    this.advCountFilter = 10;
+    this.advCountFilter = 20;
 
     this.quickSearchTerm = '';
     this.quickStatusFilter = '';
 
     this.applyAdvancedFilters();
+  }
+
+  deleteContract(uuid: string) {
+    Swal.fire({
+      title: 'Êtes-vous sûr ?',
+      text: "Cette action est irréversible !",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Oui, supprimer !',
+      cancelButtonText: 'Annuler',
+      reverseButtons: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.contractService.getDelete(uuid).subscribe({
+          next: () => {
+            Swal.fire('Supprimé !', 'Le contrat a été supprimé.', 'success');
+            this.loadContracts();
+          },
+          error: (err: any) => {
+            Swal.fire('Erreur', err?.error?.message || 'Erreur lors de la suppression', 'error');
+          }
+        });
+      }
+    });
   }
 }

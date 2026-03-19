@@ -1,6 +1,7 @@
 export const MOCK_COMPLIANCE = [
     {
         id: 1,
+        uuid: 'COMP-1001',
         vehicle: 'Toyota Corolla 2021 (LE)',
         licensePlate: '1234 AB 01',
         assignedClient: 'Jean KOUASSI',
@@ -13,6 +14,7 @@ export const MOCK_COMPLIANCE = [
     },
     {
         id: 2,
+        uuid: 'COMP-1002',
         vehicle: 'Hyundai Elantra 2020 (GLS)',
         licensePlate: '5678 CD 01',
         assignedClient: 'Marie BAMBA',
@@ -25,6 +27,7 @@ export const MOCK_COMPLIANCE = [
     },
     {
         id: 3,
+        uuid: 'COMP-1003',
         vehicle: 'Kia Rio 2022 (EX)',
         licensePlate: 'En Attente',
         assignedClient: 'Stock GbatCar',
@@ -37,6 +40,7 @@ export const MOCK_COMPLIANCE = [
     },
     {
         id: 4,
+        uuid: 'COMP-1004',
         vehicle: 'Suzuki Vitara 2019 (GLX)',
         licensePlate: '9012 EF 01',
         assignedClient: 'Paul KONE',

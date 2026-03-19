@@ -20,6 +20,8 @@ export interface Client {
     id?: string;
 
     // Identification
+    nom?: string;               // alias for lastName
+    prenom?: string;            // alias for firstName
     name?: string;
     firstName?: string;
     lastName?: string;

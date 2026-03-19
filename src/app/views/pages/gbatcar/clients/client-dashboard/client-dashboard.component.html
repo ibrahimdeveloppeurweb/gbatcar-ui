@@ -40,7 +40,7 @@
                     <div>
                         <p class="text-secondary fs-12px mb-1">Clients Actifs</p>
                         <h4 class="fw-bold mb-0 text-success">{{ stats.activeClients }}</h4>
-                        <small class="text-muted fs-11px">Durée moy.: {{ stats.avgContractDuration }} mois</small>
+                        <small class="text-muted fs-11px">Durée moy.: 24 mois</small>
                     </div>
                     <i data-feather="user-check" appFeatherIcon class="icon-lg text-success"></i>
                 </div>
@@ -56,8 +56,9 @@
                     <div>
                         <p class="text-secondary fs-12px mb-1">En Retard Paiement</p>
                         <h4 class="fw-bold mb-0 text-danger">{{ stats.lateClients }}</h4>
-                        <small class="text-muted fs-11px">Taux: {{ ((stats.lateClients / stats.totalClients) *
-                            100).toFixed(1) }}% de la flotte</small>
+                        <small class="text-muted fs-11px">Taux: {{ stats.totalClients ? ((stats.lateClients /
+                            stats.totalClients) *
+                            100).toFixed(1) : 0 }}% de la flotte</small>
                     </div>
                     <i data-feather="alert-triangle" appFeatherIcon class="icon-lg text-danger"></i>
                 </div>
@@ -71,10 +72,11 @@
             <div class="card-body py-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-secondary fs-12px mb-1">Valeur Portefeuille</p>
+                        <p class="text-secondary fs-12px mb-1">Valeur Portefeuille (Impayés)</p>
                         <h4 class="fw-bold mb-0 text-primary" style="font-size: 1rem;">{{
-                            formatCurrency(stats.totalPortfolioValue) }}</h4>
-                        <small class="text-muted fs-11px">Moy./client: {{ formatCurrency(stats.avgClientValue)
+                            formatCurrency(stats.portfolioValue || 0) }}</h4>
+                        <small class="text-muted fs-11px">Moy./client: {{ stats.totalClients ?
+                            formatCurrency(stats.portfolioValue / stats.totalClients) : '0 FCFA'
                             }}</small>
                     </div>
                     <i data-feather="briefcase" appFeatherIcon class="icon-lg text-primary"></i>
@@ -100,19 +102,19 @@
                 <!-- Quick stats -->
                 <div class="d-flex justify-content-around mt-2 pt-2 border-top">
                     <div class="text-center">
-                        <span class="badge bg-success px-2">{{ stats.activeClients }}</span>
+                        <span class="badge bg-success px-2">{{ distribution['Actifs'] || 0 }}</span>
                         <p class="text-muted fs-10px mb-0 mt-1">Actifs</p>
                     </div>
                     <div class="text-center">
-                        <span class="badge bg-danger px-2">{{ stats.lateClients }}</span>
+                        <span class="badge bg-danger px-2">{{ distribution['En Retard'] || 0 }}</span>
                         <p class="text-muted fs-10px mb-0 mt-1">En retard</p>
                     </div>
                     <div class="text-center">
-                        <span class="badge bg-warning text-dark px-2">{{ stats.pendingValidation }}</span>
+                        <span class="badge bg-warning text-dark px-2">{{ distribution['En Attente'] || 0 }}</span>
                         <p class="text-muted fs-10px mb-0 mt-1">En attente</p>
                     </div>
                     <div class="text-center">
-                        <span class="badge bg-secondary px-2">{{ stats.inactiveClients }}</span>
+                        <span class="badge bg-secondary px-2">{{ distribution['Inactifs'] || 0 }}</span>
                         <p class="text-muted fs-10px mb-0 mt-1">Inactifs</p>
                     </div>
                 </div>
@@ -165,17 +167,21 @@
                         <tbody>
                             <tr *ngFor="let c of riskClients">
                                 <td>
-                                    <span class="d-block fw-medium text-primary fs-12px">{{ c.name }}</span>
-                                    <span class="text-muted fs-11px">{{ c.vehicle }}</span>
+                                    <span class="d-block fw-medium text-primary fs-12px">{{ c.lastName }} {{ c.firstName
+                                        }}</span>
+                                    <span class="text-muted fs-11px">{{ c.vehicle ? c.vehicle.marque + ' ' +
+                                        c.vehicle.modele : c.phone }}</span>
                                 </td>
-                                <td class="text-danger fw-bold fs-12px">{{ c.delay }}j</td>
-                                <td class="fw-bold text-dark fs-12px">{{ formatCurrency(c.amount) }}</td>
+                                <td class="text-danger fw-bold fs-12px">--</td>
+                                <td class="fw-bold text-dark fs-12px">{{ formatCurrency(c.unpaidAmount || 0) }}</td>
                                 <td>
-                                    <span class="badge" [ngClass]="getRiskClass(c.risk)">{{ c.risk }}</span>
+                                    <span class="badge" [ngClass]="getCalculatedRiskClass(c)">{{
+                                        getCalculatedRiskLevel(c) }}</span>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center gap-1">
-                                        <button class="btn btn-icon btn-xs btn-outline-primary" title="Voir dossier">
+                                        <button class="btn btn-icon btn-xs btn-outline-primary"
+                                            [routerLink]="['/gbatcar/clients/details', c.uuid]" title="Voir dossier">
                                             <i data-feather="eye" appFeatherIcon class="icon-xs"></i>
                                         </button>
                                         <button class="btn btn-icon btn-xs btn-outline-warning" title="Contacter">
@@ -218,22 +224,27 @@
                         <tbody>
                             <tr *ngFor="let c of recentClients">
                                 <td>
-                                    <span class="d-block fw-medium text-primary fs-12px">{{ c.name }}</span>
+                                    <span class="d-block fw-medium text-primary fs-12px">{{ c.lastName }} {{ c.firstName
+                                        }}</span>
                                     <span class="text-muted fs-11px">{{ c.phone }}</span>
                                 </td>
-                                <td class="text-muted fs-12px">{{ c.vehicle }}</td>
+                                <td class="text-muted fs-12px">{{ c.vehicle ? c.vehicle.marque + ' ' + c.vehicle.modele
+                                    : 'Non assigné' }}</td>
                                 <td>
                                     <span class="badge" [ngClass]="getStatusClass(c.status)">{{ c.status }}</span>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center gap-1">
-                                        <button class="btn btn-icon btn-xs btn-outline-primary" title="Voir dossier">
+                                        <button class="btn btn-icon btn-xs btn-outline-primary"
+                                            [routerLink]="['/gbatcar/clients/details', c.uuid]" title="Voir dossier">
                                             <i data-feather="eye" appFeatherIcon class="icon-xs"></i>
                                         </button>
-                                        <button class="btn btn-icon btn-xs btn-outline-success" title="Valider">
+                                        <button class="btn btn-icon btn-xs btn-outline-success"
+                                            [routerLink]="['/gbatcar/clients/details', c.uuid]" title="Valider">
                                             <i data-feather="check-square" appFeatherIcon class="icon-xs"></i>
                                         </button>
-                                        <button class="btn btn-icon btn-xs btn-outline-warning" title="Modifier">
+                                        <button class="btn btn-icon btn-xs btn-outline-warning"
+                                            [routerLink]="['/gbatcar/clients/form', c.uuid]" title="Modifier">
                                             <i data-feather="edit-2" appFeatherIcon class="icon-xs"></i>
                                         </button>
                                     </div>

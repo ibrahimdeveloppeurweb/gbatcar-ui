@@ -1,5 +1,6 @@
 import { Client } from './client.model';
 import { Contract } from './contract.model';
+import { VehicleCompliance } from './vehicle-compliance.model';
 export interface VehicleDocumentStatus {
     status?: string;           // 'Valid', 'Expiring Soon', 'Expired'
     expiryDate?: string;
@@ -23,6 +24,7 @@ export interface Vehicle {
     year?: number;             // alias
     couleur?: string;
     finition?: string;         // e.g., 'LE', 'GLS'
+    trim?: string;             // alias for finition
     numeroChassis?: string;    // VIN
     nombrePlaces?: number;
     carburant?: string;
@@ -53,6 +55,10 @@ export interface Vehicle {
     status?: string;           // alias
     paymentStatus?: string;    // 'À jour', 'En retard', 'Critique'
     reimbursementProgress?: number; // % de remboursement
+    daysLate?: number;
+    totalContractAmount?: number;
+    contractProgress?: number;
+    paidAmount?: number;
 
     // ===================== CONFORMITÉ LÉGALE =====================
     insurance?: VehicleDocumentStatus;
@@ -61,6 +67,7 @@ export interface Vehicle {
     transportLicense?: VehicleDocumentStatus;
     fireExtinguisher?: VehicleDocumentStatus;
     preventiveMaintenance?: VehicleDocumentStatus;
+    compliance?: VehicleCompliance;
 
     // ===================== COMMERCIAL (Catalogue & TCO) =====================
     commercialOffer?: {
@@ -78,6 +85,19 @@ export interface Vehicle {
     pipelineStatus?: string;   // 'Prêt', 'En Préparation', 'En cours d'immatriculation'
     preReservedBy?: string;
 
+    // Financial/Calculation props (Catalog)
+    depositPercentage?: number;
+    durationInMonths?: number;
+    includingInsurance?: boolean;
+    includingGPS?: boolean;
+
+    // TCO direct access (sometimes used in templates)
+    purchasePrice?: number;
+    customsFees?: number;
+    transitFees?: number;
+    preparationCost?: number;
+    gpsInstallationCost?: number;
+
     // ===================== RENTABILITÉ (Form UI) =====================
     prixDeVente?: number;
     tcoEstime?: number;
@@ -91,6 +111,8 @@ export interface Vehicle {
     // ===================== PRÉSENTATION =====================
     photo?: string;
     photoSrc?: string;
+    photos?: string[];
+    _carouselIdx?: number;
     description?: string;
     prixParJour?: number;
 

@@ -35,4 +35,16 @@ export class GeneralSettingService {
             catchError((error: any) => throwError(() => error))
         );
     }
+
+    getHistory(): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+
+        return this.api._get(`${this.url}/history`).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
 }

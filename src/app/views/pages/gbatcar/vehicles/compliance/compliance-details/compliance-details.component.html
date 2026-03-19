@@ -10,7 +10,13 @@
     </div>
 </div>
 
-<div class="row" *ngIf="item">
+<div class="row mx-0 justify-content-center py-5" *ngIf="loading">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Chargement...</span>
+    </div>
+</div>
+
+<div class="row" *ngIf="!loading && item">
     <div class="col-md-12 stretch-card">
         <div class="card">
             <div class="card-body">
@@ -22,7 +28,11 @@
                                 item.assignedClient }}</span></p>
                     </div>
                     <div>
-                        <span class="badge bg-success fs-6">En Règle</span>
+                        <span class="badge fs-6"
+                            [ngClass]="item.insurance.status === 'Valid' && item.technicalInspection.status === 'Valid' ? 'bg-success' : 'bg-warning text-dark'">
+                            {{ item.insurance.status === 'Valid' && item.technicalInspection.status === 'Valid' ? 'En
+                            Règle' : 'À Vérifier' }}
+                        </span>
                     </div>
                 </div>
 
@@ -30,39 +40,95 @@
                     <!-- Administratif & Légal -->
                     <div class="col-md-6 mb-4 mb-md-0">
                         <h6 class="mb-3">
-                            <i data-feather="file-text" class="icon-sm text-primary me-2"></i> Administratif & Légal
+                            <i data-feather="file-text" appFeatherIcon class="icon-sm text-primary me-2"></i>
+                            Administratif & Légal
                         </h6>
                         <ul class="list-group list-group-flush">
+                            <!-- Assurance -->
                             <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
                                 <div>
-                                    <span class="d-block fw-bold">Assurance (Tous Risques)</span>
-                                    <small class="text-muted" *ngIf="item.insurance.status === 'Valid'">Expire dans {{
-                                        item.insurance.daysLeft }} jours</small>
+                                    <span class="d-block fw-bold">
+                                        <a *ngIf="item.insurance.url" [href]="getFileUrl(item.insurance.url)"
+                                            target="_blank" class="text-primary me-1">
+                                            <i data-feather="link" appFeatherIcon class="icon-sm"></i>
+                                        </a>
+                                        Assurance (Tous Risques)
+                                    </span>
+                                    <small class="text-muted" *ngIf="item.insurance.status !== 'Missing'">
+                                        {{ item.insurance.status === 'Expired' ? 'Expiré' : 'Expire dans ' +
+                                        item.insurance.daysLeft + ' jours' }}
+                                    </small>
+                                    <small class="text-muted" *ngIf="item.insurance.status === 'Missing'">Non
+                                        renseigné</small>
                                 </div>
-                                <span class="badge rounded-pill"
-                                    [ngClass]="{'bg-success': item.insurance.status === 'Valid', 'bg-warning text-dark': item.insurance.status === 'Expiring Soon', 'bg-danger': item.insurance.status === 'Expired'}">
-                                    {{ item.insurance.expiryDate | date:'dd/MM/yyyy' }}
+                                <span class="badge rounded-pill" [ngClass]="getStatusBadgeClass(item.insurance.status)">
+                                    {{ item.insurance.expiryDate ? (item.insurance.expiryDate | date:'dd/MM/yyyy') :
+                                    'N/A' }}
                                 </span>
                             </li>
+                            <!-- Carte Grise -->
                             <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
                                 <div>
-                                    <span class="d-block fw-bold">Carte Grise</span>
-                                    <small class="text-muted" *ngIf="item.roadTax.status === 'Valid'">Expire dans {{
-                                        item.roadTax.daysLeft }} jours</small>
+                                    <span class="d-block fw-bold">
+                                        <a *ngIf="item.carteGrise.url" [href]="getFileUrl(item.carteGrise.url)"
+                                            target="_blank" class="text-primary me-1">
+                                            <i data-feather="link" appFeatherIcon class="icon-sm"></i>
+                                        </a>
+                                        Carte Grise
+                                    </span>
+                                    <small class="text-muted" *ngIf="item.carteGrise.status !== 'Missing'">
+                                        {{ item.carteGrise.status === 'Expired' ? 'Expiré' : 'Expire dans ' +
+                                        item.carteGrise.daysLeft + ' jours' }}
+                                    </small>
+                                    <small class="text-muted" *ngIf="item.carteGrise.status === 'Missing'">Non
+                                        renseigné</small>
                                 </div>
                                 <span class="badge rounded-pill"
-                                    [ngClass]="{'bg-success': item.roadTax.status === 'Valid', 'bg-warning text-dark': item.roadTax.status === 'Expiring Soon', 'bg-danger': item.roadTax.status === 'Expired'}">
-                                    {{ item.roadTax.expiryDate | date:'dd/MM/yyyy' }}
+                                    [ngClass]="getStatusBadgeClass(item.carteGrise.status)">
+                                    {{ item.carteGrise.expiryDate ? (item.carteGrise.expiryDate | date:'dd/MM/yyyy') :
+                                    'N/A' }}
                                 </span>
                             </li>
+                            <!-- Contrat Location-Vente -->
                             <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
                                 <div>
-                                    <span class="d-block fw-bold">Contrat Location-Vente</span>
-                                    <small class="text-muted">Type: {{ item.transportLicense.type }}</small>
+                                    <span class="d-block fw-bold">
+                                        <a *ngIf="item.leaseContract.url" [href]="getFileUrl(item.leaseContract.url)"
+                                            target="_blank" class="text-primary me-1">
+                                            <i data-feather="link" appFeatherIcon class="icon-sm"></i>
+                                        </a>
+                                        Contrat Location-Vente
+                                    </span>
+                                    <small class="text-muted">Type: {{ item.leaseContract.type }}</small>
                                 </div>
                                 <span class="badge rounded-pill"
-                                    [ngClass]="{'bg-success': item.transportLicense.status === 'Valid', 'bg-warning text-dark': item.transportLicense.status === 'Expiring Soon', 'bg-danger': item.transportLicense.status === 'Expired'}">
-                                    {{ item.transportLicense.expiryDate | date:'dd/MM/yyyy' }}
+                                    [ngClass]="getStatusBadgeClass(item.leaseContract.status)">
+                                    {{ item.leaseContract.expiryDate ? (item.leaseContract.expiryDate |
+                                    date:'dd/MM/yyyy') : 'N/A' }}
+                                </span>
+                            </li>
+                            <!-- Licence de Transport -->
+                            <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="d-block fw-bold">
+                                        <a *ngIf="item.transportLicense.url"
+                                            [href]="getFileUrl(item.transportLicense.url)" target="_blank"
+                                            class="text-primary me-1">
+                                            <i data-feather="link" appFeatherIcon class="icon-sm"></i>
+                                        </a>
+                                        Licence de Transport
+                                    </span>
+                                    <small class="text-muted" *ngIf="item.transportLicense.status !== 'Missing'">
+                                        {{ item.transportLicense.status === 'Expired' ? 'Expiré' : 'Expire dans ' +
+                                        item.transportLicense.daysLeft + ' jours' }} ({{ item.transportLicense.type }})
+                                    </small>
+                                    <small class="text-muted" *ngIf="item.transportLicense.status === 'Missing'">Non
+                                        renseigné</small>
+                                </div>
+                                <span class="badge rounded-pill"
+                                    [ngClass]="getStatusBadgeClass(item.transportLicense.status)">
+                                    {{ item.transportLicense.expiryDate ? (item.transportLicense.expiryDate |
+                                    date:'dd/MM/yyyy') : 'N/A' }}
                                 </span>
                             </li>
                         </ul>
@@ -71,34 +137,80 @@
                     <!-- Technique & Sécurité -->
                     <div class="col-md-6">
                         <h6 class="mb-3">
-                            <i data-feather="tool" class="icon-sm text-primary me-2"></i> Technique & Sécurité
+                            <i data-feather="tool" appFeatherIcon class="icon-sm text-primary me-2"></i> Technique &
+                            Sécurité
                         </h6>
                         <ul class="list-group list-group-flush">
+                            <!-- Visite Technique -->
                             <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
                                 <div>
-                                    <span class="d-block fw-bold">Visite Technique</span>
-                                    <small class="text-muted" *ngIf="item.technicalInspection.status === 'Valid'">Expire
-                                        dans {{ item.technicalInspection.daysLeft }} jours</small>
+                                    <span class="d-block fw-bold">
+                                        <a *ngIf="item.technicalInspection.url"
+                                            [href]="getFileUrl(item.technicalInspection.url)" target="_blank"
+                                            class="text-primary me-1">
+                                            <i data-feather="link" appFeatherIcon class="icon-sm"></i>
+                                        </a>
+                                        Visite Technique
+                                    </span>
+                                    <small class="text-muted" *ngIf="item.technicalInspection.status !== 'Missing'">
+                                        {{ item.technicalInspection.status === 'Expired' ? 'Expiré' : 'Expire dans ' +
+                                        item.technicalInspection.daysLeft + ' jours' }}
+                                    </small>
+                                    <small class="text-muted" *ngIf="item.technicalInspection.status === 'Missing'">Non
+                                        renseigné</small>
                                 </div>
                                 <span class="badge rounded-pill"
-                                    [ngClass]="{'bg-success': item.technicalInspection.status === 'Valid', 'bg-warning text-dark': item.technicalInspection.status === 'Expiring Soon', 'bg-danger': item.technicalInspection.status === 'Expired'}">
-                                    {{ item.technicalInspection.expiryDate | date:'dd/MM/yyyy' }}
+                                    [ngClass]="getStatusBadgeClass(item.technicalInspection.status)">
+                                    {{ item.technicalInspection.expiryDate ? (item.technicalInspection.expiryDate |
+                                    date:'dd/MM/yyyy') : 'N/A' }}
                                 </span>
                             </li>
+                            <!-- Vignette / Taxe -->
                             <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">Extincteur</span>
-                                <span class="badge rounded-pill"
-                                    [ngClass]="{'bg-success': item.fireExtinguisher.status === 'Valid', 'bg-warning text-dark': item.fireExtinguisher.status === 'Expiring Soon', 'bg-danger': item.fireExtinguisher.status === 'Expired'}">
-                                    {{ item.fireExtinguisher.expiryDate | date:'dd/MM/yyyy' }}
+                                <div>
+                                    <span class="d-block fw-bold">
+                                        <a *ngIf="item.roadTax.url" [href]="getFileUrl(item.roadTax.url)"
+                                            target="_blank" class="text-primary me-1">
+                                            <i data-feather="link" appFeatherIcon class="icon-sm"></i>
+                                        </a>
+                                        Vignette / Taxe
+                                    </span>
+                                    <small class="text-muted" *ngIf="item.roadTax.status !== 'Missing'">
+                                        {{ item.roadTax.status === 'Expired' ? 'Expiré' : 'Expire dans ' +
+                                        item.roadTax.daysLeft + ' jours' }}
+                                    </small>
+                                    <small class="text-muted" *ngIf="item.roadTax.status === 'Missing'">Non
+                                        renseigné</small>
+                                </div>
+                                <span class="badge rounded-pill" [ngClass]="getStatusBadgeClass(item.roadTax.status)">
+                                    {{ item.roadTax.expiryDate ? (item.roadTax.expiryDate |
+                                    date:'dd/MM/yyyy') : 'N/A' }}
                                 </span>
                             </li>
+                            <!-- Extincteur -->
+                            <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">
+                                    <a *ngIf="item.fireExtinguisher.url" [href]="getFileUrl(item.fireExtinguisher.url)"
+                                        target="_blank" class="text-primary me-1">
+                                        <i data-feather="link" appFeatherIcon class="icon-sm"></i>
+                                    </a>
+                                    Extincteur
+                                </span>
+                                <span class="badge rounded-pill"
+                                    [ngClass]="getStatusBadgeClass(item.fireExtinguisher.status)">
+                                    {{ item.fireExtinguisher.expiryDate ? (item.fireExtinguisher.expiryDate |
+                                    date:'dd/MM/yyyy') : 'N/A' }}
+                                </span>
+                            </li>
+                            <!-- Maintenance Préventive -->
                             <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
                                 <div>
                                     <span class="d-block fw-bold">Maintenance Préventive</span>
                                     <small class="text-muted">Kilométrage Actuel: {{
                                         item.preventiveMaintenance.currentKm | number }} km</small>
                                 </div>
-                                <span class="badge bg-info rounded-pill">
+                                <span class="badge rounded-pill"
+                                    [ngClass]="getStatusBadgeClass(item.preventiveMaintenance.status)">
                                     Prochaine: {{ item.preventiveMaintenance.nextKm | number }} km
                                 </span>
                             </li>
@@ -109,7 +221,8 @@
                 <div class="mt-4 pt-4 border-top">
                     <button class="btn btn-outline-primary" routerLink="/gbatcar/vehicles/compliance">Retour à la
                         liste</button>
-                    <button class="btn btn-primary ms-2" [routerLink]="['/gbatcar/vehicles/compliance/add']">Mettre à
+                    <button class="btn btn-primary ms-2" [routerLink]="['/gbatcar/vehicles/compliance/add']"
+                        [queryParams]="{vehicle: item.uuid}">Mettre à
                         jour un document</button>
                 </div>
             </div>
@@ -117,8 +230,58 @@
     </div>
 </div>
 
+<!-- Filtres de recherche -->
+<div class="row mb-4" *ngIf="!loading && item">
+    <div class="col-md-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body py-3">
+                <h6 class="card-title mb-3 fs-13px text-uppercase fw-bold text-secondary">Filtres de recherche</h6>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-transparent border-end-0">
+                                <i data-feather="search" appFeatherIcon class="icon-xs text-muted"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0 ps-0"
+                                placeholder="Motif, plaque, client..." [(ngModel)]="searchTerm">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fs-12px text-secondary mb-1">Statut des Documents</label>
+                        <select class="form-select form-select-sm" [(ngModel)]="statusFilter">
+                            <option value="">Tous les documents</option>
+                            <option value="Actif">Actif</option>
+                            <option value="Expiré">Expiré</option>
+                            <option value="En attente">En attente (Infractions)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fs-12px text-secondary mb-1">Date de création entre :</label>
+                        <div class="d-flex align-items-center">
+                            <input type="date" class="form-control form-control-sm me-1" placeholder="Début"
+                                [(ngModel)]="startDate">
+                            <span class="text-secondary">-</span>
+                            <input type="date" class="form-control form-control-sm ms-1" placeholder="Fin"
+                                [(ngModel)]="endDate">
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end pb-1">
+                        <button class="btn btn-sm btn-primary w-100 me-2 shadow-sm" (click)="applyFilters()">
+                            <i data-feather="search" appFeatherIcon class="icon-xs me-1"></i> Rechercher
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary w-100" (click)="resetFilters()">
+                            <i data-feather="refresh-cw" appFeatherIcon class="icon-xs me-1"></i> Réinit.
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Historique des Documents -->
-<div class="row mt-4" *ngIf="item">
+<div class="row mt-4" *ngIf="!loading && item">
     <div class="col-md-12 stretch-card">
         <div class="card">
             <div class="card-body">
@@ -132,6 +295,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Date d'Ajout</th>
+                                <th>Créé par</th>
                                 <th>Type de Document</th>
                                 <th>Période de Validité</th>
                                 <th>Coût du Renouvellement</th>
@@ -141,38 +305,38 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>10/01/2023</td>
-                                <td>Assurance (Tous Risques)</td>
-                                <td>15/01/2023 - 14/01/2024</td>
-                                <td class="fw-bold">185 000 FCFA</td>
-                                <td><span class="badge bg-info text-dark">Répercuté au locataire</span></td>
-                                <td><span class="badge bg-secondary">Archivé</span></td>
-                                <td><a href="#" class="text-primary"><i data-feather="download" appFeatherIcon
-                                            class="icon-sm"></i>
-                                        doc_assurance_2023.pdf</a></td>
+                            <tr *ngFor="let doc of filteredHistory">
+                                <td>{{ doc.createdAt | date:'dd/MM/yyyy' }}</td>
+                                <td class="text-muted">{{ doc.create || 'Système' }}</td>
+                                <td>{{ doc.type }}</td>
+                                <td>
+                                    {{ doc.startDate | date:'dd/MM/yyyy' }} - {{ doc.endDate | date:'dd/MM/yyyy' }}
+                                    <small class="text-primary d-block">{{ getDuration(doc.startDate, doc.endDate)
+                                        }}</small>
+                                </td>
+                                <td class="fw-bold">{{ doc.renewalCost | number }} FCFA</td>
+                                <td>
+                                    <span class="badge bg-info text-dark">{{ doc.affectation || 'Répercuté au locataire'
+                                        }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge"
+                                        [ngClass]="doc.status === 'Actif' ? 'bg-success' : 'bg-secondary'">
+                                        {{ doc.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a *ngIf="doc.fileUrl" [href]="getFileUrl(doc.fileUrl)" target="_blank"
+                                        class="text-primary">
+                                        <i data-feather="download" appFeatherIcon class="icon-sm"></i> voir_doc
+                                    </a>
+                                    <span *ngIf="!doc.fileUrl" class="text-muted">-</span>
+                                </td>
                             </tr>
-                            <tr>
-                                <td>05/02/2023</td>
-                                <td>Visite Technique</td>
-                                <td>10/02/2023 - 09/02/2024</td>
-                                <td class="fw-bold">45 000 FCFA</td>
-                                <td><span class="badge bg-info text-dark">Répercuté au locataire</span></td>
-                                <td><span class="badge bg-secondary">Archivé</span></td>
-                                <td><a href="#" class="text-primary"><i data-feather="download" appFeatherIcon
-                                            class="icon-sm"></i>
-                                        sicta_2023.pdf</a></td>
-                            </tr>
-                            <tr>
-                                <td>Aujourd'hui</td>
-                                <td>Assurance (Tous Risques)</td>
-                                <td>En cours jusqu'au {{ item.insurance.expiryDate | date:'dd/MM/yyyy' }}</td>
-                                <td class="fw-bold">195 000 FCFA</td>
-                                <td><span class="badge bg-info text-dark">Répercuté au locataire</span></td>
-                                <td><span class="badge bg-success">Actif</span></td>
-                                <td><a href="#" class="text-primary"><i data-feather="download" appFeatherIcon
-                                            class="icon-sm"></i>
-                                        doc_actuel.pdf</a></td>
+                            <tr *ngIf="filteredHistory.length === 0">
+                                <td colspan="8" class="text-center py-4 text-muted fst-italic">
+                                    Aucun document ne correspond à votre recherche.
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -183,7 +347,7 @@
 </div>
 
 <!-- Gestion des Infractions & Contraventions -->
-<div class="row mt-4" *ngIf="item">
+<div class="row mt-4" *ngIf="!loading && item">
     <div class="col-md-12 stretch-card">
         <div class="card border-warning" style="border-left: 4px solid #f39c12 !important;">
             <div class="card-body">
@@ -196,7 +360,7 @@
                         <small class="text-muted">Les amendes reçues au nom de GbatCar sont répercutées sur le solde du
                             locataire.</small>
                     </div>
-                    <button class="btn btn-sm btn-outline-warning">
+                    <button class="btn btn-sm btn-warning" (click)="openPenaltyModal(infractionModal)">
                         <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Saisir une Infraction
                     </button>
                 </div>
@@ -205,38 +369,58 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Date</th>
+                                <th>Créé par</th>
                                 <th>Type d'Infraction</th>
                                 <th>Description / Preuve</th>
                                 <th>Montant</th>
                                 <th>Affectation Financière</th>
                                 <th>Statut</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Mock infraction data -->
-                            <tr>
-                                <td>15/01/2024</td>
-                                <td>Excès de Vitesse (GPS)</td>
-                                <td><a href="#" class="text-primary"><i data-feather="file" appFeatherIcon
-                                            class="icon-xs me-1"></i>rapport_vitesse_jan24.pdf</a></td>
-                                <td class="fw-bold text-danger">10 000 FCFA</td>
-                                <td><span class="badge bg-danger">Répercuté au locataire</span></td>
-                                <td><span class="badge bg-success">Payé</span></td>
+                            <tr *ngFor="let penalty of filteredPenalties">
+                                <td>{{ penalty.date | date:'dd/MM/yyyy' }}</td>
+                                <td class="text-muted small">{{ penalty.create || 'Système' }}</td>
+                                <td>{{ penalty.reason }}</td>
+                                <td>
+                                    <span class="text-muted fst-italic">{{ penalty.reference }}</span>
+                                </td>
+                                <td class="fw-bold text-danger">{{ penalty.amount | number }} FCFA</td>
+                                <td>
+                                    <span class="badge"
+                                        [ngClass]="isAtFault(penalty) ? 'bg-warning text-dark' : 'bg-danger'">
+                                        Répercuté au locataire
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge"
+                                        [ngClass]="penalty.status === 'Payé' ? 'bg-success' : 'bg-warning text-dark'">
+                                        {{ penalty.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <button class="btn btn-sm btn-outline-info btn-icon me-1" title="Détails"
+                                            (click)="openDetailModal(penaltyDetailModal, penalty)">
+                                            <i data-feather="eye" appFeatherIcon></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger btn-icon" title="Supprimer"
+                                            (click)="deletePenalty(penalty)">
+                                            <i data-feather="trash-2" appFeatherIcon></i>
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
-                            <tr>
-                                <td>03/03/2024</td>
-                                <td>Stationnement Interdit</td>
-                                <td><span class="text-muted fst-italic">PV N° AB-1234 – Plateau</span></td>
-                                <td class="fw-bold text-danger">5 000 FCFA</td>
-                                <td><span class="badge bg-warning text-dark">En attente</span></td>
-                                <td><span class="badge bg-warning text-dark">Non payé</span></td>
+                            <tr *ngIf="filteredPenalties.length === 0">
+                                <td colspan="8" class="text-center py-4 text-muted fst-italic">
+                                    <i data-feather="info" appFeatherIcon
+                                        class="icon-md mb-2 text-warning d-block mx-auto"></i>
+                                    Aucune infraction ne correspond à votre recherche.
+                                </td>
                             </tr>
                         </tbody>
                     </table>
-                </div>
-                <div *ngIf="false" class="text-center py-4 text-muted">
-                    <i data-feather="check-circle" appFeatherIcon class="icon-lg d-block mx-auto mb-2 text-success"></i>
-                    <small>Aucune infraction enregistrée pour ce véhicule.</small>
                 </div>
             </div>
         </div>
@@ -244,9 +428,177 @@
 </div>
 
 
-<div class="row" *ngIf="!item">
+<div class="row" *ngIf="!loading && !item">
     <div class="col-md-12">
         <div class="alert alert-danger">Document de conformité introuvable.</div>
         <button class="btn btn-primary" routerLink="/gbatcar/vehicles/compliance">Retour à la liste</button>
     </div>
 </div>
+<!-- Modal Saisir Infraction -->
+<ng-template #infractionModal let-modal>
+    <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title">
+            <i data-feather="alert-triangle" appFeatherIcon class="icon-sm me-2"></i>
+            Saisir une nouvelle infraction
+        </h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body">
+        <form [formGroup]="penaltyForm">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Référence / N° PV <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="reference" placeholder="Ex: PV-2024-001">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Motif de l'infraction <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="reason" placeholder="Ex: Excès de vitesse">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Montant (FCFA) <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" formControlName="amount">
+                        <span class="input-group-text">FCFA</span>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Date de l'infraction <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" formControlName="date">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold">Sévérité</label>
+                    <select class="form-select" formControlName="severity">
+                        <option value="Faible">Faible</option>
+                        <option value="Moyenne">Moyenne</option>
+                        <option value="Critique">Critique</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold">Statut</label>
+                    <select class="form-select" formControlName="status">
+                        <option value="En attente">En attente</option>
+                        <option value="Payé">Payé</option>
+                        <option value="Annulé">Annulé</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold">Échéance de paiement</label>
+                    <input type="date" class="form-control" formControlName="dueDate">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Observations / Preuves</label>
+                    <textarea class="form-control mb-3" formControlName="observation" rows="3"
+                        placeholder="Détails supplémentaires..."></textarea>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Justificatif (PV, Photo, etc.)</label>
+                    <input type="file" class="form-control" (change)="onFileSelected($event)"
+                        accept="image/*,application/pdf">
+                    <p class="text-muted small mt-1">Formats acceptés : PDF, JPG, PNG.</p>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">Annuler</button>
+        <button type="button" class="btn btn-warning" (click)="savePenalty()"
+            [disabled]="penaltyForm.invalid || submittingPenalty">
+            <span *ngIf="submittingPenalty" class="spinner-border spinner-border-sm me-1"></span>
+            <i *ngIf="!submittingPenalty" data-feather="check" appFeatherIcon class="icon-sm me-1"></i>
+            Enregistrer l'infraction
+        </button>
+    </div>
+</ng-template>
+<!-- Modal Détails Infraction -->
+<ng-template #penaltyDetailModal let-modal>
+    <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">
+            <i data-feather="info" appFeatherIcon class="icon-sm me-2"></i>
+            Détails de l'infraction : {{ selectedPenalty?.reference }}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" aria-label="Close"
+            (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body" *ngIf="selectedPenalty">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <label class="text-muted small uppercase fw-bold d-block mb-1">Motif</label>
+                <div class="h6 mb-0">{{ selectedPenalty.reason }}</div>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <label class="text-muted small uppercase fw-bold d-block mb-1">Statut</label>
+                <span class="badge"
+                    [ngClass]="selectedPenalty.status === 'Payé' ? 'bg-success' : 'bg-warning text-dark'">
+                    {{ selectedPenalty.status }}
+                </span>
+            </div>
+        </div>
+
+        <div class="row mb-4 pb-3 border-bottom">
+            <div class="col-md-4">
+                <label class="text-muted small uppercase fw-bold d-block mb-1">Montant</label>
+                <div class="h5 text-danger fw-bold mb-0">{{ selectedPenalty.amount | number }} FCFA</div>
+            </div>
+            <div class="col-md-4">
+                <label class="text-muted small uppercase fw-bold d-block mb-1">Sévérité</label>
+                <div class="mb-0">
+                    <span class="badge" [ngClass]="{
+                        'bg-success': selectedPenalty.severity === 'Faible',
+                        'bg-warning': selectedPenalty.severity === 'Moyenne',
+                        'bg-danger': selectedPenalty.severity === 'Critique'
+                    }">{{ selectedPenalty.severity }}</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="text-muted small uppercase fw-bold d-block mb-1">Saisie par</label>
+                <div class="mb-0 text-muted">{{ selectedPenalty.create || 'Système' }}</div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <label class="text-muted small uppercase fw-bold d-block mb-1">Date de l'infraction</label>
+                <div>{{ selectedPenalty.date | date:'dd MMMM yyyy' }}</div>
+            </div>
+            <div class="col-md-6">
+                <label class="text-muted small uppercase fw-bold d-block mb-1">Échéance de paiement</label>
+                <div [class.text-danger]="selectedPenalty.status !== 'Payé'">
+                    {{ selectedPenalty.dueDate ? (selectedPenalty.dueDate | date:'dd MMMM yyyy') : 'N/A' }}
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-light p-3 rounded mt-2">
+            <div class="row align-items-center">
+                <div [class.col-md-8]="selectedPenalty.proofUrl" [class.col-md-12]="!selectedPenalty.proofUrl">
+                    <label class="text-muted small uppercase fw-bold d-block mb-2">Observations / Commentaires</label>
+                    <p class="mb-0 fst-italic">{{ selectedPenalty.observation || 'Aucune observation enregistrée.' }}
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end border-start" *ngIf="selectedPenalty.proofUrl">
+                    <label class="text-muted small uppercase fw-bold d-block mb-2">Preuve / Justificatif</label>
+                    <a [href]="getFileUrl(selectedPenalty.proofUrl)" target="_blank"
+                        class="btn btn-sm btn-outline-primary shadow-sm">
+                        <i data-feather="file" appFeatherIcon class="icon-sm me-1"></i>
+                        Voir la preuve
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.close()">Fermer</button>
+    </div>
+</ng-template>

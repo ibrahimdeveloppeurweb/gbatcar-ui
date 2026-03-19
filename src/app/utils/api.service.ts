@@ -43,6 +43,13 @@ export class ApiService {
   _delete(endpoint: string, reqOpts?: any) {
     return this.http.delete(this.url + "/" + endpoint, reqOpts);
   }
+
+  _download(endpoint: string, params?: any) {
+    return this.http.get(this.url + "/" + endpoint, {
+      params: params,
+      responseType: 'blob'
+    });
+  }
 }
 
 @Injectable({
@@ -85,5 +92,12 @@ export class ApiUrlService {
 
   _delete(endpoint: string, reqOpts?: any) {
     return this.http.delete(this.url + "/" + endpoint, reqOpts);
+  }
+
+  _download(endpoint: string, params?: any) {
+    return this.http.get(this.url + "/" + endpoint, {
+      params: params,
+      responseType: 'blob'
+    });
   }
 }

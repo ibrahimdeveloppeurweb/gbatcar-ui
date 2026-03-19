@@ -264,13 +264,13 @@
                                         'bg-secondary': vehicle.paymentStatus === 'Soldé'
                                     }">
                                         {{ vehicle.paymentStatus }}
-                                        <span *ngIf="vehicle.daysLate > 0"> (J+{{ vehicle.daysLate }})</span>
+                                        <span *ngIf="(vehicle.daysLate ?? 0) > 0"> (J+{{ vehicle.daysLate }})</span>
                                     </span>
                                     <span *ngIf="vehicle.paymentStatus === '-'" class="text-muted fst-italic">-</span>
                                 </td>
                                 <!-- Barre de progression remboursement -->
                                 <td style="min-width: 150px;">
-                                    <div *ngIf="vehicle.totalContractAmount > 0">
+                                    <div *ngIf="(vehicle.totalContractAmount ?? 0) > 0">
                                         <div class="d-flex justify-content-between mb-1">
                                             <small class="text-muted">{{ vehicle.contractProgress }}%</small>
                                             <small class="text-muted">{{ vehicle.paidAmount | number }} / {{
@@ -278,9 +278,9 @@
                                         </div>
                                         <div class="progress" style="height: 6px;">
                                             <div class="progress-bar" [ngClass]="{
-                                                'bg-success': vehicle.contractProgress > 50,
-                                                'bg-primary': vehicle.contractProgress > 20 && vehicle.contractProgress <= 50,
-                                                'bg-warning': vehicle.contractProgress <= 20,
+                                                'bg-success': (vehicle.contractProgress ?? 0) > 50,
+                                                'bg-primary': (vehicle.contractProgress ?? 0) > 20 && (vehicle.contractProgress ?? 0) <= 50,
+                                                'bg-warning': (vehicle.contractProgress ?? 0) <= 20,
                                                 'bg-danger': vehicle.paymentStatus === 'Critique'
                                             }" role="progressbar" [style.width.%]="vehicle.contractProgress"></div>
                                         </div>
@@ -301,11 +301,11 @@
                                 </td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary me-1"
-                                        [routerLink]="['details', vehicle.id]" title="Voir détails">
+                                        [routerLink]="['/gbatcar/vehicles/details', vehicle.uuid]" title="Voir détails">
                                         <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
                                     </button>
                                     <button class="btn btn-sm btn-outline-secondary me-1"
-                                        [routerLink]="['edit', vehicle.id]" title="Éditer">
+                                        [routerLink]="['/gbatcar/vehicles/edit', vehicle.uuid]" title="Éditer">
                                         <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
                                     </button>
                                     <button class="btn btn-sm btn-outline-danger" title="Immobiliser (GPS)"

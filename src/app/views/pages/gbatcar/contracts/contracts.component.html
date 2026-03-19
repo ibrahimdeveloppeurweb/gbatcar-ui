@@ -1,6 +1,6 @@
 <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
     <div>
-        <h4 class="mb-3 mb-md-0">Tous les Contrats</h4>
+        <h4 class="mb-3 mb-md-0">Tous les Contrats [DYNAMISÉ]</h4>
         <p class="text-secondary">Annuaire global des contrats de location-vente GbatCar.</p>
     </div>
     <div class="d-flex align-items-center flex-wrap text-nowrap">
@@ -171,17 +171,27 @@
     </div>
 </div>
 
+<!-- Overlay chargement -->
+<div class="d-flex justify-content-center align-items-center position-fixed w-100 h-100 bg-white"
+    style="z-index: 9999; left:0; top:0; opacity: 0.8;" *ngIf="loading">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Chargement...</span>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-md-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="card-title mb-0">RÉPERTOIRE DES CONTRATS ({{ filteredContracts.length }})</h6>
+                    <h6 class="card-title mb-0 fw-bold text-uppercase">RÉPERTOIRE DES CONTRATS ({{
+                        filteredContracts.length }})</h6>
                     <div class="d-flex align-items-center">
-                        <input type="text" class="form-control form-control-sm me-2"
-                            placeholder="Recherche par ID, client..." style="width: 250px;"
+                        <input type="text" class="form-control form-control-sm me-2 border-light shadow-none"
+                            placeholder="Recherche par ID, client..." style="width: 280px; background-color: #f9fafb;"
                             [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
-                        <select class="form-select form-select-sm" style="width: 200px;" [(ngModel)]="quickStatusFilter"
+                        <select class="form-select form-select-sm border-light shadow-none"
+                            style="width: 180px; background-color: #f9fafb;" [(ngModel)]="quickStatusFilter"
                             (change)="applyQuickFilters()">
                             <option value="">Tous les statuts</option>
                             <option value="En cours">En cours</option>
@@ -192,55 +202,64 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
+                    <table class="table table-hover align-middle">
+                        <thead class="bg-light-subtle">
                             <tr>
-                                <th>N° Contrat</th>
-                                <th>Client</th>
-                                <th>Usage</th>
-                                <th>Véhicule</th>
-                                <th>Fin de Contrat</th>
-                                <th>Avancement</th>
-                                <th>Risque</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">N° Contrat</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Client</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Usage</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Véhicule</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Fin de Contrat</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Avancement</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Risque</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Statut</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0 text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr *ngFor="let contract of filteredContracts">
-                                <td class="fw-medium text-dark">{{ contract.id }}</td>
+                                <td class="fw-bold text-danger">#{{ contract.reference || (contract.uuid ?
+                                    (contract.uuid | slice:0:8 | uppercase) : 'TEMP') }}</td>
                                 <td>
-                                    <a [routerLink]="['/gbatcar/clients/details', contract.clientId]"
-                                        class="text-primary fw-medium d-block">{{ contract.clientName }}</a>
-                                    <span class="text-muted tx-11">{{ contract.clientId }}</span>
+                                    <a [routerLink]="['/gbatcar/clients/details', contract.client?.uuid]"
+                                        class="text-dark fw-bold d-block">{{ contract.client?.lastName }} {{
+                                        contract.client?.firstName }}</a>
+                                    <span class="text-muted fs-11px">CLI-{{ (contract.client?.uuid ?
+                                        (contract.client?.uuid | slice:0:3 | uppercase) : '...') }}</span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-light text-dark border">VTC</span>
-                                </td>
-                                <td>
-                                    <span class="d-block tx-13">{{ contract.vehicle.split('(')[0] }}</span>
-                                    <span class="text-muted tx-11">{{ contract.vehicle.split('(')[1].replace(')', '')
+                                    <span class="badge bg-light text-dark border">{{ contract.usageType || 'VTC'
                                         }}</span>
                                 </td>
                                 <td>
-                                    <div class="tx-12 fw-medium">{{ contract.endDate | date:'dd/MM/yyyy' }}</div>
-                                    <div class="tx-11"
+                                    <span class="d-block fs-13px fw-bold">{{ contract.vehicle?.marque }} {{
+                                        contract.vehicle?.modele }}</span>
+                                    <span class="text-muted fs-11px">{{ contract.vehicle?.immatriculation }}</span>
+                                </td>
+                                <td>
+                                    <div class="fs-13px fw-bold text-dark">{{ contract.endDate | date:'dd/MM/yyyy' }}
+                                    </div>
+                                    <div class="fs-11px"
                                         [ngClass]="getDaysUntilDeadline(contract.endDate) < 30 ? 'text-danger fw-bold' : 'text-muted'">
-                                        J-{{ getDaysUntilDeadline(contract.endDate) }}
+                                        J{{ getDaysUntilDeadline(contract.endDate) >= 0 ? '-' : '+' }}{{
+                                        MathAbs(getDaysUntilDeadline(contract.endDate)) }}
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="d-flex justify-content-between tx-11 mb-1">
-                                        <span>{{ (contract.paidAmount / contract.totalAmount * 100) | number:'1.0-0'
-                                            }}%</span>
+                                    <div class="d-flex justify-content-between fs-11px mb-1 text-dark fw-medium">
+                                        <span>{{ (contract.totalAmount ? ( (contract.paidAmount || 0) /
+                                            contract.totalAmount *
+                                            100) : 0) | number:'1.0-0' }}%</span>
                                     </div>
-                                    <div class="progress" style="height: 6px; width: 80px;">
+                                    <div class="progress" style="height: 6px; width: 80px; background-color: #f1f5f9;">
                                         <div class="progress-bar" [ngClass]="{
                                             'bg-success': contract.status === 'Soldé' || contract.paymentStatus === 'À jour',
                                             'bg-warning': contract.paymentStatus === 'En retard',
-                                            'bg-danger': contract.status === 'Résilié'
+                                            'bg-danger': contract.status === 'Résilié' || contract.paymentStatus === 'Impayé définitif',
+                                            'bg-primary': !contract.paymentStatus || contract.paymentStatus === 'À jour'
                                         }" role="progressbar"
-                                            [style.width.%]="(contract.paidAmount / contract.totalAmount) * 100"></div>
+                                            [style.width.%]="(contract.totalAmount ? ( (contract.paidAmount || 0) / contract.totalAmount) : 0) * 100">
+                                        </div>
                                     </div>
                                 </td>
                                 <td>
@@ -248,38 +267,44 @@
                                         <div class="rounded-circle me-2"
                                             [ngClass]="'bg-' + getRiskLevel(contract).class.split('-')[1]"
                                             style="width: 8px; height: 8px;"></div>
-                                        <span class="tx-12" [ngClass]="getRiskLevel(contract).class">{{
+                                        <span class="fs-12px fw-medium" [ngClass]="getRiskLevel(contract).class">{{
                                             getRiskLevel(contract).label }}</span>
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge badge-pill" [ngClass]="{
-                                        'bg-primary': contract.status === 'En cours',
-                                        'bg-warning text-dark': contract.status === 'En Attente',
-                                        'bg-success': contract.status === 'Soldé',
-                                        'bg-danger': contract.status === 'Résilié'
+                                    <span class="badge rounded-pill px-2" [ngClass]="{
+                                        'bg-success': contract.status === 'Soldé' || contract.status === 'VALIDATED',
+                                        'bg-primary': contract.status === 'En cours' || contract.status === 'ACTIVE',
+                                        'bg-warning text-dark': contract.status === 'En Attente' || contract.status === 'NEW' || contract.status === 'PENDING',
+                                        'bg-danger': contract.status === 'Résilié',
+                                        'bg-secondary': !contract.status
                                     }">
-                                        {{ contract.status }}
+                                        {{ contract.status || 'Inconnu' }}
                                     </span>
                                 </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <button [routerLink]="['/gbatcar/contracts/details', contract.id]"
-                                            class="btn btn-icon btn-xs btn-outline-primary me-1" title="Détails">
-                                            <i data-feather="eye" appFeatherIcon class="icon-xs"></i>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button [routerLink]="['details', contract.uuid]"
+                                            class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
+                                            title="Détails">
+                                            <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
                                         </button>
-                                        <button class="btn btn-icon btn-xs btn-outline-success me-1" title="Valider">
-                                            <i data-feather="check-square" appFeatherIcon class="icon-xs"></i>
+                                        <button [routerLink]="['edit', contract.uuid]"
+                                            class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
+                                            title="Modifier">
+                                            <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
                                         </button>
-                                        <button class="btn btn-icon btn-xs btn-outline-warning" title="Modifier">
-                                            <i data-feather="edit-2" appFeatherIcon class="icon-xs"></i>
+                                        <button class="btn btn-xs btn-icon btn-outline-danger border-1 shadow-none"
+                                            (click)="deleteContract(contract.uuid!)" title="Supprimer">
+                                            <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
                                         </button>
                                     </div>
                                 </td>
                             </tr>
-                            <tr *ngIf="filteredContracts.length === 0">
-                                <td colspan="9" class="text-center py-4 text-muted">
-                                    Aucun contrat trouvé avec ces critères.
+                            <tr *ngIf="filteredContracts.length === 0 && !loading">
+                                <td colspan="9" class="text-center py-5 text-muted bg-white">
+                                    <i data-feather="search" appFeatherIcon class="icon-xxl mb-3 text-light"></i>
+                                    <p class="fs-14px">Aucun contrat trouvé avec ces critères.</p>
                                 </td>
                             </tr>
                         </tbody>

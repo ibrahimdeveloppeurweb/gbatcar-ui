@@ -35,17 +35,18 @@ export class PenaltyService {
         }
     }
 
-    create(data: Penalty): Observable<any> {
+    create(data: Penalty | FormData): Observable<any> {
         return this.api._post(`${this.url}/new`, data).pipe(
             map((response: any) => response),
-            catchError((error: any) => throwError(error))
+            catchError((error: any) => throwError(() => error))
         );
     }
 
-    update(data: Penalty): Observable<any> {
-        return this.api._post(`${this.url}/${data.uuid}/edit`, data).pipe(
+    update(data: Penalty | FormData): Observable<any> {
+        const uuid = data instanceof FormData ? data.get('uuid') : (data as Penalty).uuid;
+        return this.api._post(`${this.url}/${uuid}/edit`, data).pipe(
             map((response: any) => response),
-            catchError((error: any) => throwError(error))
+            catchError((error: any) => throwError(() => error))
         );
     }
 
@@ -73,7 +74,7 @@ export class PenaltyService {
         );
     }
 
-    getDelete(uuid: string): Observable<Penalty> {
+    delete(uuid: string): Observable<any> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();
             return new Observable(obs => { obs.next(); obs.complete(); });

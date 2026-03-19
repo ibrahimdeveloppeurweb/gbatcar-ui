@@ -1,15 +1,19 @@
-import { Component, OnInit, Pipe, PipeTransform } from '@angular/core';
+import { Component, OnInit, Pipe, PipeTransform, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MOCK_VEHICLES } from '../../../../core/mock/gbatcar-admin.mock';
 import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon.directive';
+import { VehicleService } from '../../../../core/services/vehicle/vehicle.service';
+import { Vehicle } from '../../../../core/models/vehicle.model';
+import { environment } from '../../../../../environments/environment';
+
+/** Refresh to clear compiler cache **/
 
 // Pipe helper to count items by property value in the template
 @Pipe({ name: 'countWhere', standalone: true })
 export class CountWherePipe implements PipeTransform {
   transform(items: any[], key: string, value: string): number {
-    return items.filter(i => i[key] === value).length;
+    return items ? items.filter(i => i[key] === value).length : 0;
   }
 }
 
@@ -21,44 +25,30 @@ export class CountWherePipe implements PipeTransform {
   styleUrl: './vehicles.component.scss'
 })
 export class VehiclesComponent implements OnInit {
-  vehicles = MOCK_VEHICLES;
+  private vehicleService = inject(VehicleService);
 
+  vehicles: Vehicle[] = [];
+  loading: boolean = false;
   showAdvancedFilters: boolean = true;
+
+  stats = {
+    total: 0,
+    assigned: 0,
+    paymentAlert: 0,
+    maintenanceAlert: 0,
+    critical: 0,
+    goodPayers: 0
+  };
 
   // Active tab
   activeTab: string = 'all'; // 'all' | 'ok' | 'alert' | 'critical'
 
-  toggleAdvancedFilters() {
-    this.showAdvancedFilters = !this.showAdvancedFilters;
-  }
-
-  setTab(tab: string) {
-    this.activeTab = tab;
-  }
-
-  get tabLabel(): string {
-    const labels: Record<string, string> = {
-      all: 'Flotte GbatCar',
-      ok: 'Bons Payeurs',
-      alert: 'En Alerte Paiement',
-      critical: 'À Récupérer (Critique)',
-    };
-    return labels[this.activeTab] || 'Flotte';
-  }
-
-  // KPI counts
-  get alertCount(): number {
-    return this.vehicles.filter(v => v.paymentStatus === 'En retard').length;
-  }
-  get criticalCount(): number {
-    return this.vehicles.filter(v => v.paymentStatus === 'Critique').length;
-  }
-  get goodPayersCount(): number {
-    return this.vehicles.filter(v => v.paymentStatus === 'À jour').length;
-  }
-  get maintenanceAlertCount(): number {
-    return this.vehicles.filter(v => v.maintenanceAlert).length;
-  }
+  // Interface Aliases for Template compatibility
+  get alertCount(): number { return this.stats.paymentAlert; }
+  get maintenanceAlertCount(): number { return this.stats.maintenanceAlert; }
+  get goodPayersCount(): number { return this.stats.goodPayers; }
+  get criticalCount(): number { return this.stats.critical; }
+  get filteredVehicles(): Vehicle[] { return this.vehicles; }
 
   // 1. Quick Filters
   quickSearchTerm: string = '';
@@ -73,75 +63,124 @@ export class VehiclesComponent implements OnInit {
   advYearMax: number | null = null;
   advMileageMin: number | null = null;
   advMileageMax: number | null = null;
-  advCountFilter: number = 10;
-
-  // 3. ACTUALLY APPLIED Filters
-  appliedSearchTerm: string = '';
-  appliedStatusFilter: string = '';
-  appliedAssignedClient: string = '';
-  appliedPaymentFilter: string = '';
-  appliedYearMin: number | null = null;
-  appliedYearMax: number | null = null;
-  appliedMileageMin: number | null = null;
-  appliedMileageMax: number | null = null;
-  appliedCountFilter: number = 10;
+  advCountFilter: number = 10; // Default to 10 as in image
 
   constructor() { }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {
+    this.loadDashboardStats();
+    this.loadVehicles();
+  }
 
-  get filteredVehicles() {
-    let result = this.vehicles.filter(vehicle => {
-      // 1. Text Search
-      const searchStr = `${vehicle.brand} ${vehicle.model} ${vehicle.licensePlate}`.toLowerCase();
-      const matchesSearch = !this.appliedSearchTerm || searchStr.includes(this.appliedSearchTerm.toLowerCase());
+  loadVehicles() {
+    this.loading = true;
+    const filters: any = {
+      search: this.advSearchTerm,
+      status: this.advStatusFilter,
+      assignedClient: this.advAssignedClient,
+      paymentStatus: this.advPaymentFilter,
+      yearMin: this.advYearMin,
+      yearMax: this.advYearMax,
+      mileageMin: this.advMileageMin,
+      mileageMax: this.advMileageMax
+    };
 
-      // 2. Exact Selectors
-      const matchesStatus = !this.appliedStatusFilter || vehicle.status === this.appliedStatusFilter;
-      const matchesAssigned = !this.appliedAssignedClient || vehicle.assignedClient.toLowerCase().includes(this.appliedAssignedClient.toLowerCase());
-      const matchesPayment = !this.appliedPaymentFilter || vehicle.paymentStatus === this.appliedPaymentFilter;
+    // Tab specific overrides
+    if (this.activeTab === 'ok') filters.paymentStatus = 'À jour';
+    if (this.activeTab === 'alert') filters.paymentStatus = 'En retard';
+    if (this.activeTab === 'critical') filters.paymentStatus = 'Critique';
 
-      // 3. Range: Year
-      const matchesYearMin = this.appliedYearMin === null || vehicle.year >= this.appliedYearMin;
-      const matchesYearMax = this.appliedYearMax === null || vehicle.year <= this.appliedYearMax;
+    this.vehicleService.getList(filters).subscribe({
+      next: (data: any) => {
+        this.vehicles = (data.data || data).map((v: any) => {
+          // Map backend French fields to frontend English aliases
+          v.brand = v.marque;
+          v.model = v.modele;
+          v.licensePlate = v.immatriculation;
+          v.mileage = v.kilometrage;
+          v.status = v.statut;
+          v.trim = v.finition;
+          v.year = v.annee;
+          v.gpsStatus = v.gpsStatus || 'Non installé';
 
-      // 4. Range: Mileage
-      const matchesMileageMin = this.appliedMileageMin === null || vehicle.mileage >= this.appliedMileageMin;
-      const matchesMileageMax = this.appliedMileageMax === null || vehicle.mileage <= this.appliedMileageMax;
+          // Client mapping
+          if (v.client) {
+            v.assignedClient = `${v.client.firstName || ''} ${v.client.lastName || v.client.name || ''}`.trim();
+          } else {
+            v.assignedClient = 'Aucun';
+          }
 
-      // 5. Tab filter
-      let matchesTab = true;
-      if (this.activeTab === 'ok') matchesTab = vehicle.paymentStatus === 'À jour';
-      if (this.activeTab === 'alert') matchesTab = vehicle.paymentStatus === 'En retard';
-      if (this.activeTab === 'critical') matchesTab = vehicle.paymentStatus === 'Critique';
+          // Contract details aggregation
+          // Usually the 'active' contract is the one with 'En cours' or 'Actif' status
+          const activeContract = v.contracts?.find((c: any) =>
+            c.status === 'En cours' || c.status === 'Actif' || c.status === 'Acting'
+          );
 
-      return matchesSearch && matchesStatus && matchesAssigned && matchesPayment
-        && matchesYearMin && matchesYearMax && matchesMileageMin && matchesMileageMax
-        && matchesTab;
+          if (activeContract) {
+            v.totalContractAmount = activeContract.totalAmount || 0;
+            v.paidAmount = activeContract.paidAmount || 0;
+            v.contractProgress = v.totalContractAmount > 0
+              ? Math.round((v.paidAmount / v.totalContractAmount) * 100)
+              : 0;
+            v.paymentStatus = activeContract.paymentStatus || v.paymentStatus;
+            v.daysLate = activeContract.daysLate || 0;
+          } else {
+            v.totalContractAmount = 0;
+            v.paidAmount = 0;
+            v.contractProgress = 0;
+            if (!v.paymentStatus) v.paymentStatus = '-';
+          }
+
+          return v;
+        });
+        this.loading = false;
+      },
+      error: () => this.loading = false
     });
+  }
 
-    return result.slice(0, this.appliedCountFilter);
+  // Optimized: Use getCatalog if it already supports filters, or update getList
+  // Actually, I'll update the component to use a more versatile method if I could, 
+  // but looking at VehicleService, getCatalog is the one taking filters.
+  // I updated the backend findCatalogByFilters to be general.
+
+  loadDashboardStats() {
+    this.vehicleService.getDashboardData().subscribe({
+      next: (res: any) => {
+        this.stats = res;
+      }
+    });
+  }
+
+  toggleAdvancedFilters() {
+    this.showAdvancedFilters = !this.showAdvancedFilters;
+  }
+
+  setTab(tab: string) {
+    this.activeTab = tab;
+    this.loadVehicles();
+  }
+
+  get tabLabel(): string {
+    const labels: Record<string, string> = {
+      all: 'Flotte GbatCar',
+      ok: 'Bons Payeurs',
+      alert: 'En Alerte Paiement',
+      critical: 'À Récupérer (Critique)',
+    };
+    return labels[this.activeTab] || 'Flotte';
   }
 
   applyQuickFilters() {
-    this.appliedSearchTerm = this.quickSearchTerm;
-    this.appliedStatusFilter = this.quickStatusFilter;
     this.advSearchTerm = this.quickSearchTerm;
     this.advStatusFilter = this.quickStatusFilter;
+    this.loadVehicles();
   }
 
   applyAdvancedFilters() {
-    this.appliedSearchTerm = this.advSearchTerm;
-    this.appliedStatusFilter = this.advStatusFilter;
-    this.appliedAssignedClient = this.advAssignedClient;
-    this.appliedPaymentFilter = this.advPaymentFilter;
-    this.appliedYearMin = this.advYearMin;
-    this.appliedYearMax = this.advYearMax;
-    this.appliedMileageMin = this.advMileageMin;
-    this.appliedMileageMax = this.advMileageMax;
-    this.appliedCountFilter = this.advCountFilter;
     this.quickSearchTerm = this.advSearchTerm;
     this.quickStatusFilter = this.advStatusFilter;
+    this.loadVehicles();
   }
 
   resetFilters() {
@@ -153,9 +192,9 @@ export class VehiclesComponent implements OnInit {
     this.advYearMax = null;
     this.advMileageMin = null;
     this.advMileageMax = null;
-    this.advCountFilter = 10;
+    this.advCountFilter = 20;
     this.quickSearchTerm = '';
     this.quickStatusFilter = '';
-    this.applyAdvancedFilters();
+    this.loadVehicles();
   }
 }

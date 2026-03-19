@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MOCK_MAINTENANCE } from '../../../../core/mock/gbatcar-admin.mock';
 import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon.directive';
+import { MaintenanceService } from '../../../../core/services/maintenance/maintenance.service';
 
 @Component({
   selector: 'app-maintenance',
@@ -14,96 +14,96 @@ import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon
 })
 export class MaintenanceComponent implements OnInit {
 
-  maintenanceItems = MOCK_MAINTENANCE;
+  private maintenanceService = inject(MaintenanceService);
 
-  // KPI computed properties
-  get plannedCount(): number { return this.maintenanceItems.filter(m => m.status === 'Planifié').length; }
-  get inProgressCount(): number { return this.maintenanceItems.filter(m => m.status === 'En cours').length; }
-  get totalCost(): number { return this.maintenanceItems.reduce((sum, m) => sum + m.cost, 0); }
-
+  maintenanceItems: any[] = [];
+  loading = false;
   showAdvancedFilters: boolean = true;
 
-  toggleAdvancedFilters() {
-    this.showAdvancedFilters = !this.showAdvancedFilters;
-  }
+  // Live API Metrics
+  totalCount = 0;
+  plannedCount = 0;
+  inProgressCount = 0;
+  totalCost = 0;
 
-  // 1. Quick Filters
+  // Quick filter (toolbar row below table title)
   quickSearchTerm: string = '';
   quickStatusFilter: string = '';
 
-  // 2. Advanced Filters Form State
+  // Advanced filter form state
   advSearchTerm: string = '';
   advStatusFilter: string = '';
-  // We can just use the search term for provider/type for now or add specific filters if needed.
-  // We will provide search across all text. Let's add Date and Cost specifically.
   advDateMin: string = '';
   advDateMax: string = '';
   advCostMin: number | null = null;
   advCostMax: number | null = null;
   advCountFilter: number = 10;
 
-  // 3. ACTUALLY APPLIED Filters
-  appliedSearchTerm: string = '';
-  appliedStatusFilter: string = '';
-  appliedDateMin: string = '';
-  appliedDateMax: string = '';
-  appliedCostMin: number | null = null;
-  appliedCostMax: number | null = null;
-  appliedCountFilter: number = 10;
+  toggleAdvancedFilters() {
+    this.showAdvancedFilters = !this.showAdvancedFilters;
+  }
 
-  constructor() { }
+  ngOnInit(): void {
+    this.fetchMetrics();
+    this.loadMaintenance();
+  }
 
-  ngOnInit(): void { }
+  /** Fetch KPI dashboard counts from backend */
+  fetchMetrics() {
+    this.maintenanceService.getDashboardData().subscribe({
+      next: (res: any) => {
+        const data = res.data || res;
+        this.totalCount = data.total || 0;
+        this.plannedCount = data.planned || 0;
+        this.inProgressCount = data.inProgress || 0;
+        this.totalCost = data.totalCostThisMonth || 0;
+      },
+      error: console.error
+    });
+  }
 
-  get filteredMaintenance() {
-    let result = this.maintenanceItems.filter(mnt => {
-      // 1. Text Search (ID, Vehicle, Type, Provider)
-      const searchStr = `${mnt.id} ${mnt.vehicle} ${mnt.provider} ${mnt.type}`.toLowerCase();
-      const matchesSearch = !this.appliedSearchTerm || searchStr.includes(this.appliedSearchTerm.toLowerCase());
-
-      // 2. Exact Selectors
-      const matchesStatus = !this.appliedStatusFilter || mnt.status === this.appliedStatusFilter;
-
-      // 3. Date Ranges
-      const mntDate = new Date(mnt.date);
-      const minDate = this.appliedDateMin ? new Date(this.appliedDateMin) : null;
-      const maxDate = this.appliedDateMax ? new Date(this.appliedDateMax) : null;
-
-      const matchesDateMin = !minDate || mntDate >= minDate;
-      const matchesDateMax = !maxDate || mntDate <= maxDate;
-      const matchesDate = matchesDateMin && matchesDateMax;
-
-      // 4. Cost Range
-      const matchesCostMin = this.appliedCostMin === null || mnt.cost >= this.appliedCostMin;
-      const matchesCostMax = this.appliedCostMax === null || mnt.cost <= this.appliedCostMax;
-      const matchesCost = matchesCostMin && matchesCostMax;
-
-      return matchesSearch && matchesStatus && matchesDate && matchesCost;
+  /** Build filter payload and fetch list from backend — like vehicles.loadVehicles() */
+  loadMaintenance() {
+    this.loading = true;
+    // Build filters, stripping out null / undefined / empty to avoid '?dateMin=undefined'
+    const raw: any = {
+      search: this.advSearchTerm,
+      status: this.advStatusFilter,
+      dateMin: this.advDateMin,
+      dateMax: this.advDateMax,
+      costMin: this.advCostMin,
+      costMax: this.advCostMax,
+      limit: this.advCountFilter,
+    };
+    const filters: any = {};
+    Object.keys(raw).forEach(k => {
+      const v = raw[k];
+      if (v !== null && v !== undefined && v !== '') {
+        filters[k] = v;
+      }
     });
 
-    // Apply Count Limit
-    return result.slice(0, this.appliedCountFilter);
+    this.maintenanceService.getList(filters).subscribe({
+      next: (res: any) => {
+        this.maintenanceItems = res.data ?? res;
+        this.loading = false;
+      },
+      error: () => { this.loading = false; }
+    });
   }
 
   applyQuickFilters() {
-    this.appliedSearchTerm = this.quickSearchTerm;
-    this.appliedStatusFilter = this.quickStatusFilter;
-
+    // Sync quick bar into adv form, then re-fetch
     this.advSearchTerm = this.quickSearchTerm;
     this.advStatusFilter = this.quickStatusFilter;
+    this.loadMaintenance();
   }
 
   applyAdvancedFilters() {
-    this.appliedSearchTerm = this.advSearchTerm;
-    this.appliedStatusFilter = this.advStatusFilter;
-    this.appliedDateMin = this.advDateMin;
-    this.appliedDateMax = this.advDateMax;
-    this.appliedCostMin = this.advCostMin;
-    this.appliedCostMax = this.advCostMax;
-    this.appliedCountFilter = this.advCountFilter;
-
+    // Sync adv form to quick bar, then re-fetch
     this.quickSearchTerm = this.advSearchTerm;
     this.quickStatusFilter = this.advStatusFilter;
+    this.loadMaintenance();
   }
 
   resetFilters() {
@@ -114,10 +114,8 @@ export class MaintenanceComponent implements OnInit {
     this.advCostMin = null;
     this.advCostMax = null;
     this.advCountFilter = 10;
-
     this.quickSearchTerm = '';
     this.quickStatusFilter = '';
-
-    this.applyAdvancedFilters();
+    this.loadMaintenance();
   }
 }

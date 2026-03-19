@@ -5,6 +5,7 @@ import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { RouterLink } from '@angular/router';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { ThemeCssVariableService } from '../../../../../core/services/theme-css-variable.service';
+import { ClientService } from '../../../../../core/services/client/client.service';
 
 @Component({
     selector: 'app-client-dashboard',
@@ -16,47 +17,73 @@ import { ThemeCssVariableService } from '../../../../../core/services/theme-css-
 export class ClientDashboardComponent implements OnInit {
 
     themeCssVariables = inject(ThemeCssVariableService).getThemeCssVariables();
+    private clientService = inject(ClientService);
+
+    loading = false;
 
     // ===================== KPI DATA =====================
-    stats = {
-        totalClients: 42,
-        activeClients: 35,
-        lateClients: 6,
-        pendingValidation: 3,
-        inactiveClients: 4,
-        newThisMonth: 5,
-        churnRate: 2.4,             // % de clients perdus
-        avgContractDuration: 24,    // mois
-        totalPortfolioValue: 1_820_000_000, // FCFA
-        avgClientValue: 43_333_333, // FCFA par client
+    stats: any = {
+        totalClients: 0,
+        activeClients: 0,
+        lateClients: 0,
+        newThisMonth: 0,
+        portfolioValue: 0
     };
 
+    distribution: any = {};
+    trends: any = { new: [], lost: [] };
+
     // ===================== TOP CLIENTS AT RISK =====================
-    riskClients = [
-        { id: 'CLI-004', name: 'Fatou Sylla', vehicle: 'Suzuki Swift', contractId: 'CTR-2024-002', delay: 5, amount: 4_850_000, risk: 'Élevé' },
-        { id: 'CLI-005', name: 'Amadou Coulibaly', vehicle: 'Toyota Corolla', contractId: 'CTR-2022-045', delay: 45, amount: 4_500_000, risk: 'Critique' },
-        { id: 'CLI-001', name: 'Jean Dubois', vehicle: 'Toyota Yaris', contractId: 'CTR-2024-001', delay: 12, amount: 2_200_000, risk: 'Modéré' },
-    ];
+    riskClients: any[] = [];
 
     // ===================== RECENT CLIENTS =====================
-    recentClients = [
-        { id: 'CLI-006', name: 'Marième Ba', phone: '+225 07 00 00 06', vehicle: 'Kia Rio', status: 'En Attente Validation', paymentStatus: '-', date: '2024-03-08' },
-        { id: 'CLI-007', name: 'Oumar Traoré', phone: '+225 07 00 00 07', vehicle: 'Hyundai Accent', status: 'Actif', paymentStatus: 'À jour', date: '2024-03-05' },
-        { id: 'CLI-008', name: 'Aïssata Konaté', phone: '+225 07 00 00 08', vehicle: 'Toyota Yaris', status: 'Actif', paymentStatus: 'À jour', date: '2024-03-01' },
-    ];
+    recentClients: any[] = [];
 
     // ===================== CHARTS =====================
     public clientStatusChartOptions: ApexOptions | any;
     public clientGrowthChartOptions: ApexOptions | any;
 
     ngOnInit(): void {
+        this.loadDashboardData();
+    }
+
+    loadDashboardData() {
+        this.loading = true;
+        this.clientService.getDashboardData().subscribe({
+            next: (data: any) => {
+                this.stats = data.kpis || this.stats;
+                this.distribution = data.distribution || {};
+                this.trends = data.trends || { new: [], lost: [] };
+                this.riskClients = data.riskyClients || [];
+                this.recentClients = data.newClients || [];
+
+                this.refreshCharts();
+                this.loading = false;
+            },
+            error: (err) => {
+                console.error('Error fetching dashboard stats', err);
+                this.loading = false;
+                this.refreshCharts(); // Load empty charts at least
+            }
+        });
+    }
+
+    refreshCharts() {
         this.clientStatusChartOptions = this.buildClientStatusChart();
         this.clientGrowthChartOptions = this.buildClientGrowthChart();
     }
 
     buildClientStatusChart() {
+        const dist = this.distribution;
+        const seriesData = [
+            dist['Actifs'] || 0,
+            dist['En Retard'] || 0,
+            dist['En Attente'] || 0,
+            dist['Inactifs'] || 0
+        ];
+
         return {
-            series: [this.stats.activeClients, this.stats.lateClients, this.stats.pendingValidation, this.stats.inactiveClients],
+            series: seriesData,
             chart: { type: 'donut', height: 270 },
             labels: ['Actifs', 'En Retard', 'En Attente', 'Inactifs'],
             colors: ['#2ecc71', '#e74c3c', '#f39c12', '#6c757d'],
@@ -84,16 +111,35 @@ export class ClientDashboardComponent implements OnInit {
     }
 
     buildClientGrowthChart() {
+        const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+        const categories = [];
+        const newData = [0, 0, 0, 0, 0, 0];
+        const lostData = [0, 0, 0, 0, 0, 0];
+
+        // Generate the last 6 months globally
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            categories.push(monthNames[d.getMonth()]);
+
+            // match new from trends DB
+            const nM = this.trends.new?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
+            if (nM) newData[5 - i] = parseInt(nM.count);
+
+            const lM = this.trends.lost?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
+            if (lM) lostData[5 - i] = parseInt(lM.count);
+        }
+
         return {
             series: [
-                { name: 'Nouveaux Clients', data: [3, 5, 2, 6, 4, 5] },
-                { name: 'Clients Perdus', data: [1, 0, 1, 2, 0, 1] },
+                { name: 'Nouveaux Clients', data: newData },
+                { name: 'Clients Perdus', data: lostData },
             ],
             chart: { type: 'bar', height: 270, toolbar: { show: false }, stacked: false },
             colors: ['#2ecc71', '#e74c3c'],
             plotOptions: { bar: { columnWidth: '50%', borderRadius: 3 } },
             xaxis: {
-                categories: ['Oct', 'Nov', 'Déc', 'Jan', 'Fév', 'Mar'],
+                categories: categories,
                 axisBorder: { color: this.themeCssVariables.gridBorder },
             },
             grid: { borderColor: this.themeCssVariables.gridBorder },
@@ -109,19 +155,29 @@ export class ClientDashboardComponent implements OnInit {
 
     getStatusClass(status: string): string {
         const map: Record<string, string> = {
-            'Actif': 'bg-success',
-            'En Attente Validation': 'bg-warning text-dark',
-            'Actif (Retard)': 'bg-danger',
+            'En Cours de Contrat': 'bg-success',
+            'Dossier Approuvé': 'bg-success',
+            'En attente de Validation': 'bg-warning text-dark',
+            'Litige / Bloqué': 'bg-danger',
             'Inactif': 'bg-secondary',
+            'Prospect': 'bg-primary-subtle text-primary border border-primary-subtle',
         };
         return map[status] || 'bg-secondary';
     }
 
-    getRiskClass(risk: string): string {
+    getCalculatedRiskLevel(c: any): string {
+        if (!c.unpaidAmount) return 'Modéré';
+        if (c.unpaidAmount > 2000000) return 'Critique';
+        if (c.unpaidAmount > 500000) return 'Élevé';
+        return 'Modéré';
+    }
+
+    getCalculatedRiskClass(c: any): string {
+        const risk = this.getCalculatedRiskLevel(c);
         const map: Record<string, string> = {
             'Critique': 'bg-danger',
             'Élevé': 'bg-warning text-dark',
-            'Modéré': 'bg-primary',
+            'Modéré': 'bg-danger-subtle text-danger',
         };
         return map[risk] || 'bg-secondary';
     }

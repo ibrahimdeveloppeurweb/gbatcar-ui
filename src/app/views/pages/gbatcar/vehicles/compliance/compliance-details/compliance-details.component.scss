@@ -1,0 +1,51 @@
+.btn-action {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 0;
+
+    i {
+        width: 16px;
+        height: 16px;
+    }
+
+    &.btn-view {
+        background-color: #61d3d3; // Turquoise filling
+        color: #000;
+        border-color: #61d3d3;
+
+        &:hover {
+            background-color: darken(#61d3d3, 10%);
+        }
+    }
+
+    &.btn-upload {
+        border-color: #e74c3c; // Red border
+        color: #e74c3c;
+
+        &:hover {
+            background-color: rgba(#e74c3c, 0.1);
+        }
+    }
+
+    &.btn-delete {
+        border-color: #ff3366; // Pinkish-red border as in image
+        color: #ff3366;
+
+        &:hover {
+            background-color: rgba(#ff3366, 0.1);
+        }
+    }
+}
+
+.infraction-actions {
+    display: flex;
+    gap: 8px;
+}

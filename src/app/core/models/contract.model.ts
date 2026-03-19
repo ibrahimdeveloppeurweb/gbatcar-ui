@@ -60,6 +60,7 @@ export interface Contract {
     dailyRate?: number;           // Redevance journalière
     durationInMonths?: number;
     initialDeposit?: number;      // Apport initial / Garantie
+    prixDeVente?: number;         // Prix de vente du véhicule au moment du contrat
     maintenanceAndInsurance?: string;
 
     // ===================== GESTION DES RISQUES =====================

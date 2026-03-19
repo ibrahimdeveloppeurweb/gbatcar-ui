@@ -22,13 +22,14 @@ export class VehicleService {
         return this.vehicle;
     }
 
-    add(data: Vehicle): Observable<any> {
+    add(data: any): Observable<any> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();
             return new Observable(obs => { obs.next(); obs.complete(); });
         }
 
-        if (data.uuid) {
+        const uuid = data instanceof FormData ? data.get('uuid') : data.uuid;
+        if (uuid) {
             return this.update(data);
         } else {
             return this.create(data);
@@ -49,14 +50,14 @@ export class VehicleService {
         );
     }
 
-    getList(statut?: string, categorie?: string): Observable<Vehicle[]> {
+    getList(filters?: any): Observable<Vehicle[]> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();
             return new Observable(obs => { obs.next(); obs.complete(); });
         }
 
-        return this.api._get(`${this.url}/`, { statut, categorie }).pipe(
-            map((response: any) => response),
+        return this.api._get(`${this.url}/`, filters).pipe(
+            map((response: any) => response.data || response),
             catchError((error: any) => throwError(error))
         );
     }
@@ -148,7 +149,7 @@ export class VehicleService {
         );
     }
 
-    setCoverImage(vehicleId: number, photo: string): Observable<any> {
+    setCoverImage(vehicleId: string, photo: string): Observable<any> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();
             return new Observable(obs => { obs.next(); obs.complete(); });
@@ -159,7 +160,7 @@ export class VehicleService {
         );
     }
 
-    removeGalleryImage(vehicleId: number, photo: string): Observable<any> {
+    removeGalleryImage(vehicleId: string, photo: string): Observable<any> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();
             return new Observable(obs => { obs.next(); obs.complete(); });

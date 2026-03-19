@@ -78,3 +78,64 @@
         </div>
     </div>
 </form>
+
+<div class="row" *ngIf="history && history.length > 0">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="card-title fw-bolder mb-4 text-primary d-flex align-items-center text-uppercase">
+                    <i data-feather="clock" appFeatherIcon class="icon-sm me-2"></i>
+                    Historique des modifications
+                </h6>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr class="text-uppercase tx-12 fw-bold text-muted bg-light">
+                                <th class="ps-3 border-0">Date</th>
+                                <th class="border-0">Justification / Motif</th>
+                                <th class="border-0">Frais (FCFA)</th>
+                                <th class="border-0">Pén. (%)</th>
+                                <th class="border-0">Grâce (J)</th>
+                                <th class="border-0">Durée (M)</th>
+                                <th class="border-0 px-3 text-end">Apport (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let item of history" class="align-middle">
+                                <td class="ps-3 border-start border-3 border-info">
+                                    <div class="fw-bold">{{ item.createdAt | date:'dd/MM/yyyy' }}</div>
+                                    <small class="text-muted">{{ item.createdAt | date:'HH:mm' }}</small>
+                                </td>
+                                <td>
+                                    <span class="text-wrap" style="max-width: 250px; display: block; font-size: 13px;">
+                                        {{ item.description }}
+                                    </span>
+                                </td>
+                                <td
+                                    [ngClass]="{'text-primary fw-bold': item.previousValues.fraisDossier !== item.newValues.fraisDossier}">
+                                    {{ item.newValues.fraisDossier | number }}
+                                </td>
+                                <td
+                                    [ngClass]="{'text-primary fw-bold': item.previousValues.penaliteRetardJournaliere !== item.newValues.penaliteRetardJournaliere}">
+                                    {{ item.newValues.penaliteRetardJournaliere }}%
+                                </td>
+                                <td
+                                    [ngClass]="{'text-primary fw-bold': item.previousValues.delaiGracePenalite !== item.newValues.delaiGracePenalite}">
+                                    {{ item.newValues.delaiGracePenalite }}
+                                </td>
+                                <td
+                                    [ngClass]="{'text-primary fw-bold': item.previousValues.dureeContratDefautMois !== item.newValues.dureeContratDefautMois}">
+                                    {{ item.newValues.dureeContratDefautMois }}
+                                </td>
+                                <td class="px-3 text-end"
+                                    [ngClass]="{'text-primary fw-bold': item.previousValues.apportInitialPourcentage !== item.newValues.apportInitialPourcentage}">
+                                    {{ item.newValues.apportInitialPourcentage }}%
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

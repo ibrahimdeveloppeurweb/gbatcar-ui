@@ -22,40 +22,42 @@ export class ClientService {
         return this.client;
     }
 
-    add(data: Client): Observable<any> {
+    add(data: any): Observable<any> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();
             return new Observable(obs => { obs.next(); obs.complete(); });
         }
 
-        if (data.uuid) {
+        const uuid = data instanceof FormData ? data.get('uuid') : data.uuid;
+        if (uuid) {
             return this.update(data);
         } else {
             return this.create(data);
         }
     }
 
-    create(data: Client): Observable<any> {
+    create(data: any): Observable<any> {
         return this.api._post(`${this.url}/new`, data).pipe(
             map((response: any) => response),
             catchError((error: any) => throwError(error))
         );
     }
 
-    update(data: Client): Observable<any> {
-        return this.api._post(`${this.url}/${data.uuid}/edit`, data).pipe(
+    update(data: any): Observable<any> {
+        const uuid = data instanceof FormData ? data.get('uuid') : data.uuid;
+        return this.api._post(`${this.url}/${uuid}/edit`, data).pipe(
             map((response: any) => response),
             catchError((error: any) => throwError(error))
         );
     }
 
-    getList(type?: string, statut?: string): Observable<Client[]> {
+    getList(filters?: any): Observable<Client[]> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();
             return new Observable(obs => { obs.next(); obs.complete(); });
         }
 
-        return this.api._get(`${this.url}/`, { type, statut }).pipe(
+        return this.api._get(`${this.url}/`, filters).pipe(
             map((response: any) => response),
             catchError((error: any) => throwError(error))
         );

@@ -74,7 +74,7 @@
 
 
 <!-- Filtres Avancés -->
-<div class="row mb-3" *ngIf="showAdvancedFilters">
+<div class="row mb-3" *ngIf="!showAdvancedFilters">
     <div class="col-md-12">
         <div class="card">
             <div class="card-body">
@@ -164,76 +164,103 @@
     <div class="col-md-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="card-title mb-0">Liste des Clients GbatCar ({{ filteredClients.length }})</h6>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="card-title mb-0 fw-bold text-uppercase">LISTE DES CLIENTS GBATCAR ({{
+                        filteredClients.length }})</h6>
                     <div class="d-flex align-items-center">
-                        <input type="text" class="form-control form-control-sm me-2"
-                            placeholder="Rechercher par nom/ID..." style="width: 250px;" [(ngModel)]="quickSearchTerm"
-                            (input)="applyQuickFilters()">
-                        <select class="form-select form-select-sm" style="width: 200px;" [(ngModel)]="quickStatusFilter"
+                        <input type="text" class="form-control form-control-sm me-2 border-light shadow-none"
+                            placeholder="Rechercher par nom/ID..." style="width: 280px; background-color: #f9fafb;"
+                            [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
+                        <select class="form-select form-select-sm border-light shadow-none"
+                            style="width: 180px; background-color: #f9fafb;" [(ngModel)]="quickStatusFilter"
                             (change)="applyQuickFilters()">
                             <option value="">Tous les statuts</option>
-                            <option value="Actif">Actif</option>
-                            <option value="Actif (Retard)">Actif (Retard)</option>
-                            <option value="En Attente Validation">En Attente Validation</option>
+                            <option value="Dossier Approuvé">Actif</option>
+                            <option value="En attente de Validation">En Attente</option>
                             <option value="Inactif">Inactif</option>
                         </select>
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
+                    <table class="table table-hover align-middle">
+                        <thead class="bg-light-subtle">
                             <tr>
-                                <th>ID Client</th>
-                                <th>Nom & Prénom</th>
-                                <th>Contact (Tél / Email)</th>
-                                <th>Véhicule / Immatriculation</th>
-                                <th>Statut Dossier</th>
-                                <th>Situation Financière</th>
-                                <th>Actions</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">ID CLIENT</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">NOM & PRÉNOM</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">CONTACT (TÉL / EMAIL)
+                                </th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">VÉHICULE /
+                                    IMMATRICULATION</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">STATUT DOSSIER</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">SITUATION FINANCIÈRE</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0 text-center">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let client of filteredClients">
-                                <td class="fw-medium text-primary">{{ client.id }}</td>
-                                <td>{{ client.name }}</td>
-                                <td>
-                                    <div>{{ client.phone }}</div>
-                                    <div class="text-secondary fs-12px">{{ client.email }}</div>
+                            <tr *ngFor="let client of filteredClients"
+                                [ngClass]="{'bg-light': client.status === 'Inactif'}">
+                                <td class="fw-bold text-danger">CLI-{{ (client.uuid || '') | slice:0:3 | uppercase }}
                                 </td>
-                                <td>{{ client.vehicle }}</td>
+                                <td class="text-dark">{{ client.lastName }} {{ client.firstName }}</td>
                                 <td>
-                                    <span class="badge" [ngClass]="{
-                                        'bg-success': client.status === 'Actif',
-                                        'bg-warning text-dark': client.status === 'En Attente Validation',
-                                        'bg-danger': client.status === 'Actif (Retard)',
-                                        'bg-secondary': client.status === 'Inactif'
+                                    <div class="fw-bold fs-13px">{{ client.phone }}</div>
+                                    <div class="text-muted fs-11px">{{ client.email }}</div>
+                                </td>
+                                <td>
+                                    <span *ngIf="client.vehicle" class="fs-13px fw-bold">
+                                        {{ client.vehicle.marque }} {{ client.vehicle.modele }} - {{
+                                        client.vehicle.immatriculation }}
+                                    </span>
+                                    <span *ngIf="!client.vehicle" class="text-muted fs-13px">Non assigné</span>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill px-2" [ngClass]="{
+                                        'bg-success': client.status === 'Dossier Approuvé' || client.status === 'En Cours de Contrat',
+                                        'bg-warning text-dark': client.status === 'En attente de Validation',
+                                        'bg-danger': client.status === 'Litige / Bloqué',
+                                        'bg-secondary': client.status === 'Inactif',
+                                        'bg-primary-subtle text-primary border border-primary-subtle': client.status === 'Prospect'
                                     }">
-                                        {{ client.status }}
+                                        {{ client.status === 'Dossier Approuvé' || client.status === 'En Cours de
+                                        Contrat' ? 'Actif' : client.status }}
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge" [ngClass]="{
-                                        'bg-success-subtle text-success': client.paymentStatus === 'À jour' || client.paymentStatus === 'Soldé',
-                                        'bg-danger-subtle text-danger': client.paymentStatus.includes('Impayé'),
-                                        'bg-light text-dark': client.paymentStatus === '-'
-                                    }">
-                                        {{ client.paymentStatus }}
+                                    <!-- Dynamic Finance Badge based on screenshot logic -->
+                                    <span
+                                        *ngIf="(client.unpaidAmount || 0) === 0 && (client.status === 'Dossier Approuvé' || client.status === 'En Cours de Contrat')"
+                                        class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2">À
+                                        jour</span>
+
+                                    <span *ngIf="(client.unpaidAmount || 0) > 0"
+                                        class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2">
+                                        Impayé ({{ (client.unpaidAmount || 0) | number }} FCFA)
                                     </span>
+
+                                    <span *ngIf="client.status === 'En attente de Validation'"
+                                        class="badge bg-light text-muted border border-light-subtle rounded-pill px-2">-</span>
+
+                                    <span
+                                        *ngIf="client.status === 'Soldé' || (client.status === 'Inactif' && (client.unpaidAmount || 0) === 0)"
+                                        class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2">Soldé</span>
                                 </td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary me-2"
-                                        [routerLink]="['details', client.id]">
-                                        <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-secondary" [routerLink]="['edit', client.id]">
-                                        <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
-                                    </button>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
+                                            [routerLink]="['details', client.uuid]" title="Voir détails">
+                                            <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                        </button>
+                                        <button class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
+                                            [routerLink]="['edit', client.uuid]" title="Modifier">
+                                            <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
-                            <tr *ngIf="filteredClients.length === 0">
-                                <td colspan="7" class="text-center py-4 text-muted">
-                                    Aucun client trouvé avec ces critères.
+                            <tr *ngIf="filteredClients.length === 0 && !loading">
+                                <td colspan="7" class="text-center py-5 text-muted bg-white">
+                                    <i data-feather="search" appFeatherIcon class="icon-xxl mb-3 text-light"></i>
+                                    <p class="fs-14px">Aucun dossier trouvé avec ces critères.</p>
                                 </td>
                             </tr>
                         </tbody>

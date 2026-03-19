@@ -156,20 +156,22 @@
                         </thead>
                         <tbody>
                             <tr *ngFor="let alert of criticalAlerts">
-                                <td class="fw-bold text-dark">{{ alert.plate }}</td>
-                                <td class="text-muted">{{ alert.model }}</td>
-                                <td class="text-primary fw-medium">{{ alert.client }}</td>
+                                <td class="fw-bold text-dark">{{ alert.immatriculation || alert.plate }}</td>
+                                <td class="text-muted">{{ alert.marque || alert.model }} {{ alert.modele || '' }}</td>
+                                <td class="text-primary fw-medium">
+                                    {{ alert.client_last_name || alert.client }} {{ alert.client_first_name || '' }}
+                                </td>
                                 <td>
                                     <span class="d-flex align-items-center">
                                         <i data-feather="alert-triangle" appFeatherIcon class="icon-xs me-1"
-                                            [ngClass]="'text-' + alert.severity"></i>
-                                        {{ alert.issue }}
+                                            [ngClass]="'text-' + (alert.niveau?.toLowerCase() === 'critique' ? 'danger' : 'warning')"></i>
+                                        {{ alert.problem || alert.issue }}
                                     </span>
                                 </td>
                                 <td>
                                     <span class="badge"
-                                        [ngClass]="alert.severity === 'danger' ? 'bg-danger' : 'bg-warning text-dark'">
-                                        {{ getSeverityLabel(alert.severity) }}
+                                        [ngClass]="alert.niveau?.toLowerCase() === 'critique' ? 'bg-danger' : 'bg-warning text-dark'">
+                                        {{ getSeverityLabel(alert.niveau || alert.severity) }}
                                     </span>
                                 </td>
                                 <td class="fw-bold" [ngClass]="alert.cost > 0 ? 'text-dark' : 'text-muted'">
@@ -177,16 +179,18 @@
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center gap-1">
-                                        <button class="btn btn-icon btn-xs btn-outline-primary"
-                                            title="Voir le véhicule">
+                                        <button class="btn btn-icon btn-xs btn-outline-primary" title="Voir le véhicule"
+                                            (click)="viewVehicle(alert.uuid)">
                                             <i data-feather="eye" appFeatherIcon class="icon-xs"></i>
                                         </button>
                                         <button class="btn btn-icon btn-xs btn-outline-success"
-                                            title="Marquer comme résolu">
+                                            title="Marquer comme résolu"
+                                            (click)="resolveAlert(alert.uuid, alert.problem)">
                                             <i data-feather="check-square" appFeatherIcon class="icon-xs"></i>
                                         </button>
                                         <button class="btn btn-icon btn-xs btn-outline-warning"
-                                            title="Planifier intervention">
+                                            title="Planifier intervention"
+                                            (click)="scheduleAction(alert.uuid, alert.problem)">
                                             <i data-feather="tool" appFeatherIcon class="icon-xs"></i>
                                         </button>
                                     </div>

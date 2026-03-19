@@ -16,6 +16,7 @@ import { Subject, takeUntil } from 'rxjs';
 export class GbatcarAdminSettingsComponent implements OnInit, OnDestroy {
 
     settingsForm: FormGroup;
+    history: any[] = [];
     private unsubscribeAll$ = new Subject<void>();
 
     constructor(
@@ -32,6 +33,11 @@ export class GbatcarAdminSettingsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
+        this.loadSettings();
+        this.loadHistory();
+    }
+
+    loadSettings() {
         this.generalSettingService.getSettings()
             .pipe(takeUntil(this.unsubscribeAll$))
             .subscribe({
@@ -43,11 +49,23 @@ export class GbatcarAdminSettingsComponent implements OnInit, OnDestroy {
                             delaiGracePenalite: res.data.delaiGracePenalite || 3,
                             dureeContratDefautMois: res.data.dureeContratDefautMois || 36,
                             apportInitialPourcentage: res.data.apportInitialPourcentage || 20
-                        });
+                        }, { emitEvent: false });
                     }
                 },
                 error: (err) => {
                     console.error('Erreur lors du chargement des paramètres généraux', err);
+                }
+            });
+    }
+
+    loadHistory() {
+        this.generalSettingService.getHistory()
+            .pipe(takeUntil(this.unsubscribeAll$))
+            .subscribe({
+                next: (res) => {
+                    if (res && res.data) {
+                        this.history = res.data;
+                    }
                 }
             });
     }
@@ -72,33 +90,55 @@ export class GbatcarAdminSettingsComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const payload = this.settingsForm.value;
-
-        this.generalSettingService.saveSettings(payload)
-            .pipe(takeUntil(this.unsubscribeAll$))
-            .subscribe({
-                next: () => {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        icon: 'success',
-                        title: 'Paramètres enregistrés avec succès.'
-                    });
-                },
-                error: (err) => {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        icon: 'error',
-                        title: err?.error?.message || 'Erreur serveur lors de la sauvegarde.'
-                    });
+        Swal.fire({
+            title: 'Justification de la modification',
+            text: 'Veuillez saisir la raison de ce changement (ex: Campagne promotionnelle)',
+            input: 'textarea',
+            inputPlaceholder: 'Saisissez votre raison ici...',
+            showCancelButton: true,
+            confirmButtonText: 'Enregistrer',
+            cancelButtonText: 'Annuler',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Vous devez saisir une raison !';
                 }
-            });
+                return null;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const payload = {
+                    ...this.settingsForm.value,
+                    reason: result.value
+                };
+
+                this.generalSettingService.saveSettings(payload)
+                    .pipe(takeUntil(this.unsubscribeAll$))
+                    .subscribe({
+                        next: () => {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true,
+                                icon: 'success',
+                                title: 'Paramètres enregistrés avec succès.'
+                            });
+                            this.loadHistory(); // Refresh history
+                        },
+                        error: (err) => {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true,
+                                icon: 'error',
+                                title: err?.error?.message || 'Erreur serveur lors de la sauvegarde.'
+                            });
+                        }
+                    });
+            }
+        });
     }
 }

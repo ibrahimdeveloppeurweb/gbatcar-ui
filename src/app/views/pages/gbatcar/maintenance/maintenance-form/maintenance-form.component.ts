@@ -1,72 +1,102 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import Swal from 'sweetalert2/dist/sweetalert2.js';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
+import { MaintenanceService } from '../../../../../core/services/maintenance/maintenance.service';
+import { VehicleService } from '../../../../../core/services/vehicle/vehicle.service';
+import { NgSelectModule } from '@ng-select/ng-select';
+import { ApiService } from '../../../../../utils/api.service';
 
 @Component({
     selector: 'app-maintenance-form',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterModule, FeatherIconDirective],
+    imports: [CommonModule, ReactiveFormsModule, RouterModule, FeatherIconDirective, NgSelectModule],
     templateUrl: './maintenance-form.component.html',
     styleUrl: './maintenance-form.component.scss'
 })
 export class MaintenanceFormComponent implements OnInit {
 
+    private fb = inject(FormBuilder);
+    private route = inject(ActivatedRoute);
+    private router = inject(Router);
+    private maintenanceService = inject(MaintenanceService);
+    private vehicleService = inject(VehicleService);
+    private apiService = inject(ApiService);
+
+    customSearchFn = (term: string, item: any) => {
+        term = term.toLowerCase();
+        const marque = (item.marque || '').toLowerCase();
+        const modele = (item.modele || '').toLowerCase();
+        const plaque = (item.immatriculation || '').toLowerCase();
+        return marque.includes(term) || modele.includes(term) || plaque.includes(term);
+    };
+
     form!: FormGroup;
+    isEditMode = false;
+    maintenanceId: string | null = null;
+    pageTitle = 'Nouvelle Intervention';
+    submit = false;
+    loading = false;
     isSubmitting = false;
-    submitSuccess = false;
 
     // Options pour les selects
     interventionTypes = [
-        'Vidange & Filtres',
-        'Plaquettes de frein',
-        'Révision Générale',
-        'Changement Pneus',
-        'Révision pneumatiques',
-        'Contrôle technique',
-        'Remplacement batterie',
-        'Freins & Disques',
-        'Électrique',
-        'Carrosserie',
-        'Autre',
+        'Vidange & Filtres', 'Plaquettes de frein', 'Révision Générale',
+        'Changement Pneus', 'Révision pneumatiques', 'Contrôle technique',
+        'Remplacement batterie', 'Freins & Disques', 'Électrique',
+        'Carrosserie', 'Autre'
     ];
 
     providers = [
-        'Garage GbatCar Centre',
-        'Auto Plus Marcory',
-        'Pneumatique Express',
-        'Atelier Mécanique Adjamé',
-        'Centre Auto Plateau',
-        'Autre prestataire',
+        'Garage GbatCar Centre', 'Auto Plus Marcory', 'Pneumatique Express',
+        'Atelier Mécanique Adjamé', 'Centre Auto Plateau', 'Autre prestataire'
     ];
 
-    statusOptions = [
-        'Planifié',
-        'En cours',
-        'Terminé',
-        'Annulé',
-    ];
+    statusOptions = ['Planifié', 'En cours', 'Terminé', 'Annulé'];
 
-    // Véhicules disponibles (mock)
-    vehicles = [
-        { id: 'V001', label: 'Toyota Yaris (1234 AB 01)' },
-        { id: 'V002', label: 'Suzuki Swift (9012 EF 01)' },
-        { id: 'V003', label: 'Toyota Corolla (7890 IJ 01)' },
-        { id: 'V004', label: 'Kia Rio (3456 GH 01)' },
-        { id: 'V005', label: 'Hyundai Accent (5678 CD 01)' },
-        { id: 'V006', label: 'Toyota Yaris (4567 CD 02)' },
-    ];
+    // Dynamic vehicles list
+    vehicles: any[] = [];
+    loadingVehicles = false;
 
-    constructor(private fb: FormBuilder, private router: Router) { }
+    // Files handling
+    selectedFiles: File[] = [];
+    existingDocs: any[] = [];
+    uploading = false;
+
+    constructor() { }
 
     ngOnInit(): void {
+        this.newForm();
+        this.loadVehicles();
+
+        this.maintenanceId = this.route.snapshot.paramMap.get('uuid') || this.route.snapshot.paramMap.get('id');
+
+        // Auto select vehicle if passed in queryParams (from Alert Dashboard)
+        const queryVehicleUuid = this.route.snapshot.queryParamMap.get('vehicleUuid');
+        const queryReason = this.route.snapshot.queryParamMap.get('reason');
+        if (queryVehicleUuid) {
+            this.form.patchValue({ vehicle: queryVehicleUuid });
+            if (queryReason) {
+                this.form.patchValue({ description: 'Alerte Dashboard: ' + queryReason });
+            }
+        }
+
+        if (this.maintenanceId) {
+            this.isEditMode = true;
+            this.pageTitle = 'Modifier l\'Intervention';
+            this.loadMaintenanceData(this.maintenanceId);
+        }
+    }
+
+    newForm(): void {
         this.form = this.fb.group({
             date: [new Date().toISOString().split('T')[0], Validators.required],
-            vehicle: ['', Validators.required],
-            type: ['', Validators.required],
+            vehicle: [null, Validators.required], // Store vehicle UUID
+            type: [null, Validators.required],
             typeAutre: [''],
-            provider: ['', Validators.required],
+            provider: [null, Validators.required],
             providerAutre: [''],
             cost: [null, [Validators.required, Validators.min(0)]],
             status: ['Planifié', Validators.required],
@@ -78,30 +108,262 @@ export class MaintenanceFormComponent implements OnInit {
         });
     }
 
+    loadVehicles(): void {
+        this.loadingVehicles = true;
+        this.vehicleService.getList().subscribe({
+            next: (res: any) => {
+                this.vehicles = res.data || res;
+                this.loadingVehicles = false;
+            },
+            error: () => {
+                this.loadingVehicles = false;
+                this.toast('Erreur lors du chargement des véhicules', 'Erreur', 'error');
+            }
+        });
+    }
+
+    loadMaintenanceData(uuid: string): void {
+        this.loading = true;
+        this.maintenanceService.getSingle(uuid).subscribe({
+            next: (res: any) => {
+                const m = res.data || res;
+                // Parse options if "Autre"
+                let t = m.type;
+                let tA = '';
+                if (!this.interventionTypes.includes(t)) {
+                    tA = t; t = 'Autre';
+                }
+                let p = m.provider || m.prestataire;
+                let pA = '';
+                if (!this.providers.includes(p)) {
+                    pA = p; p = 'Autre prestataire';
+                }
+
+                this.form.patchValue({
+                    date: m.date || m.dateIntervention ? new Date(m.date || m.dateIntervention).toISOString().split('T')[0] : '',
+                    vehicle: m.vehicle?.uuid || m.vehicleId || m.vehicle,
+                    type: t,
+                    typeAutre: tA,
+                    provider: p,
+                    providerAutre: pA,
+                    cost: m.cost || m.cout,
+                    status: m.status || m.statut,
+                    kilometrage: m.kilometrage,
+                    technicien: m.technician || m.technicien,
+                    description: m.description || m.observation,
+                    nextMaintenanceDate: m.nextMaintenanceDate ? new Date(m.nextMaintenanceDate).toISOString().split('T')[0] : '',
+                    nextMaintenanceKm: m.nextMaintenanceMileage,
+                });
+                this.existingDocs = m.documents || [];
+                this.loading = false;
+            },
+            error: () => {
+                this.loading = false;
+                this.toast('Impossible de charger les données de la maintenance.', 'Erreur', 'error');
+                this.navigateBack();
+            }
+        });
+    }
+
     get isTypeAutre(): boolean { return this.form.get('type')?.value === 'Autre'; }
     get isProviderAutre(): boolean { return this.form.get('provider')?.value === 'Autre prestataire'; }
 
-    onSubmit(): void {
+    onConfirme(): void {
+        this.submit = true;
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+            this.toast('Veuillez remplir correctement les champs obligatoires.', 'Erreur', 'warning');
             return;
         }
-        this.isSubmitting = true;
-        // Simulate API call
-        setTimeout(() => {
-            this.isSubmitting = false;
-            this.submitSuccess = true;
-            // Navigate back after success
-            setTimeout(() => this.router.navigate(['/gbatcar/maintenance']), 1500);
-        }, 900);
+
+        Swal.fire({
+            title: '',
+            text: this.isEditMode
+                ? 'Confirmez-vous la modification de cette intervention ?'
+                : "Confirmez-vous l'enregistrement de cette nouvelle intervention ?",
+            icon: 'warning',
+            showCancelButton: true,
+            showCloseButton: true,
+            confirmButtonText: 'Confirmer <i class="fas fa-check"></i>',
+            cancelButtonText: 'Annuler <i class="feather icon-x-circle"></i>',
+            confirmButtonColor: '#1bc943',
+            reverseButtons: true
+        }).then((result: any) => {
+            if (result.isConfirmed) {
+                this.saveData();
+            }
+        });
     }
 
+    saveData(): void {
+        this.isSubmitting = true;
+        const vals = this.form.value;
+
+        const payload: any = {
+            dateIntervention: vals.date,
+            vehicle: vals.vehicle,
+            type: vals.type === 'Autre' ? vals.typeAutre : vals.type,
+            prestataire: vals.provider === 'Autre prestataire' ? vals.providerAutre : vals.provider,
+            cost: vals.cost,
+            statut: vals.status,
+            kilometrage: vals.kilometrage,
+            technicien: vals.technicien,
+            observation: vals.description,
+            nextMaintenanceDate: vals.nextMaintenanceDate,
+            nextMaintenanceMileage: vals.nextMaintenanceKm,
+        };
+
+        if (this.isEditMode && this.maintenanceId) {
+            payload.uuid = this.maintenanceId;
+        }
+
+        this.maintenanceService.add(payload).subscribe({
+            next: (res: any) => {
+                const created = res.data || res;
+                const finalUuid = created.uuid || this.maintenanceId;
+
+                // Handle file uploads if any
+                if (this.selectedFiles.length > 0 && finalUuid) {
+                    this.uploadFiles(finalUuid);
+                } else {
+                    this.finalizeSave();
+                }
+            },
+            error: (err: any) => {
+                this.isSubmitting = false;
+                this.toast(
+                    err?.error?.message || "Une erreur est survenue lors de l'enregistrement.",
+                    'Erreur', 'error'
+                );
+            }
+        });
+    }
+
+    uploadFiles(uuid: string): void {
+        this.uploading = true;
+        // Convert File[] to FileList-like or just use the array if the service allows
+        // Our service expects FileList, but we can craft a DataTransfer or change service to accept File[]
+        // Let's just pass them as individual uploads or update service to handle array
+        const formData = new FormData();
+        this.selectedFiles.forEach(f => formData.append('files[]', f, f.name));
+
+        this.maintenanceService.uploadDocuments(uuid, this.selectedFiles as any).subscribe({
+            next: () => {
+                this.uploading = false;
+                this.finalizeSave();
+            },
+            error: () => {
+                this.uploading = false;
+                this.toast("Intervention enregistrée, mais erreur lors de l'envoi des fichiers.", "Attention", "warning");
+                this.finalizeSave();
+            }
+        });
+    }
+
+    finalizeSave(): void {
+        this.isSubmitting = false;
+        this.toast(
+            this.isEditMode ? 'Intervention modifiée avec succès' : 'Intervention enregistrée avec succès',
+            'Succès', 'success'
+        );
+        this.navigateBack();
+    }
+
+    // --- File UI Handlers ---
+
+    onFilesSelected(event: any): void {
+        const files: FileList = event.target.files;
+        if (!files || files.length === 0) return;
+
+        if (this.isEditMode && this.maintenanceId) {
+            // In Edit mode, upload immediately
+            this.uploading = true;
+            this.maintenanceService.uploadDocuments(this.maintenanceId, files).subscribe({
+                next: (res: any) => {
+                    this.uploading = false;
+                    this.loadMaintenanceData(this.maintenanceId!); // Refresh list
+                },
+                error: () => {
+                    this.uploading = false;
+                    this.toast("Erreur lors de l'upload.", "Erreur", "error");
+                }
+            });
+        } else {
+            // In Create mode, queue them
+            for (let i = 0; i < files.length; i++) {
+                this.selectedFiles.push(files.item(i)!);
+            }
+        }
+        event.target.value = ''; // Reset
+    }
+
+    removeSelectedFile(index: number): void {
+        this.selectedFiles.splice(index, 1);
+    }
+
+    deleteDoc(doc: any): void {
+        if (!this.maintenanceId) return;
+        if (!confirm(`Supprimer le document "${doc.originalName}" ?`)) return;
+
+        this.maintenanceService.deleteDocument(this.maintenanceId, doc.uuid).subscribe({
+            next: () => {
+                this.existingDocs = this.existingDocs.filter(d => d.uuid !== doc.uuid);
+                this.toast("Document supprimé", "Succès", "success");
+            },
+            error: () => this.toast("Impossible de supprimer le document.", "Erreur", "error")
+        });
+    }
+
+    /** Download a document as a Blob (auth supported) */
+    downloadDoc(doc: any): void {
+        if (!this.maintenanceId) return;
+        this.maintenanceService.downloadDocument(this.maintenanceId, doc.uuid).subscribe({
+            next: (blob: Blob) => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = doc.originalName;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }
+        });
+    }
+
+    formatSize(size: number): string {
+        if (!size) return '0 o';
+        if (size < 1024) return size + ' o';
+        if (size < 1048576) return (size / 1024).toFixed(1) + ' Ko';
+        return (size / 1048576).toFixed(1) + ' Mo';
+    }
+
+
     onCancel(): void {
+        this.navigateBack();
+    }
+
+    navigateBack(): void {
         this.router.navigate(['/gbatcar/maintenance']);
     }
 
     isInvalid(field: string): boolean {
         const control = this.form.get(field);
-        return !!(control && control.invalid && control.touched);
+        return !!(control && control.invalid && control.touched && this.submit);
+    }
+
+    toast(msg: string, title: string, type: string): void {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+        });
+        const iconType = (['error', 'success', 'warning', 'info', 'question'].includes(type)) ? type as any : 'info';
+        Toast.fire({
+            icon: iconType,
+            title: title ? `${title} - ${msg}` : msg
+        });
     }
 }

@@ -2,24 +2,24 @@ import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiService } from '../../../utils/api.service';
 import { NoInternetHelper } from '../../../utils/no-internet-helper';
-import { Contract, ContractDashboardData } from '../../models/contract.model';
+import { VehicleCompliance } from '../../models/vehicle-compliance.model';
 
 @Injectable({
     providedIn: 'root'
 })
-export class ContractService {
-    contract: Contract;
+export class VehicleComplianceService {
+    compliance: VehicleCompliance;
     public edit: boolean = false;
-    private url = 'private/contract';
+    private url = 'private/vehicle-compliance';
 
     constructor(private api: ApiService) { }
 
-    setContract(contract: Contract) {
-        this.contract = contract;
+    setCompliance(compliance: VehicleCompliance) {
+        this.compliance = compliance;
     }
 
-    getContract(): Contract {
-        return this.contract;
+    getCompliance(): VehicleCompliance {
+        return this.compliance;
     }
 
     add(data: any): Observable<any> {
@@ -36,10 +36,10 @@ export class ContractService {
         }
     }
 
-    create(data: any): Observable<any> {
+    create(data: VehicleCompliance | FormData): Observable<any> {
         return this.api._post(`${this.url}/new`, data).pipe(
             map((response: any) => response),
-            catchError((error: any) => throwError(error))
+            catchError((error: any) => throwError(() => error))
         );
     }
 
@@ -47,11 +47,11 @@ export class ContractService {
         const uuid = data instanceof FormData ? data.get('uuid') : data.uuid;
         return this.api._post(`${this.url}/${uuid}/edit`, data).pipe(
             map((response: any) => response),
-            catchError((error: any) => throwError(error))
+            catchError((error: any) => throwError(() => error))
         );
     }
 
-    getList(filters?: any): Observable<Contract[]> {
+    getList(filters?: any): Observable<VehicleCompliance[]> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();
             return new Observable(obs => { obs.next(); obs.complete(); });
@@ -59,23 +59,23 @@ export class ContractService {
 
         return this.api._get(`${this.url}/`, filters).pipe(
             map((response: any) => response.data || response),
-            catchError((error: any) => throwError(error))
+            catchError((error: any) => throwError(() => error))
         );
     }
 
-    getSingle(uuid: string): Observable<Contract> {
+    getSingle(uuid: string, filters?: any): Observable<VehicleCompliance> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();
             return new Observable(obs => { obs.next(); obs.complete(); });
         }
 
-        return this.api._get(`${this.url}/${uuid}/show`).pipe(
-            map((response: any) => response),
-            catchError((error: any) => throwError(error))
+        return this.api._get(`${this.url}/${uuid}/show`, filters).pipe(
+            map((response: any) => response.data || response),
+            catchError((error: any) => throwError(() => error))
         );
     }
 
-    getDelete(uuid: string): Observable<Contract> {
+    getDelete(uuid: string): Observable<any> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();
             return new Observable(obs => { obs.next(); obs.complete(); });
@@ -83,30 +83,6 @@ export class ContractService {
 
         return this.api._delete(`${this.url}/${uuid}/delete`).pipe(
             map((response: any) => response),
-            catchError((error: any) => throwError(error))
-        );
-    }
-
-    getDashboardData(filters?: any): Observable<ContractDashboardData> {
-        if (!navigator.onLine) {
-            NoInternetHelper.internet();
-            return new Observable(obs => { obs.next(); obs.complete(); });
-        }
-
-        return this.api._get(`${this.url}/dashboard`, filters).pipe(
-            map((response: any) => response.data || response),
-            catchError((error: any) => throwError(() => error))
-        );
-    }
-
-    getLateContracts(filters?: any): Observable<Contract[]> {
-        if (!navigator.onLine) {
-            NoInternetHelper.internet();
-            return new Observable(obs => { obs.next(); obs.complete(); });
-        }
-
-        return this.api._get(`${this.url}/late`, filters).pipe(
-            map((response: any) => response.data || response),
             catchError((error: any) => throwError(() => error))
         );
     }

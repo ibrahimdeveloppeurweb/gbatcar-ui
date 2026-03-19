@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { VehicleService } from '../../../../../core/services/vehicle/vehicle.service';
+import { GeneralSettingService } from '../../../../../core/services/setting/setting.service';
 import { environment } from '../../../../../../environments/environment';
 
 @Component({
@@ -16,16 +17,18 @@ import { environment } from '../../../../../../environments/environment';
 })
 export class VehicleFormComponent implements OnInit {
   private formBuild = inject(FormBuilder);
-  private route     = inject(ActivatedRoute);
-  private router    = inject(Router);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private vehicleService = inject(VehicleService);
+  private settingService = inject(GeneralSettingService);
 
   form!: FormGroup;
-  isEditMode   = false;
+  isEditMode = false;
   vehicleId: string | null = null;
-  pageTitle    = 'Nouveau Véhicule';
-  submit       = false;
-  loading      = false;
+  pageTitle = 'Nouveau Véhicule';
+  submit = false;
+  loading = false;
+  settings: any = null;
 
   // Base URL for Images
   baseUrl = environment.serverUrl.replace('/api', '');
@@ -43,11 +46,13 @@ export class VehicleFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.vehicleId = this.route.snapshot.paramMap.get('id');
+    this.vehicleId = this.route.snapshot.paramMap.get('uuid');
     if (this.vehicleId) {
       this.isEditMode = true;
-      this.pageTitle  = 'Modifier le Véhicule';
+      this.pageTitle = 'Modifier le Véhicule';
       this.loadVehicleData(this.vehicleId);
+    } else {
+      this.loadSettings();
     }
 
     // Auto-calcul du TCO depuis les composantes
@@ -57,55 +62,76 @@ export class VehicleFormComponent implements OnInit {
     });
 
     // Auto-calcul de la marge brute
-    this.form.get('prixDeVente')?.valueChanges.subscribe(() => this.updateMarge());
+    this.form.get('prixDeVente')?.valueChanges.subscribe(() => {
+      this.updateMarge();
+      this.updateDailyRate();
+    });
     this.form.get('tcoEstime')?.valueChanges.subscribe(() => this.updateMarge());
+
+    // Ecouter les changements de paramètres (même s'ils sont désactivés, ils peuvent changer via patchValue)
+    this.form.get('durationInMonths')?.valueChanges.subscribe(() => this.updateDailyRate());
+    this.form.get('depositPercentage')?.valueChanges.subscribe(() => this.updateDailyRate());
+  }
+
+  loadSettings() {
+    this.settingService.getSettings().subscribe({
+      next: (res: any) => {
+        this.settings = res.data || res;
+        if (this.settings) {
+          this.form.patchValue({
+            durationInMonths: this.settings.dureeContratDefautMois,
+            depositPercentage: this.settings.apportInitialPourcentage,
+          });
+        }
+      }
+    });
   }
 
   newForm(): void {
     this.form = this.formBuild.group({
       // Base Info
-      marque:           [null, Validators.required],
-      modele:           [null, Validators.required],
-      finition:         [null],
-      photo:            [null],
-      photos:           [[]],  // Tableau d'images
-      transmission:     ['Automatique', Validators.required],
-      carburant:        ['Essence', Validators.required],
-      annee:            [null, [Validators.required, Validators.min(1990), Validators.max(2030)]],
-      couleur:          [null],
-      nombrePlaces:     ['5'],
-      statut:           ['Disponible', Validators.required],
+      marque: [null, Validators.required],
+      modele: [null, Validators.required],
+      finition: [null],
+      photo: [null],
+      photos: [[]],  // Tableau d'images
+      transmission: ['Automatique', Validators.required],
+      carburant: ['Essence', Validators.required],
+      annee: [null, [Validators.required, Validators.min(1990), Validators.max(2030)]],
+      couleur: [null],
+      nombrePlaces: ['5'],
+      statut: ['Disponible', Validators.required],
       // Technical ID
-      immatriculation:  [null, Validators.required],
-      numeroChassis:    [null],
-      kilometrage:      [0],
-      prochainEntretien:[null],
-      lastMaintenance:  [null],
-      gpsStatus:        ['Non installé'],
-      notesInternes:    [null],
+      immatriculation: [null, Validators.required],
+      numeroChassis: [null],
+      kilometrage: [0],
+      prochainEntretien: [null],
+      lastMaintenance: [null],
+      gpsStatus: ['Non installé'],
+      notesInternes: [null],
       // Rentabilité (calculée automatiquement)
-      prixDeVente:      [null, Validators.required],
-      tcoEstime:        [null],
+      prixDeVente: [null, Validators.required],
+      tcoEstime: [null],
       margeBrutePrevisionnelle: [null],
       // TCO composantes (UI only → sommées dans tcoEstime)
-      purchasePrice:       [null],
-      customsFees:         [null],
-      transitFees:         [null],
-      preparationCost:     [null],
+      purchasePrice: [null],
+      customsFees: [null],
+      transitFees: [null],
+      preparationCost: [null],
       gpsInstallationCost: [null],
-      otherCosts:          [null],
+      otherCosts: [null],
       // Offre Commerciale
-      totalPrice:         [null],
-      depositPercentage:  [null, [Validators.min(0), Validators.max(100)]],
-      durationInMonths:   [null, [Validators.min(1)]],
-      dailyRate:          [15000],
-      intendedUse:        ['VTC'],
+      totalPrice: [null],
+      depositPercentage: [{ value: null, disabled: true }, [Validators.min(0), Validators.max(100)]],
+      durationInMonths: [{ value: null, disabled: true }, [Validators.min(1)]],
+      dailyRate: [0],
+      intendedUse: ['VTC'],
       includingInsurance: [false],
-      includingGPS:       [false],
+      includingGPS: [false],
       // Commercial
-      prixParJour:      [null],
-      description:      [null],
-      pipelineStatus:   [null],
+      prixParJour: [null],
+      description: [null],
+      pipelineStatus: [null],
     });
   }
 
@@ -114,15 +140,31 @@ export class VehicleFormComponent implements OnInit {
   updateTco(): void {
     const f = this.form.value;
     const tco = (f.purchasePrice || 0) + (f.customsFees || 0) + (f.transitFees || 0)
-              + (f.preparationCost || 0) + (f.gpsInstallationCost || 0) + (f.otherCosts || 0);
+      + (f.preparationCost || 0) + (f.gpsInstallationCost || 0) + (f.otherCosts || 0);
     this.form.patchValue({ tcoEstime: tco }, { emitEvent: false });
     this.updateMarge();
   }
 
   updateMarge(): void {
     const prix = this.form.get('prixDeVente')?.value || 0;
-    const tco  = this.form.get('tcoEstime')?.value || 0;
+    const tco = this.form.get('tcoEstime')?.value || 0;
     this.form.patchValue({ margeBrutePrevisionnelle: prix - tco }, { emitEvent: false });
+  }
+
+  updateDailyRate(): void {
+    const prix = this.form.get('prixDeVente')?.value || 0;
+    const percentage = this.form.get('depositPercentage')?.value || 0;
+    const duration = this.form.get('durationInMonths')?.value || 1;
+
+    if (prix > 0 && duration > 0) {
+      const remaining = prix - (prix * percentage / 100);
+      const monthlyRate = remaining / duration;
+
+      this.form.patchValue({
+        dailyRate: Math.round(monthlyRate),
+        prixParJour: Math.round(monthlyRate) // Synchro pour le backend
+      }, { emitEvent: false });
+    }
   }
 
   // ─── Fichiers ────────────────────────────────────────────────────────────
@@ -170,11 +212,11 @@ export class VehicleFormComponent implements OnInit {
   selectImage(imgUrl: string): void {
     // on enlève la baseUrl pour ne stocker que le chemin relatif dans la DB
     const relativeUrl = imgUrl.replace(this.baseUrl, '');
-    
+
     // Toggle logic for multiple photos array
     const currentPhotos: string[] = this.form.get('photos')?.value || [];
     const index = currentPhotos.indexOf(relativeUrl);
-    
+
     if (index === -1) {
       // Add if not present
       this.form.patchValue({ photos: [...currentPhotos, relativeUrl] });
@@ -221,39 +263,40 @@ export class VehicleFormComponent implements OnInit {
       next: (res: any) => {
         const v = res.data || res;
         this.form.patchValue({
-          marque:           v.marque,
-          modele:           v.modele,
-          finition:         v.finition,
-          transmission:     v.transmission,
-          carburant:        v.carburant,
-          annee:            v.annee,
-          couleur:          v.couleur,
-          nombrePlaces:     v.nombrePlaces,
-          statut:           v.statut,
-          immatriculation:  v.immatriculation,
-          numeroChassis:    v.numeroChassis,
-          kilometrage:      v.kilometrage,
-          prochainEntretien:v.prochainEntretien,
-          gpsStatus:        v.gpsStatus,
-          notesInternes:    v.notesInternes,
-          prixDeVente:      v.prixDeVente,
-          tcoEstime:        v.tcoEstime,
+          marque: v.marque,
+          modele: v.modele,
+          finition: v.finition,
+          transmission: v.transmission,
+          carburant: v.carburant,
+          annee: v.annee,
+          couleur: v.couleur,
+          nombrePlaces: v.nombrePlaces,
+          statut: v.statut,
+          immatriculation: v.immatriculation,
+          numeroChassis: v.numeroChassis,
+          kilometrage: v.kilometrage,
+          prochainEntretien: v.prochainEntretien,
+          lastMaintenance: v.dateDerniereMaintenance ? new Date(v.dateDerniereMaintenance.date || v.dateDerniereMaintenance).toISOString().split('T')[0] : v.lastMaintenance,
+          gpsStatus: v.gpsStatus,
+          notesInternes: v.notesInternes,
+          prixDeVente: v.prixDeVente,
+          tcoEstime: v.tcoEstime,
           margeBrutePrevisionnelle: v.margeBrutePrevisionnelle,
           includingInsurance: v.includingInsurance,
-          includingGPS:       v.includingGPS,
-          prixParJour:      v.prixParJour,
-          photo:            v.photo,
-          photos:           v.photos || [],
-          description:      v.description,
-          pipelineStatus:   v.pipelineStatus,
-          purchasePrice:    v.purchasePrice,
-          customsFees:      v.customsFees,
-          transitFees:      v.transitFees,
-          preparationCost:  v.preparationCost,
+          includingGPS: v.includingGPS,
+          prixParJour: v.prixParJour,
+          photo: v.photo,
+          photos: v.photos || [],
+          description: v.description,
+          pipelineStatus: v.pipelineStatus,
+          purchasePrice: v.purchasePrice,
+          customsFees: v.customsFees,
+          transitFees: v.transitFees,
+          preparationCost: v.preparationCost,
           gpsInstallationCost: v.gpsInstallationCost,
-          otherCosts:       v.otherCosts,
-          totalPrice:       v.prixDeVente, // Le prixDeVente sert aussi de totalPrice dans la section commerciale
-          depositPercentage:v.depositPercentage,
+          otherCosts: v.otherCosts,
+          totalPrice: v.prixDeVente, // Le prixDeVente sert aussi de totalPrice dans la section commerciale
+          depositPercentage: v.depositPercentage,
           durationInMonths: v.durationInMonths
         });
         this.loading = false;
@@ -284,7 +327,7 @@ export class VehicleFormComponent implements OnInit {
       showCancelButton: true,
       showCloseButton: true,
       confirmButtonText: 'Confirmer <i class="fas fa-check"></i>',
-      cancelButtonText:  'Annuler <i class="feather icon-x-circle"></i>',
+      cancelButtonText: 'Annuler <i class="feather icon-x-circle"></i>',
       confirmButtonColor: '#1bc943',
       reverseButtons: true
     }).then((result: any) => {
@@ -304,7 +347,7 @@ export class VehicleFormComponent implements OnInit {
 
     // Construction du FormData (supporte fichiers + champs)
     const formData = new FormData();
-    const values = this.form.value;
+    const values = this.form.getRawValue();
     Object.keys(values).forEach(key => {
       const val = values[key];
       if (val !== null && val !== undefined && val !== '') {

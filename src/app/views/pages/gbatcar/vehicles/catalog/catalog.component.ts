@@ -7,6 +7,8 @@ import { VehicleService } from '../../../../../core/services/vehicle/vehicle.ser
 import { environment } from '../../../../../../environments/environment';
 import Swal from 'sweetalert2';
 
+import { Vehicle } from '../../../../../core/models/vehicle.model';
+
 @Component({
   selector: 'app-catalog',
   standalone: true,
@@ -18,7 +20,7 @@ export class CatalogComponent implements OnInit {
 
   private vehicleService = inject(VehicleService);
 
-  catalogItems: any[] = [];
+  catalogItems: Vehicle[] = [];
   loading: boolean = false;
 
   baseUrl = environment.serverUrl.replace('/api', '');
@@ -86,9 +88,9 @@ export class CatalogComponent implements OnInit {
     const photo = this.lightboxCurrentPhoto;
     if (!photo || !this.lightboxVehicle) return;
 
-    console.log('Setting cover:', photo, 'for vehicle:', this.lightboxVehicle.id);
+    console.log('Setting cover:', photo, 'for vehicle:', this.lightboxVehicle.uuid || this.lightboxVehicle.id);
 
-    this.vehicleService.setCoverImage(this.lightboxVehicle.id, photo).subscribe({
+    this.vehicleService.setCoverImage(this.lightboxVehicle.uuid || this.lightboxVehicle.id, photo).subscribe({
       next: (res: any) => {
         console.log('Cover set success:', res);
         this.lightboxVehicle.photo = photo;
@@ -122,7 +124,7 @@ export class CatalogComponent implements OnInit {
     const photo = this.lightboxCurrentPhoto;
     if (!photo || !this.lightboxVehicle) return;
 
-    this.vehicleService.removeGalleryImage(this.lightboxVehicle.id, photo).subscribe({
+    this.vehicleService.removeGalleryImage(this.lightboxVehicle.uuid || this.lightboxVehicle.id, photo).subscribe({
       next: (res: any) => {
         console.log('Deletion success:', res);
         // Suppression locale

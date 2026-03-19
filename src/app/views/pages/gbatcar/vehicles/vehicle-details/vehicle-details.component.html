@@ -1,22 +1,34 @@
-<div *ngIf="vehicle" class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+<div *ngIf="loading" class="d-flex justify-content-center align-items-center" style="height: 400px;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Chargement...</span>
+    </div>
+</div>
+
+<div *ngIf="!loading && !vehicle" class="alert alert-warning">
+    Véhicule introuvable ou erreur de chargement.
+</div>
+
+<div *ngIf="!loading && vehicle" class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
     <div>
         <nav class="page-breadcrumb mb-1">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a routerLink="/gbatcar/vehicles">Parc Automobile</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ vehicle.licensePlate }}</li>
+                <li class="breadcrumb-item active" aria-current="page">{{ vehicle.immatriculation ||
+                    vehicle.licensePlate }}</li>
             </ol>
         </nav>
         <div class="d-flex align-items-center mb-3 mb-md-0">
             <button (click)="goBack()" class="btn btn-primary btn-icon btn-xs me-3" title="Retour à la flotte">
                 <i data-feather="arrow-left" appFeatherIcon></i>
             </button>
-            <h4 class="mb-0">Dossier Véhicule : {{ vehicle.brand }} {{ vehicle.model }} ({{ vehicle.licensePlate }})
+            <h4 class="mb-0">Dossier Véhicule : {{ vehicle.marque || vehicle.brand }} {{ vehicle.modele || vehicle.model
+                }} ({{ vehicle.immatriculation || vehicle.licensePlate }})
             </h4>
         </div>
     </div>
     <div class="d-flex align-items-center flex-wrap text-nowrap">
         <button type="button" class="btn btn-outline-primary btn-icon-text me-2 mb-2 mb-md-0"
-            [routerLink]="['/gbatcar/vehicles/edit', vehicle.id]">
+            [routerLink]="['/gbatcar/vehicles/edit', vehicle.uuid || vehicle.id]">
             <i data-feather="edit" appFeatherIcon class="btn-icon-prepend"></i>
             Modifier Infos
         </button>
@@ -25,7 +37,7 @@
 
 <!-- Financial Health Alert Banner (shown only when vehicle is assigned and has a payment issue) -->
 <div class="alert border-0 mb-4 d-flex align-items-center justify-content-between"
-    *ngIf="vehicle && vehicle.paymentStatus && vehicle.paymentStatus !== 'À jour' && vehicle.assignedClient !== 'Aucun'"
+    *ngIf="!loading && vehicle && vehicle.paymentStatus && vehicle.paymentStatus !== 'À jour' && (vehicle.client || vehicle.assignedClient !== 'Aucun')"
     [ngClass]="{
         'alert-danger': vehicle.paymentStatus === 'Critique',
         'alert-warning': vehicle.paymentStatus === 'En retard'
@@ -35,9 +47,11 @@
         <div>
             <strong>Alerte Financière :</strong>
             <span *ngIf="vehicle.paymentStatus === 'En retard'"> Ce véhicule présente un retard de paiement de
-                <strong>{{ vehicle.daysLate }} jours</strong>. Contacter le locataire immédiatement.</span>
+                <strong *ngIf="vehicle.daysLate">{{ vehicle.daysLate }} jours</strong>. Contacter le locataire
+                immédiatement.</span>
             <span *ngIf="vehicle.paymentStatus === 'Critique'"> Ce véhicule est en situation <strong>CRITIQUE</strong>.
-                Retard de <strong>{{ vehicle.daysLate }} jours</strong>. Procédure de récupération à engager.</span>
+                <span *ngIf="vehicle.daysLate">Retard de <strong>{{ vehicle.daysLate }} jours</strong>.</span> Procédure
+                de récupération à engager.</span>
         </div>
     </div>
     <div class="d-flex gap-2 flex-shrink-0 ms-3">
@@ -50,7 +64,7 @@
     </div>
 </div>
 
-<div class="row" *ngIf="vehicle">
+<div class="row" *ngIf="!loading && vehicle">
     <!-- Colonne Gauche : Profil & Stats -->
     <div class="col-md-4 grid-margin stretch-card">
         <div class="card">
@@ -60,20 +74,54 @@
                 </div>
 
                 <div class="d-flex flex-column align-items-center border-bottom pb-4 mb-4">
-                    <div
-                        class="wd-80 ht-80 rounded-circle overflow-hidden mb-3 bg-light d-flex justify-content-center align-items-center">
-                        <i data-feather="truck" appFeatherIcon class="text-secondary wd-40 ht-40"></i>
+                    <div class="wd-100 ht-100 rounded overflow-hidden mb-3 bg-light d-flex justify-content-center align-items-center position-relative"
+                        style="width: 150px !important; height: 120px !important;">
+                        <!-- Pas d'image -->
+                        <div *ngIf="!vehicle.photos || vehicle.photos.length === 0"
+                            class="d-flex align-items-center justify-content-center h-100 w-100 text-muted">
+                            <i data-feather="truck" appFeatherIcon class="text-secondary wd-40 ht-40"></i>
+                        </div>
+
+                        <!-- Carousel -->
+                        <ng-container *ngIf="vehicle.photos && vehicle.photos.length > 0">
+                            <img [src]="baseUrl + vehicle.photos[vehicle._carouselIdx || 0]" alt="Vehicle Image"
+                                class="w-100 h-100" style="object-fit:cover; cursor:zoom-in;"
+                                (click)="openLightbox(vehicle._carouselIdx || 0, $event)">
+
+                            <!-- Nav gauche -->
+                            <button *ngIf="vehicle.photos.length > 1"
+                                class="btn btn-dark btn-xs position-absolute top-50 start-0 translate-middle-y ms-1 p-0 opacity-75"
+                                style="width: 20px; height: 20px;"
+                                (click)="$event.stopPropagation(); vehicle._carouselIdx = ((vehicle._carouselIdx || 0) - 1 + vehicle.photos.length) % vehicle.photos.length">
+                                <i data-feather="chevron-left" appFeatherIcon class="icon-xs"></i>
+                            </button>
+                            <!-- Nav droite -->
+                            <button *ngIf="vehicle.photos.length > 1"
+                                class="btn btn-dark btn-xs position-absolute top-50 end-0 translate-middle-y me-1 p-0 opacity-75"
+                                style="width: 20px; height: 20px;"
+                                (click)="$event.stopPropagation(); vehicle._carouselIdx = ((vehicle._carouselIdx || 0) + 1) % vehicle.photos.length">
+                                <i data-feather="chevron-right" appFeatherIcon class="icon-xs"></i>
+                            </button>
+
+                            <!-- Badge nb photos -->
+                            <span class="badge bg-dark position-absolute top-0 end-0 m-1 opacity-75 fs-10px">
+                                <i data-feather="image" appFeatherIcon class="icon-xs me-1"></i> {{
+                                vehicle.photos.length }}
+                            </span>
+                        </ng-container>
                     </div>
                     <div class="text-center">
-                        <p class="tx-16 fw-bolder text-primary">{{ vehicle.licensePlate }}</p>
-                        <p class="tx-12 text-muted">{{ vehicle.id }}</p>
+                        <p class="tx-16 fw-bolder text-primary">{{ vehicle.immatriculation || vehicle.licensePlate }}
+                        </p>
+                        <p class="tx-12 text-muted">{{ vehicle.marque || vehicle.brand }} {{ vehicle.modele ||
+                            vehicle.model }}</p>
                         <span class="badge mt-2" [ngClass]="{
-                            'bg-success': vehicle.status === 'Disponible',
-                            'bg-primary': vehicle.status === 'Assigné',
-                            'bg-warning text-dark': vehicle.status === 'En Maintenance',
-                            'bg-secondary': vehicle.status === 'Hors Service'
+                            'bg-success': (vehicle.statut || vehicle.status) === 'Disponible',
+                            'bg-primary': (vehicle.statut || vehicle.status) === 'Assigné',
+                            'bg-warning text-dark': (vehicle.statut || vehicle.status) === 'En Maintenance',
+                            'bg-secondary': (vehicle.statut || vehicle.status) === 'Hors Service'
                         }">
-                            {{ vehicle.status }}
+                            {{ vehicle.statut || vehicle.status }}
                         </span>
                     </div>
                 </div>
@@ -81,53 +129,25 @@
                 <div class="mt-3">
                     <label class="tx-11 fw-bolder mb-0 text-uppercase">Spécifications :</label>
                     <p class="text-muted d-flex align-items-center mt-1"><strong>Marque :</strong> <span
-                            class="ms-2 text-dark">{{ vehicle.brand }}</span></p>
+                            class="ms-2 text-dark">{{ vehicle.marque || vehicle.brand }}</span></p>
                     <p class="text-muted d-flex align-items-center mt-1"><strong>Modèle :</strong> <span
-                            class="ms-2 text-dark">{{ vehicle.model }}</span></p>
+                            class="ms-2 text-dark">{{ vehicle.modele || vehicle.model }}</span></p>
                     <p class="text-muted d-flex align-items-center mt-1"><strong>Finition :</strong> <span
-                            class="ms-2 text-dark">{{ vehicle.trim }}</span></p>
+                            class="ms-2 text-dark">{{ vehicle.finition || vehicle.trim }}</span></p>
                     <p class="text-muted d-flex align-items-center mt-1"><strong>Boîte :</strong> <span
                             class="ms-2 text-dark">{{ vehicle.transmission }}</span></p>
                     <p class="text-muted d-flex align-items-center mt-1"><strong>Carburant :</strong> <span
-                            class="ms-2 text-dark">{{ vehicle.fuelType }}</span></p>
+                            class="ms-2 text-dark">{{ vehicle.carburant || vehicle.fuelType }}</span></p>
                     <p class="text-muted d-flex align-items-center mt-1"><strong>Année :</strong> <span
-                            class="ms-2 text-dark">{{ vehicle.year }}</span></p>
+                            class="ms-2 text-dark">{{ vehicle.annee || vehicle.year }}</span></p>
                     <p class="text-muted d-flex align-items-center mt-1"><strong>Couleur :</strong> <span
-                            class="ms-2 text-dark">{{ vehicle.color }}</span></p>
+                            class="ms-2 text-dark">{{ vehicle.couleur || vehicle.color }}</span></p>
                     <p class="text-muted d-flex align-items-center mt-1"><strong>Châssis (VIN) :</strong> <span
-                            class="ms-2 text-dark">{{ vehicle.chassisNumber }}</span></p>
+                            class="ms-2 text-dark">{{ vehicle.numeroChassis || vehicle.chassisNumber }}</span></p>
                 </div>
 
                 <div class="mt-4 pt-3 border-top pb-2">
-                    <h6 class="tx-11 fw-bolder mb-3 text-uppercase text-danger">Offre Commerciale (Location-Vente)</h6>
-                    <div class="d-flex justify-content-between text-muted mt-2">
-                        <span>Prix total :</span>
-                        <span class="text-dark fw-bold">{{ vehicle.totalPrice | number }} FCFA</span>
-                    </div>
-                    <div class="d-flex justify-content-between text-muted mt-2">
-                        <span>Apport initial ({{ vehicle.depositPercentage }}%) :</span>
-                        <span class="text-success fw-bold">{{ (vehicle.totalPrice * vehicle.depositPercentage / 100) |
-                            number }} FCFA</span>
-                    </div>
-                    <div class="d-flex justify-content-between text-muted mt-2">
-                        <span>Mensualité ({{ vehicle.durationInMonths }} mois) :</span>
-                        <span class="text-dark fw-bold">{{ ((vehicle.totalPrice - (vehicle.totalPrice *
-                            vehicle.depositPercentage / 100)) / vehicle.durationInMonths) | number:'1.0-0' }}
-                            FCFA</span>
-                    </div>
-                    <div class="d-flex flex-wrap mt-3 gap-2">
-                        <span class="badge border border-secondary text-secondary fw-normal fs-12px"
-                            *ngIf="vehicle.includingInsurance"><i data-feather="check-circle" appFeatherIcon
-                                class="icon-xs me-1"></i> Assurance incluse</span>
-                        <span class="badge border border-secondary text-secondary fw-normal fs-12px"
-                            *ngIf="vehicle.includingGPS"><i data-feather="map-pin" appFeatherIcon
-                                class="icon-xs me-1"></i> Traceur GPS inclus</span>
-                    </div>
-                    <div class="mt-3" *ngIf="vehicle.status === 'Disponible'">
-                        <button class="btn btn-outline-danger btn-sm w-100"
-                            [routerLink]="['/gbatcar/vehicles/edit', vehicle.id]"><i data-feather="edit-2"
-                                appFeatherIcon class="icon-sm me-1"></i> Éditer l'offre</button>
-                    </div>
+                    <p class="text-muted tx-12">Dossier technique et administratif du véhicule.</p>
                 </div>
             </div>
         </div>
@@ -135,6 +155,108 @@
 
     <!-- Colonne Droite : Affectation, Santé Financière & Maintenance -->
     <div class="col-md-8">
+        <!-- ── SECTION RENTABILITÉ & OFFRE (New from Catalog) ── -->
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h4 class="mb-1">{{ vehicle.marque || vehicle.brand }} {{ vehicle.modele || vehicle.model }}
+                            <span class="text-muted fs-6">{{ vehicle.annee || vehicle.year }}</span>
+                        </h4>
+                        <p class="text-secondary fs-13px mb-2">
+                            {{ vehicle.finition || vehicle.trim }} • {{ vehicle.transmission }} • {{ vehicle.carburant
+                            || vehicle.fuelType }} • {{ (vehicle.kilometrage || vehicle.mileage) | number }} km
+                        </p>
+                        <div class="d-flex align-items-center">
+                            <small class="text-muted me-2">Pipeline :</small>
+                            <span class="badge rounded-pill bg-light text-dark border">
+                                <i data-feather="clock" appFeatherIcon class="icon-xs me-1"></i>
+                                {{ (vehicle.pipelineStatus || 'En attente') }}
+                            </span>
+                        </div>
+                    </div>
+                    <span class="badge fs-13px" [ngClass]="{
+                        'bg-success': (vehicle.statut || vehicle.status) === 'Disponible',
+                        'bg-primary': (vehicle.statut || vehicle.status) === 'Assigné',
+                        'bg-warning text-dark': (vehicle.statut || vehicle.status) === 'En Maintenance',
+                        'bg-secondary': (vehicle.statut || vehicle.status) === 'Hors Service'
+                    }">{{ vehicle.statut || vehicle.status }}</span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- TCO Box -->
+                        <div class="bg-light border rounded p-3 h-100">
+                            <div class="d-flex justify-content-between fw-bold mb-3 text-dark">
+                                <span><i data-feather="bar-chart-2" appFeatherIcon
+                                        class="icon-xs me-1 text-secondary"></i>Coût Total (TCO)</span>
+                                <span class="text-primary">{{ formatCurrency(vehicle.tcoEstime ?? 0) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted mb-1 fs-13px">
+                                <span>Prix d'achat</span><span>{{ formatCurrency(vehicle.purchasePrice ?? 0) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted mb-1 fs-13px">
+                                <span>Dédouanement</span><span>{{ formatCurrency(vehicle.customsFees ?? 0) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted mb-1 fs-13px">
+                                <span>Transport</span><span>{{ formatCurrency(vehicle.transitFees ?? 0) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted mb-1 fs-13px">
+                                <span>Préparation</span><span>{{ formatCurrency(vehicle.preparationCost ?? 0) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted mb-1 fs-13px">
+                                <span>Pose GPS</span><span>{{ formatCurrency(vehicle.gpsInstallationCost ?? 0) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between fw-semibold text-success border-top mt-3 pt-2">
+                                <span>Marge Brute Prév.</span>
+                                <span class="fs-14px">+ {{ formatCurrency((vehicle.prixDeVente ?? 0) -
+                                    (vehicle.tcoEstime ?? 0)) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mt-3 mt-md-0">
+                        <!-- Offre Box -->
+                        <div class="bg-primary bg-opacity-10 p-3 rounded h-100 border border-primary border-opacity-10">
+                            <h6 class="text-primary mb-3 tx-12 fw-bolder text-uppercase">Offre Commerciale</h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-secondary fs-13px">Prix Total :</span>
+                                <span class="fw-bold fs-14px text-dark">{{ formatCurrency(vehicle.prixDeVente ?? 0)
+                                    }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 border-bottom pb-2">
+                                <span class="text-secondary fs-13px">Apport Initial ({{ vehicle.depositPercentage ?? 0
+                                    }}%) :</span>
+                                <span class="fw-bold text-success fs-14px">{{
+                                    formatCurrency(calculateDeposit(vehicle.prixDeVente ?? 0, vehicle.depositPercentage
+                                    ?? 0)) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mt-3">
+                                <span class="text-secondary fs-13px">Mensualité ({{ vehicle.durationInMonths ?? 0 }}
+                                    mois) :</span>
+                                <span class="fw-bolder text-dark fs-5">{{
+                                    formatCurrency(calculateMonthlyPayment(vehicle.prixDeVente ?? 0,
+                                    calculateDeposit(vehicle.prixDeVente ?? 0, vehicle.depositPercentage ?? 0),
+                                    vehicle.durationInMonths ?? 0)) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <span class="badge bg-white text-secondary border fw-normal px-3 py-2 fs-12px"
+                        *ngIf="vehicle.includingInsurance">
+                        <i data-feather="check-circle" appFeatherIcon class="icon-xs me-1 text-success"></i> Assurance
+                        Incluse
+                    </span>
+                    <span class="badge bg-white text-secondary border fw-normal px-3 py-2 fs-12px"
+                        *ngIf="vehicle.includingGPS">
+                        <i data-feather="map-pin" appFeatherIcon class="icon-xs me-1 text-primary"></i> Tracker GPS
+                        Inclus
+                    </span>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <!-- Affectation -->
             <div class="col-md-6 grid-margin stretch-card">
@@ -146,12 +268,13 @@
                         <div class="row mt-4">
                             <div class="col-12 text-center">
                                 <h3 class="fw-bolder fs-5"
-                                    [ngClass]="{'text-success': vehicle.status === 'Disponible', 'text-primary': vehicle.status === 'Assigné', 'text-warning': vehicle.status === 'En Maintenance', 'text-muted': vehicle.status === 'Hors Service'}">
-                                    {{ vehicle.assignedClient !== 'Aucun' ? vehicle.assignedClient : 'Véhicule sur Parc'
+                                    [ngClass]="{'text-success': (vehicle.statut || vehicle.status) === 'Disponible', 'text-primary': (vehicle.statut || vehicle.status) === 'Assigné', 'text-warning': (vehicle.statut || vehicle.status) === 'En Maintenance', 'text-muted': (vehicle.statut || vehicle.status) === 'Hors Service'}">
+                                    {{ vehicle.client ? (vehicle.client.firstName + ' ' + vehicle.client.lastName) :
+                                    (vehicle.assignedClient !== 'Aucun' ? vehicle.assignedClient : 'Véhicule sur Parc')
                                     }}
                                 </h3>
                                 <p class="text-muted mt-2">Redevance journalière : <span class="fw-bold text-dark">{{
-                                        vehicle.dailyRate | number }} FCFA</span></p>
+                                        (vehicle.prixParJour || vehicle.dailyRate) | number }} FCFA</span></p>
                                 <!-- GPS Status Badge -->
                                 <div class="mt-2" *ngIf="vehicle.gpsStatus">
                                     <span class="badge rounded-pill" [ngClass]="{
@@ -183,18 +306,20 @@
                         </div>
                         <div class="row mt-4">
                             <div class="col-12">
-                                <h3 class="fw-bolder fs-4 text-dark text-center">{{ vehicle.mileage | number }} <span
-                                        class="tx-14 text-muted fw-normal">km</span></h3>
+                                <h3 class="fw-bolder fs-4 text-dark text-center">{{ (vehicle.kilometrage ||
+                                    vehicle.mileage) | number }} <span class="tx-14 text-muted fw-normal">km</span></h3>
 
                                 <div class="mt-4 pt-3 border-top">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <span class="text-muted tx-12">Dernière Maintenance</span>
-                                        <span class="fw-medium text-dark tx-12">{{ vehicle.lastMaintenance |
+                                        <span class="fw-medium text-dark tx-12">{{ (vehicle.dateDerniereMaintenance ||
+                                            vehicle.lastMaintenance) |
                                             date:'dd/MM/yyyy' }}</span>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="text-muted tx-12">Prochaine Maintenance (Est.)</span>
-                                        <span class="fw-medium text-danger tx-12">{{ vehicle.nextMaintenanceMileage |
+                                        <span class="fw-medium text-danger tx-12">{{ (vehicle.prochainEntretien ||
+                                            vehicle.nextMaintenanceMileage) |
                                             number }} km</span>
                                     </div>
                                 </div>
@@ -206,7 +331,8 @@
         </div>
 
         <!-- Santé Financière du Contrat (NEW) -->
-        <div class="card grid-margin" *ngIf="vehicle.paymentStatus && vehicle.assignedClient !== 'Aucun'">
+        <div class="card grid-margin"
+            *ngIf="(vehicle.paymentStatus || vehicle.statut === 'Assigné') && (vehicle.client || (vehicle.assignedClient && vehicle.assignedClient !== 'Aucun'))">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="card-title mb-0">SANTÉ FINANCIÈRE DU CONTRAT</h6>
@@ -218,15 +344,16 @@
                 </div>
 
                 <!-- Contract Progress Bar -->
-                <div *ngIf="vehicle.contractProgress !== undefined">
+                <div *ngIf="vehicle.reimbursementProgress !== undefined || vehicle.contractProgress !== undefined">
                     <div class="d-flex justify-content-between tx-12 mb-1">
                         <span class="fw-medium">Remboursement du contrat</span>
-                        <span class="text-muted">{{ vehicle.paidAmount | number }} FCFA / {{ vehicle.totalContractAmount
+                        <span class="text-muted" *ngIf="vehicle.paidAmount">{{ vehicle.paidAmount | number }} FCFA / {{
+                            vehicle.totalContractAmount
                             | number }} FCFA</span>
                     </div>
                     <div class="progress mb-1" style="height: 10px;">
-                        <div class="progress-bar" role="progressbar" [style.width.%]="vehicle.contractProgress"
-                            [ngClass]="{
+                        <div class="progress-bar" role="progressbar"
+                            [style.width.%]="vehicle.reimbursementProgress || vehicle.contractProgress" [ngClass]="{
                                 'bg-success': vehicle.paymentStatus === 'À jour',
                                 'bg-warning': vehicle.paymentStatus === 'En retard',
                                 'bg-danger': vehicle.paymentStatus === 'Critique'
@@ -234,8 +361,10 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-between tx-12">
-                        <span class="text-muted">{{ vehicle.contractProgress }}% payé</span>
-                        <span class="text-muted">Reste : {{ (vehicle.totalContractAmount - vehicle.paidAmount) | number
+                        <span class="text-muted">{{ vehicle.reimbursementProgress || vehicle.contractProgress }}%
+                            payé</span>
+                        <span class="text-muted" *ngIf="vehicle.totalContractAmount && vehicle.paidAmount">Reste : {{
+                            (vehicle.totalContractAmount - vehicle.paidAmount) | number
                             }} FCFA</span>
                     </div>
                 </div>
@@ -251,7 +380,7 @@
 
                 <!-- Quick Actions -->
                 <div class="d-flex gap-2 mt-3 flex-wrap">
-                    <a class="btn btn-sm btn-outline-primary" [routerLink]="['/gbatcar/contracts']">
+                    <a class="btn btn-sm btn-outline-danger" [routerLink]="['/gbatcar/contracts']">
                         <i data-feather="file-text" appFeatherIcon class="icon-sm me-1"></i> Voir le Contrat
                     </a>
                     <a class="btn btn-sm btn-outline-success" [routerLink]="['/gbatcar/payments']">
@@ -290,19 +419,16 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td>15 Fév 2024</td>
-                                            <td class="fw-medium">Vidange complète + Filtres</td>
-                                            <td>44,800 km</td>
-                                            <td>Garage Auto GbatCar</td>
-                                            <td>35,000</td>
+                                        <tr *ngFor="let m of vehicle.maintenances">
+                                            <td>{{ m.dateIntervention | date:'dd MMM yyyy' }}</td>
+                                            <td class="fw-medium">{{ m.type }}</td>
+                                            <td>{{ m.kilometrage | number }} km</td>
+                                            <td>{{ m.garagiste || 'Garage Auto GbatCar' }}</td>
+                                            <td>{{ m.cout | number }}</td>
                                         </tr>
-                                        <tr>
-                                            <td>10 Déc 2023</td>
-                                            <td class="fw-medium">Changement Plaquettes Freins</td>
-                                            <td>38,500 km</td>
-                                            <td>Garage Auto GbatCar</td>
-                                            <td>25,000</td>
+                                        <tr *ngIf="!vehicle.maintenances || vehicle.maintenances.length === 0">
+                                            <td colspan="5" class="text-center text-muted py-3">Aucune intervention
+                                                enregistrée</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -313,25 +439,34 @@
                         <a ngbNavLink>Documents Numérisés</a>
                         <ng-template ngbNavContent>
                             <div class="row px-3">
-                                <div class="col-sm-4 border rounded p-3 text-center mb-3 mb-sm-0 me-3">
+                                <div class="col-sm-4 border rounded p-3 text-center mb-3 mb-sm-0 me-3"
+                                    *ngIf="vehicle.carteGriseUrl">
                                     <i data-feather="file-text" appFeatherIcon
                                         class="text-primary mb-2 mb-2 wd-30 ht-30"></i>
                                     <h6 class="mb-1">Carte Grise</h6>
-                                    <p class="text-muted tx-12 mb-2">Valide</p>
-                                    <button class="btn btn-outline-primary btn-xs">Voir Doc</button>
+                                    <p class="text-muted tx-12 mb-2">Disponible</p>
+                                    <a [href]="baseUrl + vehicle.carteGriseUrl" target="_blank"
+                                        class="btn btn-outline-primary btn-xs">Voir Doc</a>
                                 </div>
-                                <div class="col-sm-4 border rounded p-3 text-center mb-3 mb-sm-0 me-3 border-warning">
+                                <div class="col-sm-4 border rounded p-3 text-center mb-3 mb-sm-0 me-3 border-warning"
+                                    *ngIf="vehicle.assuranceUrl">
                                     <i data-feather="shield" appFeatherIcon class="text-warning mb-2 wd-30 ht-30"></i>
-                                    <h6 class="mb-1">Assurance Tous Risques</h6>
-                                    <p class="text-danger tx-12 mb-2">Exp. dans 45 jours</p>
-                                    <button class="btn btn-warning btn-xs text-dark">Renouveler</button>
+                                    <h6 class="mb-1">Assurance</h6>
+                                    <p class="text-muted tx-12 mb-2">Disponible</p>
+                                    <a [href]="baseUrl + vehicle.assuranceUrl" target="_blank"
+                                        class="btn btn-warning btn-xs text-dark">Voir Doc</a>
                                 </div>
-                                <div class="col-sm-4 border rounded p-3 text-center">
+                                <div class="col-sm-4 border rounded p-3 text-center" *ngIf="vehicle.visiteTechniqueUrl">
                                     <i data-feather="check-square" appFeatherIcon
                                         class="text-info mb-2 wd-30 ht-30"></i>
                                     <h6 class="mb-1">Visite Technique</h6>
-                                    <p class="text-muted tx-12 mb-2">Valide</p>
-                                    <button class="btn btn-outline-primary btn-xs">Voir Doc</button>
+                                    <p class="text-muted tx-12 mb-2">Disponible</p>
+                                    <a [href]="baseUrl + vehicle.visiteTechniqueUrl" target="_blank"
+                                        class="btn btn-outline-primary btn-xs">Voir Doc</a>
+                                </div>
+                                <div class="col-12 text-center py-4 text-muted"
+                                    *ngIf="!vehicle.carteGriseUrl && !vehicle.assuranceUrl && !vehicle.visiteTechniqueUrl">
+                                    Aucun document numérisé
                                 </div>
                             </div>
                         </ng-template>
@@ -354,8 +489,9 @@
                                     </span>
                                 </div>
                                 <p class="text-muted mb-1">Dernière position connue</p>
-                                <h5 class="fw-bold text-dark">Abidjan, Plateau</h5>
-                                <p class="text-muted tx-12">Mise à jour : il y a 5 min</p>
+                                <h5 class="fw-bold text-dark">{{ vehicle.lastKnownPosition || 'Non disponible' }}</h5>
+                                <p class="text-muted tx-12" *ngIf="vehicle.gpsLastUpdate">Mise à jour : {{
+                                    vehicle.gpsLastUpdate | date:'shortTime' }}</p>
                                 <div class="d-flex justify-content-center gap-2 mt-3 flex-wrap">
                                     <button class="btn btn-sm btn-outline-primary"
                                         *ngIf="vehicle.gpsStatus === 'Connecté'">
@@ -377,5 +513,59 @@
                 <div [ngbNavOutlet]="vehicleNav" class="mt-3"></div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- ════════════ LIGHTBOX MODAL ════════════ -->
+<div *ngIf="lightboxOpen"
+    class="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center"
+    style="z-index: 2000; background: rgba(0,0,0,0.92);" (click)="closeLightbox()">
+
+    <!-- Titre + close -->
+    <div class="d-flex align-items-center justify-content-between w-100 px-4 pb-2" style="max-width:900px;">
+        <span class="text-white fw-bold fs-5">
+            {{ vehicle?.marque || vehicle?.brand }} {{ vehicle?.modele || vehicle?.model }} &bull;
+            <small class="text-secondary">{{ lightboxIndex + 1 }} / {{ lightboxPhotos.length }}</small>
+        </span>
+        <button class="btn btn-sm btn-close btn-close-white" (click)="closeLightbox()"></button>
+    </div>
+
+    <!-- Image principale -->
+    <div class="position-relative d-flex align-items-center" (click)="$event.stopPropagation()"
+        style="max-width:900px; width:100%; flex:1; max-height:70vh;">
+
+        <!-- fleche gauche -->
+        <button class="btn btn-outline-light btn-sm me-2" [disabled]="lightboxIndex === 0" (click)="prevPhoto($event)">
+            <i data-feather="chevron-left" appFeatherIcon class="icon-md"></i>
+        </button>
+
+        <!-- l'image -->
+        <img [src]="baseUrl + lightboxCurrentPhoto" alt="photo" class="flex-grow-1 rounded-2"
+            style="max-height:70vh; object-fit:contain; width:1px; min-width:0;">
+
+        <!-- fleche droite -->
+        <button class="btn btn-outline-light btn-sm ms-2" [disabled]="lightboxIndex === lightboxPhotos.length - 1"
+            (click)="nextPhoto($event)">
+            <i data-feather="chevron-right" appFeatherIcon class="icon-md"></i>
+        </button>
+    </div>
+
+    <!-- Barre d'actions -->
+    <div class="d-flex gap-3 mt-3" (click)="$event.stopPropagation()">
+        <button class="btn btn-warning btn-sm" (click)="setAsCover($event)">
+            <i data-feather="star" appFeatherIcon class="icon-sm me-1"></i> Définir comme couverture
+        </button>
+        <button class="btn btn-danger btn-sm" (click)="deletePhoto($event)">
+            <i data-feather="trash-2" appFeatherIcon class="icon-sm me-1"></i> Supprimer la photo
+        </button>
+    </div>
+
+    <!-- Thumbnails en bas -->
+    <div class="d-flex flex-wrap gap-2 mt-3 px-4 overflow-auto" (click)="$event.stopPropagation()"
+        style="max-width: 900px; max-height:100px;">
+        <img *ngFor="let p of lightboxPhotos; let i = index" [src]="baseUrl + p" class="rounded"
+            style="height:70px; width:70px; object-fit:cover; cursor:pointer;"
+            [style.border]="i === lightboxIndex ? '3px solid #0d6efd' : '2px solid rgba(255,255,255,0.25)'"
+            (click)="lightboxIndex = i">
     </div>
 </div>

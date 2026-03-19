@@ -1,6 +1,6 @@
 <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
     <div>
-        <h4 class="mb-3 mb-md-0">Journal des Interventions</h4>
+        <h4 class="mb-3 mb-md-0 text-dark fw-bold">Journal des Interventions</h4>
         <p class="text-secondary">Suivi de la maintenance de la flotte et des dépenses en garage.</p>
     </div>
     <div class="d-flex align-items-center flex-wrap text-nowrap">
@@ -9,7 +9,7 @@
             <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
             {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
         </button>
-        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" routerLink="/gbatcar/maintenance/new">
+        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" routerLink="new">
             <i data-feather="tool" appFeatherIcon class="btn-icon-prepend"></i> Nouvelle Intervention
         </button>
     </div>
@@ -18,24 +18,25 @@
 <!-- KPI Summary Cards -->
 <div class="row mb-4">
     <div class="col-md-3 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #6c757d;">
+        <div class="card border-left-success h-100 border-0 shadow-sm"
+            style="border-left: 4px solid #2ecc71 !important;">
             <div class="card-body py-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-secondary fs-12px mb-1">Total Interventions</p>
-                        <h4 class="fw-bold mb-0">{{ maintenanceItems.length }}</h4>
+                        <p class="text-secondary fs-12px mb-1 text-uppercase fw-bold">Total Interventions</p>
+                        <h4 class="fw-bold mb-0">{{ totalCount }}</h4>
                     </div>
-                    <i data-feather="tool" appFeatherIcon class="icon-lg text-secondary"></i>
+                    <i data-feather="tool" appFeatherIcon class="icon-lg text-success"></i>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #3498db;">
+        <div class="card h-100 border-0 shadow-sm" style="border-left: 4px solid #3498db;">
             <div class="card-body py-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-secondary fs-12px mb-1">Planifiées</p>
+                        <p class="text-secondary fs-12px mb-1 text-uppercase fw-bold">Planifiées</p>
                         <h4 class="fw-bold mb-0 text-info">{{ plannedCount }}</h4>
                     </div>
                     <i data-feather="calendar" appFeatherIcon class="icon-lg text-info"></i>
@@ -44,11 +45,11 @@
         </div>
     </div>
     <div class="col-md-3 col-6">
-        <div class="card h-100" style="border-left: 4px solid #f39c12;">
+        <div class="card h-100 border-0 shadow-sm" style="border-left: 4px solid #f39c12;">
             <div class="card-body py-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-secondary fs-12px mb-1">En Cours</p>
+                        <p class="text-secondary fs-12px mb-1 text-uppercase fw-bold">En Cours</p>
                         <h4 class="fw-bold mb-0 text-warning">{{ inProgressCount }}</h4>
                     </div>
                     <i data-feather="settings" appFeatherIcon class="icon-lg text-warning"></i>
@@ -57,11 +58,11 @@
         </div>
     </div>
     <div class="col-md-3 col-6">
-        <div class="card h-100" style="border-left: 4px solid #e74c3c;">
+        <div class="card h-100 border-0 shadow-sm" style="border-left: 4px solid #e74c3c;">
             <div class="card-body py-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-secondary fs-12px mb-1">Coût Total (Mois)</p>
+                        <p class="text-secondary fs-12px mb-1 text-uppercase fw-bold">Coût Total (Mois)</p>
                         <h4 class="fw-bold mb-0 text-danger">{{ totalCost | number }} FCFA</h4>
                     </div>
                     <i data-feather="trending-down" appFeatherIcon class="icon-lg text-danger"></i>
@@ -71,13 +72,12 @@
     </div>
 </div>
 
-
 <!-- Filtres Avancés -->
 <div class="row mb-3" *ngIf="showAdvancedFilters">
     <div class="col-md-12">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title mb-3">Recherche Multicritères</h6>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body py-3">
+                <h6 class="card-title mb-3 text-uppercase fw-bold fs-12px">Filtres de recherche</h6>
                 <div class="row g-3">
                     <!-- Text & Selectors -->
                     <div class="col-md-3">
@@ -85,7 +85,7 @@
                         <input type="text" class="form-control form-control-sm" placeholder="Véhicule, Garage, ID..."
                             [(ngModel)]="advSearchTerm">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label fs-12px text-secondary mb-1">Statut</label>
                         <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
                             <option value="">Tous les statuts</option>
@@ -95,7 +95,7 @@
                         </select>
                     </div>
                     <!-- Date Range -->
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label class="form-label fs-12px text-secondary mb-1">Date d'intervention (Début/Fin)</label>
                         <div class="d-flex align-items-center">
                             <input type="date" class="form-control form-control-sm me-1" [(ngModel)]="advDateMin">
@@ -105,7 +105,7 @@
                     </div>
 
                     <!-- Amount Range -->
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <label class="form-label fs-12px text-secondary mb-1">Coût (FCFA)</label>
                         <div class="d-flex align-items-center">
                             <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
@@ -128,12 +128,15 @@
                         </select>
                     </div>
 
+                    <!-- Spacer -->
+                    <div class="col-md-5"></div>
+
                     <!-- Actions -->
-                    <div class="col-md-4 d-flex align-items-end justify-content-end">
-                        <button class="btn btn-sm btn-primary me-2 flex-grow-1" (click)="applyAdvancedFilters()">
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button class="btn btn-sm btn-primary me-2 w-50" (click)="applyAdvancedFilters()">
                             <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Filtrer
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary flex-grow-1" (click)="resetFilters()">
+                        <button class="btn btn-sm btn-outline-secondary w-50" (click)="resetFilters()">
                             <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
                         </button>
                     </div>
@@ -145,10 +148,11 @@
 
 <div class="row">
     <div class="col-md-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="card-title mb-0">RÉPERTOIRE DE MAINTENANCE ({{ filteredMaintenance.length }})</h6>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body py-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="card-title mb-0 text-uppercase fw-bold">RÉPERTOIRE DE MAINTENANCE ({{
+                        maintenanceItems.length }})</h6>
                     <div class="d-flex align-items-center">
                         <input type="text" class="form-control form-control-sm me-2"
                             placeholder="Recherche véhicule, garage..." style="width: 250px;"
@@ -163,23 +167,35 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
+                    <div *ngIf="loading" class="text-center p-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <table class="table table-hover align-middle mb-0" *ngIf="!loading">
+                        <thead class="bg-light">
                             <tr>
-                                <th>Date</th>
-                                <th>N° Bon</th>
-                                <th>Véhicule d'Intervention</th>
-                                <th>Motif / Type</th>
-                                <th>Garagiste / Prestataire</th>
-                                <th>Coût (FCFA)</th>
-                                <th>Statut</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">Date</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">N° Bon</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">Véhicule d'Intervention</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">Motif / Type</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">Garagiste / Prestataire</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">Coût (FCFA)</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold">Statut</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let mnt of filteredMaintenance">
-                                <td class="text-muted">{{ mnt.date | date:'dd/MM/yyyy' }}</td>
-                                <td class="fw-medium text-dark">{{ mnt.id }}</td>
-                                <td><a href="javascript:void(0)" class="text-primary fw-medium">{{ mnt.vehicle }}</a>
+                            <tr *ngFor="let mnt of maintenanceItems">
+                                <td class="text-muted">{{ mnt.dateIntervention | date:'dd/MM/yyyy' }}</td>
+                                <td class="fw-medium text-dark">{{ mnt.reference }}</td>
+                                <td>
+                                    <a *ngIf="mnt.vehicle"
+                                        [routerLink]="['/gbatcar/vehicles/details', mnt.vehicle.uuid]"
+                                        class="text-primary fw-medium">
+                                        {{ mnt.vehicle.marque }} {{ mnt.vehicle.modele }} <small>({{
+                                            mnt.vehicle.immatriculation }})</small>
+                                    </a>
                                 </td>
                                 <td>{{ mnt.type }}</td>
                                 <td>{{ mnt.provider }}</td>
@@ -193,18 +209,18 @@
                                         {{ mnt.status }}
                                     </span>
                                 </td>
-                                <td>
-                                    <button [routerLink]="['/gbatcar/maintenance/details', mnt.id]"
-                                        class="btn btn-sm btn-outline-secondary me-1" title="Voir les détails">
-                                        <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                <td class="text-end">
+                                    <button [routerLink]="['/gbatcar/maintenance/details', mnt.uuid]"
+                                        class="btn btn-icon btn-xs btn-outline-primary me-1" title="Voir les détails">
+                                        <i data-feather="eye" appFeatherIcon class="icon-xs"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-primary" title="Imprimer rapport">
-                                        <i data-feather="printer" appFeatherIcon class="icon-sm"></i>
+                                    <button class="btn btn-icon btn-xs btn-outline-secondary" title="Imprimer rapport">
+                                        <i data-feather="printer" appFeatherIcon class="icon-xs"></i>
                                     </button>
                                 </td>
                             </tr>
-                            <tr *ngIf="filteredMaintenance.length === 0">
-                                <td colspan="8" class="text-center py-4 text-muted">Auncune intervention enregistrée.
+                            <tr *ngIf="!loading && maintenanceItems.length === 0">
+                                <td colspan="8" class="text-center py-4 text-muted">Aucune intervention enregistrée.
                                 </td>
                             </tr>
                         </tbody>

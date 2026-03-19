@@ -25,7 +25,7 @@ export const vehiclesRoutes: Routes = [
         loadComponent: () => import('./compliance/compliance-add/compliance-add.component').then(m => m.ComplianceAddComponent)
     },
     {
-        path: 'compliance/details/:id',
+        path: 'compliance/details/:uuid',
         loadComponent: () => import('./compliance/compliance-details/compliance-details.component').then(m => m.ComplianceDetailsComponent)
     },
     {
@@ -33,11 +33,11 @@ export const vehiclesRoutes: Routes = [
         component: VehicleFormComponent
     },
     {
-        path: 'edit/:id',
+        path: 'edit/:uuid',
         component: VehicleFormComponent
     },
     {
-        path: 'details/:id',
+        path: 'details/:uuid',
         component: VehicleDetailsComponent
     }
 ];

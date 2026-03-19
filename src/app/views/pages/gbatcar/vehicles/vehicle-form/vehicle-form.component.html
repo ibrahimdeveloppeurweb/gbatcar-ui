@@ -244,9 +244,10 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col-sm-6">
-                            <label class="form-label text-dark fw-medium">Versement Journalier (FCFA)</label>
-                            <input type="number" class="form-control" formControlName="dailyRate" placeholder="15000">
-                            <div class="form-text text-muted">Montant quotidien attendu du locataire.</div>
+                            <label class="form-label text-dark fw-medium">Versement (FCFA)</label>
+                            <input type="number" class="form-control bg-light" formControlName="dailyRate"
+                                [readonly]="true">
+                            <div class="form-text text-muted">Montant mensuel calculé après apport initial.</div>
                         </div>
                         <div class="col-sm-6">
                             <label class="form-label text-dark fw-medium">Usage prévu</label>
@@ -326,11 +327,12 @@
                     </h6>
                     <div class="d-flex flex-column align-items-center mb-3">
                         <div class="row row-cols-3 g-2 w-100 mb-3" *ngIf="form.get('photos')?.value?.length > 0">
-                            <div class="col position-relative" *ngFor="let p of form.get('photos')?.value; let i = index">
-                                <img [src]="baseUrl + p" alt="Photo sélectionnée"
-                                    class="img-thumbnail rounded w-100" style="height: 100px; object-fit: cover;">
-                                <button type="button" class="btn btn-icon btn-xs btn-danger position-absolute" 
-                                        style="top: 5px; right: 8px;" (click)="removeImage(i, $event)">
+                            <div class="col position-relative"
+                                *ngFor="let p of form.get('photos')?.value; let i = index">
+                                <img [src]="baseUrl + p" alt="Photo sélectionnée" class="img-thumbnail rounded w-100"
+                                    style="height: 100px; object-fit: cover;">
+                                <button type="button" class="btn btn-icon btn-xs btn-danger position-absolute"
+                                    style="top: 5px; right: 8px;" (click)="removeImage(i, $event)">
                                     <i data-feather="x" appFeatherIcon></i>
                                 </button>
                             </div>
@@ -434,8 +436,7 @@
                     <h6 class="fw-bold mb-2">Ajouter une nouvelle image pour {{ currentBrand }}</h6>
                     <input type="file" id="brandImageUpload" class="d-none" accept="image/*"
                         (change)="onGalleryUpload($event)" [disabled]="uploadingImage">
-                    <label for="brandImageUpload" class="btn btn-primary m-0"
-                        [ngClass]="{'disabled': uploadingImage}">
+                    <label for="brandImageUpload" class="btn btn-primary m-0" [ngClass]="{'disabled': uploadingImage}">
                         <i data-feather="upload-cloud" appFeatherIcon class="icon-sm me-1"></i>
                         {{ uploadingImage ? 'Envoi en cours...' : 'Uploader une image' }}
                     </label>
@@ -444,9 +445,10 @@
                 <!-- Grille d'images -->
                 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
                     <div class="col" *ngFor="let img of brandImages">
-                        <div class="card h-100 border-0 shadow-sm image-card cursor-pointer"
-                            (click)="selectImage(img)" style="cursor: pointer; transition: transform 0.2s;">
-                            <img [src]="baseUrl + img" class="card-img-top" alt="Vehicle Image" style="height: 120px; object-fit: cover;">
+                        <div class="card h-100 border-0 shadow-sm image-card cursor-pointer" (click)="selectImage(img)"
+                            style="cursor: pointer; transition: transform 0.2s;">
+                            <img [src]="baseUrl + img" class="card-img-top" alt="Vehicle Image"
+                                style="height: 120px; object-fit: cover;">
                             <div class="card-body p-2 text-center text-primary fw-bold"
                                 *ngIf="form.get('photos')?.value && form.get('photos')?.value.indexOf(img.replace(baseUrl, '')) > -1">
                                 <i data-feather="check-circle" appFeatherIcon class="icon-sm"></i> Sélectionné

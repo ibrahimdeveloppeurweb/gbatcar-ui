@@ -15,27 +15,45 @@
         <div class="card">
             <div class="card-body">
                 <h6 class="card-title">Informations du Document</h6>
-                <form>
+
+                <div *ngIf="loading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+
+                <form *ngIf="!loading" [formGroup]="complianceForm" (ngSubmit)="onConfirme()">
                     <div class="row">
                         <div class="col-sm-6">
                             <div class="mb-3">
-                                <label class="form-label">Véhicule</label>
-                                <select class="form-select">
-                                    <option value="" disabled selected>Sélectionner un véhicule...</option>
-                                    <option *ngFor="let v of vehicles" [value]="v.id">{{v.vehicle}} ({{v.licensePlate}})
-                                    </option>
-                                </select>
+                                <label class="form-label">Véhicule <span class="text-danger">*</span></label>
+                                <ng-select [items]="vehicles" bindLabel="immatriculation" bindValue="uuid"
+                                    placeholder="Rechercher un véhicule (Plaque, Marque...)" formControlName="vehicleId"
+                                    [loading]="loading" [searchFn]="customSearchFn"
+                                    [ngClass]="{'is-invalid': (complianceForm.get('vehicleId')?.touched || submitting) && complianceForm.get('vehicleId')?.invalid}">
+                                    <ng-template ng-option-tmp let-item="item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="fw-bold text-dark">{{item.marque}} {{item.modele}}</span>
+                                                <br>
+                                                <small class="text-muted">{{item.immatriculation}}</small>
+                                            </div>
+                                            <span class="badge bg-light text-dark border ms-2">{{item.annee}}</span>
+                                        </div>
+                                    </ng-template>
+                                </ng-select>
+                                <div *ngIf="(complianceForm.get('vehicleId')?.touched || submitting) && complianceForm.get('vehicleId')?.invalid"
+                                    class="text-danger small mt-1">
+                                    Veuillez sélectionner un véhicule.
+                                </div>
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="mb-3">
                                 <label class="form-label">Type de Document</label>
-                                <select class="form-select">
-                                    <option value="insurance">Assurance (Tous Risques)</option>
-                                    <option value="roadTax">Carte Grise</option>
-                                    <option value="transportLicense">Contrat Location-Vente</option>
-                                    <option value="technicalInspection">Visite Technique</option>
-                                    <option value="fireExtinguisher">Extincteur & Sécurité</option>
+                                <select class="form-select" formControlName="type">
+                                    <option *ngFor="let type of documentTypes" [value]="type.value">{{type.label}}
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -45,22 +63,36 @@
                         <div class="col-sm-6">
                             <div class="mb-3">
                                 <label class="form-label">Date de délivrance / Début</label>
-                                <input type="date" class="form-control">
+                                <input type="date" class="form-control" formControlName="deliveryDate">
+                                <div *ngIf="complianceForm.get('deliveryDate')?.touched && complianceForm.get('deliveryDate')?.invalid"
+                                    class="text-danger small mt-1">
+                                    La date de délivrance est obligatoire.
+                                </div>
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="mb-3">
                                 <label class="form-label">Date d'expiration / Fin</label>
-                                <input type="date" class="form-control">
+                                <input type="date" class="form-control" formControlName="expiryDate">
+                                <div *ngIf="complianceForm.get('expiryDate')?.touched && complianceForm.get('expiryDate')?.invalid"
+                                    class="text-danger small mt-1">
+                                    La date d'expiration est obligatoire.
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-sm-12">
+                        <div class="col-sm-6">
+                            <div class="mb-3">
+                                <label class="form-label">Montant du renouvellement (FCFA)</label>
+                                <input type="number" class="form-control" formControlName="renewalCost" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
                             <div class="mb-3">
                                 <label class="form-label">Fichier Scanné (PDF/IMG)</label>
-                                <input type="file" class="form-control">
+                                <input type="file" class="form-control" (change)="onFileSelected($event)">
                             </div>
                         </div>
                     </div>
@@ -69,16 +101,19 @@
                         <div class="col-sm-12">
                             <div class="mb-3">
                                 <label class="form-label">Notes et Observations</label>
-                                <textarea class="form-control" rows="4"
+                                <textarea class="form-control" rows="4" formControlName="observation"
                                     placeholder="Saisir des détails optionnels..."></textarea>
                             </div>
                         </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary mt-3"
-                        routerLink="/gbatcar/vehicles/compliance">Enregistrer le document</button>
+                        [disabled]="complianceForm.invalid || submitting">
+                        <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1"></span>
+                        Enregistrer le document
+                    </button>
                     <button type="button" class="btn btn-outline-secondary mt-3 ms-2"
-                        routerLink="/gbatcar/vehicles/compliance">Annuler</button>
+                        (click)="navigateBack()">Annuler</button>
                 </form>
             </div>
         </div>
