@@ -151,9 +151,54 @@ export class VehicleDetailsComponent implements OnInit {
     this.loading = true;
     this.vehicleService.getSingle(uuid).subscribe({
       next: (data: any) => {
-        this.vehicle = data;
+        const vehicleData = data.data || data;
+
+        // 1. Active contract mapping (Legacy singular)
+        let activeContract = vehicleData.contracts?.find((c: any) =>
+          c.status === 'En cours' || c.status === 'Actif' || c.status === 'Acting' || c.status === 'VALIDÉ'
+        );
+
+        // 2. Or from fleet demands (New)
+        if (!activeContract && vehicleData.vehicleDemands?.length > 0) {
+          const firstDemand = vehicleData.vehicleDemands[0];
+          if (firstDemand.contract) {
+            activeContract = firstDemand.contract;
+          }
+        }
+
+        if (activeContract) {
+          console.log('Active contract found for detail repartition:', activeContract);
+          // Count total vehicles in this contract for repartition (pro-rata display)
+          const totalVehicles = activeContract.vehicleCount || activeContract.vehicleDemands?.reduce((acc: number, d: any) => acc + (d.quantity || 0), 0) || 1;
+          console.log('Total vehicles for repartition:', totalVehicles);
+
+          vehicleData.totalContractAmount = (activeContract.totalAmount || 0) / (totalVehicles || 1);
+          vehicleData.paidAmount = (activeContract.paidAmount || 0) / (totalVehicles || 1);
+          vehicleData.contractProgress = activeContract.totalAmount > 0
+            ? (activeContract.paidAmount / activeContract.totalAmount) * 100
+            : 0;
+
+          vehicleData.paymentStatus = activeContract.paymentStatus || vehicleData.paymentStatus || 'À jour';
+          vehicleData.daysLate = activeContract.daysLate || 0;
+
+          // Fix for Redevance journalière (Divided by total vehicles for unit display)
+          vehicleData.dailyRate = (activeContract.dailyRate || 0) / (totalVehicles || 1);
+          if (activeContract.endDate) {
+            vehicleData.contractEndDate = activeContract.endDate;
+          }
+          if (activeContract.uuid) {
+            vehicleData.activeContractUuid = activeContract.uuid;
+          }
+        } else {
+          vehicleData.totalContractAmount = 0;
+          vehicleData.paidAmount = 0;
+          vehicleData.contractProgress = 0;
+          vehicleData.dailyRate = vehicleData.prixParJour || 0;
+        }
+
+        this.vehicle = vehicleData;
         this.loading = false;
-        console.log('Vehicle loaded:', this.vehicle);
+        console.log('Vehicle loaded with contract data:', this.vehicle);
       },
       error: (err) => {
         this.loading = false;

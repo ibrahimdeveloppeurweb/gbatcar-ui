@@ -23,9 +23,14 @@ export interface Vehicle {
     annee?: number;
     year?: number;             // alias
     couleur?: string;
+    color?: string;            // alias
+    couleur_vehicule?: string; // alias
     finition?: string;         // e.g., 'LE', 'GLS'
     trim?: string;             // alias for finition
     numeroChassis?: string;    // VIN
+    numero_chassis?: string;   // alias
+    vin?: string;              // alias
+    annee_fabrication?: number; // alias
     nombrePlaces?: number;
     carburant?: string;
     transmission?: string;
@@ -49,6 +54,7 @@ export interface Vehicle {
     // Un Véhicule a UN Contrat actif
     contract?: Contract;
     activeContractId?: string;
+    vehicleDemands?: any[];   // Fleet demands this vehicle is assigned to
 
     // ===================== STATUT & PAIEMENT =====================
     statut?: string;           // 'Disponible', 'Assigné', 'En Maintenance'

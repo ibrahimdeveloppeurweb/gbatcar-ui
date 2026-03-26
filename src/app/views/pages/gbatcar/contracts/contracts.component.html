@@ -104,10 +104,10 @@
                         <label class="form-label fs-12px text-secondary mb-1">Statut Légale</label>
                         <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
                             <option value="">Tous</option>
-                            <option value="En cours">En cours</option>
-                            <option value="En Attente">En Attente</option>
-                            <option value="Soldé">Soldé</option>
-                            <option value="Résilié">Résilié</option>
+                            <option value="VALIDÉ">En cours</option>
+                            <option value="NEW">En Attente</option>
+                            <option value="SOLDÉ">Soldé</option>
+                            <option value="RÉSILIÉ">Résilié</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -194,10 +194,10 @@
                             style="width: 180px; background-color: #f9fafb;" [(ngModel)]="quickStatusFilter"
                             (change)="applyQuickFilters()">
                             <option value="">Tous les statuts</option>
-                            <option value="En cours">En cours</option>
-                            <option value="En Attente">En Attente</option>
-                            <option value="Soldé">Soldé</option>
-                            <option value="Résilié">Résilié</option>
+                            <option value="VALIDÉ">En cours</option>
+                            <option value="NEW">En Attente</option>
+                            <option value="SOLDÉ">Soldé</option>
+                            <option value="RÉSILIÉ">Résilié</option>
                         </select>
                     </div>
                 </div>
@@ -210,6 +210,7 @@
                                 <th class="text-uppercase fs-10px fw-bold text-muted border-0">Usage</th>
                                 <th class="text-uppercase fs-10px fw-bold text-muted border-0">Véhicule</th>
                                 <th class="text-uppercase fs-10px fw-bold text-muted border-0">Fin de Contrat</th>
+                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Total Exigible</th>
                                 <th class="text-uppercase fs-10px fw-bold text-muted border-0">Avancement</th>
                                 <th class="text-uppercase fs-10px fw-bold text-muted border-0">Risque</th>
                                 <th class="text-uppercase fs-10px fw-bold text-muted border-0">Statut</th>
@@ -218,8 +219,14 @@
                         </thead>
                         <tbody>
                             <tr *ngFor="let contract of filteredContracts">
-                                <td class="fw-bold text-danger">#{{ contract.reference || (contract.uuid ?
-                                    (contract.uuid | slice:0:8 | uppercase) : 'TEMP') }}</td>
+                                <td>
+                                    <span class="fw-bold text-danger d-block">#{{ contract.reference || (contract.uuid ?
+                                        (contract.uuid | slice:0:8 | uppercase) : 'TEMP') }}</span>
+                                    <span class="text-muted fs-10px d-block">{{ contract.createdAt | date:'dd/MM/yyyy'
+                                        }}</span>
+                                    <span class="text-muted fs-10px d-block" *ngIf="contract.create">par {{
+                                        contract.create }}</span>
+                                </td>
                                 <td>
                                     <a [routerLink]="['/gbatcar/clients/details', contract.client?.uuid]"
                                         class="text-dark fw-bold d-block">{{ contract.client?.lastName }} {{
@@ -246,10 +253,15 @@
                                     </div>
                                 </td>
                                 <td>
+                                    <span class="d-block fw-bold" style="color: #c0392b; font-size: 13px;">{{
+                                        contract.totalAmount | number }} <span
+                                            class="text-muted fw-normal fs-10px">FCFA</span></span>
+                                    <span class="text-muted fs-10px">{{ translateFrequency(contract.paymentFrequency)
+                                        }}</span>
+                                </td>
+                                <td>
                                     <div class="d-flex justify-content-between fs-11px mb-1 text-dark fw-medium">
-                                        <span>{{ (contract.totalAmount ? ( (contract.paidAmount || 0) /
-                                            contract.totalAmount *
-                                            100) : 0) | number:'1.0-0' }}%</span>
+                                        <span>{{ getEffectiveProgress(contract) | number:'1.1-1' }}%</span>
                                     </div>
                                     <div class="progress" style="height: 6px; width: 80px; background-color: #f1f5f9;">
                                         <div class="progress-bar" [ngClass]="{
@@ -257,9 +269,11 @@
                                             'bg-warning': contract.paymentStatus === 'En retard',
                                             'bg-danger': contract.status === 'Résilié' || contract.paymentStatus === 'Impayé définitif',
                                             'bg-primary': !contract.paymentStatus || contract.paymentStatus === 'À jour'
-                                        }" role="progressbar"
-                                            [style.width.%]="(contract.totalAmount ? ( (contract.paidAmount || 0) / contract.totalAmount) : 0) * 100">
+                                        }" role="progressbar" [style.width.%]="getEffectiveProgress(contract)">
                                         </div>
+                                    </div>
+                                    <div class="fs-10px text-muted mt-1 fw-medium" style="width: 80px;">
+                                        {{ (contract.paidAmount ?? 0) | number }} FCFA
                                     </div>
                                 </td>
                                 <td>
@@ -273,13 +287,13 @@
                                 </td>
                                 <td>
                                     <span class="badge rounded-pill px-2" [ngClass]="{
-                                        'bg-success': contract.status === 'Soldé' || contract.status === 'VALIDATED',
+                                        'bg-success': contract.status === 'Soldé' || contract.status === 'VALIDATED' || contract.status === 'VALIDÉ',
                                         'bg-primary': contract.status === 'En cours' || contract.status === 'ACTIVE',
                                         'bg-warning text-dark': contract.status === 'En Attente' || contract.status === 'NEW' || contract.status === 'PENDING',
                                         'bg-danger': contract.status === 'Résilié',
                                         'bg-secondary': !contract.status
                                     }">
-                                        {{ contract.status || 'Inconnu' }}
+                                        {{ translateStatus(contract.status) }}
                                     </span>
                                 </td>
                                 <td class="text-center">
@@ -290,11 +304,13 @@
                                             <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
                                         </button>
                                         <button [routerLink]="['edit', contract.uuid]"
+                                            *ngIf="contract.status !== 'VALIDÉ'"
                                             class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
                                             title="Modifier">
                                             <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
                                         </button>
                                         <button class="btn btn-xs btn-icon btn-outline-danger border-1 shadow-none"
+                                            *ngIf="contract.status !== 'VALIDÉ'"
                                             (click)="deleteContract(contract.uuid!)" title="Supprimer">
                                             <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
                                         </button>
@@ -302,7 +318,7 @@
                                 </td>
                             </tr>
                             <tr *ngIf="filteredContracts.length === 0 && !loading">
-                                <td colspan="9" class="text-center py-5 text-muted bg-white">
+                                <td colspan="10" class="text-center py-5 text-muted bg-white">
                                     <i data-feather="search" appFeatherIcon class="icon-xxl mb-3 text-light"></i>
                                     <p class="fs-14px">Aucun contrat trouvé avec ces critères.</p>
                                 </td>

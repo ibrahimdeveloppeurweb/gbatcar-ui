@@ -29,6 +29,7 @@ export class ComplianceDetailsComponent implements OnInit {
   submittingPenalty: boolean = false;
   penaltyForm: FormGroup;
   selectedPenalty: any;
+  selectedDocument: any;
   proofFile: File | null = null;
   searchTerm: string = '';
   statusFilter: string = '';
@@ -212,6 +213,37 @@ export class ComplianceDetailsComponent implements OnInit {
   openDetailModal(content: any, penalty: any) {
     this.selectedPenalty = penalty;
     this.modalService.open(content, { size: 'lg', centered: true });
+  }
+
+  openDocumentDetailModal(content: any, doc: any) {
+    this.selectedDocument = doc;
+    this.modalService.open(content, { size: 'lg', centered: true });
+  }
+
+  validatePenalty(penalty: any) {
+    Swal.fire({
+      title: 'Valider l\'infraction ?',
+      text: "Voulez-vous marquer cette infraction comme payée ?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#2ecc71',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Oui, valider !',
+      cancelButtonText: 'Annuler'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const updatedPenalty = { ...penalty, status: 'Payé' };
+        this.penaltyService.update(updatedPenalty).subscribe({
+          next: () => {
+            this.toast('Infraction validée avec succès.', 'Succès', 'success');
+            this.loadData(this.item.uuid);
+          },
+          error: (err: any) => {
+            this.toast('Erreur lors de la validation.', 'Erreur', 'error');
+          }
+        });
+      }
+    });
   }
 
   toast(msg: string, title: string, type: string): void {

@@ -15,6 +15,12 @@ import {
 import { routes } from './app.routes';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
+import { registerLocaleData } from '@angular/common';
+import localeFr from '@angular/common/locales/fr';
+import { LOCALE_ID } from '@angular/core';
+
+registerLocaleData(localeFr);
+
 import { SweetAlert2Module } from '@sweetalert2/ngx-sweetalert2';
 import { provideHighlightOptions } from 'ngx-highlightjs';
 import { NgxSpinnerModule } from 'ngx-spinner';
@@ -57,5 +63,8 @@ export const appConfig: ApplicationConfig = {
 
     // ── Syntax Highlighting ───────────────────────────────────────────────────
     provideHighlightOptions(highlightOptions),
+
+    // ── Locale ───────────────────────────────────────────────────────────────
+    { provide: LOCALE_ID, useValue: 'fr' },
   ],
 };

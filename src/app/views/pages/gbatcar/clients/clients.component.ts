@@ -23,7 +23,7 @@ export class ClientsComponent implements OnInit {
   // KPI computed properties
   get activeCount(): number { return this.clients.filter(c => c.status === 'Dossier Approuvé' || c.status === 'En Cours de Contrat').length; }
   get lateCount(): number { return this.clients.filter(c => c.status === 'Litige / Bloqué').length; }
-  get pendingCount(): number { return this.clients.filter(c => c.status === 'En attente de Validation').length; }
+  get pendingCount(): number { return this.clients.filter(c => c.status === 'En attente de Validation' || c.status === 'Prospect').length; }
 
   // 1. Quick Filters
   quickSearchTerm: string = '';

@@ -22,9 +22,15 @@ export class ContractsComponent implements OnInit {
   loading: boolean = false;
 
   // KPI computed properties
-  get activeContractsCount(): number { return this.contracts.filter(c => c.status === 'En cours').length; }
-  get lateContractsCount(): number { return this.contracts.filter(c => c.paymentStatus === 'En retard' || c.paymentStatus === 'Impayé définitif').length; }
-  get closedContractsCount(): number { return this.contracts.filter(c => c.status === 'Soldé' || c.status === 'Résilié').length; }
+  get activeContractsCount(): number {
+    return this.contracts.filter(c => ['En cours', 'ACTIVE', 'VALIDATED', 'VALIDÉ'].includes(c.status || '')).length;
+  }
+  get lateContractsCount(): number {
+    return this.contracts.filter(c => c.paymentStatus === 'En retard' || c.paymentStatus === 'Impayé définitif').length;
+  }
+  get closedContractsCount(): number {
+    return this.contracts.filter(c => c.status === 'Soldé' || c.status === 'Résilié').length;
+  }
 
   get maturingSoonCount(): number {
     const thirtyDaysFromNow = new Date();
@@ -32,12 +38,13 @@ export class ContractsComponent implements OnInit {
     return this.contracts.filter(c => {
       if (!c.endDate) return false;
       const endDate = new Date(c.endDate);
-      return c.status === 'En cours' && endDate <= thirtyDaysFromNow;
+      const isActive = ['En cours', 'ACTIVE', 'VALIDATED', 'VALIDÉ'].includes(c.status || '');
+      return isActive && endDate <= thirtyDaysFromNow;
     }).length;
   }
 
   get incompleteDossiersCount(): number {
-    return this.contracts.filter(c => c.status === 'En Attente').length;
+    return this.contracts.filter(c => ['En Attente', 'NEW', 'PENDING'].includes(c.status || '')).length;
   }
 
   showAdvancedFilters: boolean = false;
@@ -47,13 +54,15 @@ export class ContractsComponent implements OnInit {
   }
 
   getRiskLevel(contract: Contract): { label: string, class: string } {
-    if (contract.paymentStatus === 'Impayé définitif') return { label: 'Critique', class: 'text-danger' };
-    if (contract.paymentStatus === 'En retard') return { label: 'Élevé', class: 'text-warning' };
+    if (contract.paymentStatus === 'Impayé définitif') return { label: 'CRITIQUE', class: 'text-danger' };
+    if (contract.paymentStatus === 'En retard') return { label: 'ÉLEVÉ', class: 'text-warning' };
 
     const paid = contract.paidAmount || 0;
-    const total = contract.totalAmount || 1; // avoid div by 0
-    if (paid / total > 0.5) return { label: 'Bas', class: 'text-success' };
-    return { label: 'Moyen', class: 'text-info' };
+    const total = contract.totalAmount || 1;
+    const progress = (paid / total) * 100;
+
+    if (progress < 25) return { label: 'MOYEN', class: 'text-info' };
+    return { label: 'BAS', class: 'text-success' };
   }
 
   getDaysUntilDeadline(dateStr?: string): number {
@@ -172,5 +181,30 @@ export class ContractsComponent implements OnInit {
         });
       }
     });
+  }
+
+  translateFrequency(value?: string): string {
+    if (!value) return '';
+    const normalized = value.toLowerCase();
+    if (normalized === 'monthly') return 'Mensuel';
+    if (normalized === 'weekly') return 'Hebdomadaire';
+    if (normalized === 'daily') return 'Journalier';
+    return value;
+  }
+
+  translateStatus(status?: string): string {
+    if (!status) return 'Inconnu';
+    const normalized = status.toUpperCase();
+    if (normalized === 'NEW' || normalized === 'PENDING') return 'NOUVEAU';
+    if (normalized === 'VALIDATED' || normalized === 'VALIDÉ') return 'VALIDÉ';
+    if (normalized === 'ACTIVE' || normalized === 'EN COURS') return 'EN COURS';
+    if (normalized === 'SOLDÉ') return 'SOLDÉ';
+    if (normalized === 'RÉSILIÉ') return 'RÉSILIÉ';
+    return status;
+  }
+
+  getEffectiveProgress(contract: Contract): number {
+    if (!contract.totalAmount || contract.totalAmount <= 0) return 0;
+    return ((contract.paidAmount ?? 0) / contract.totalAmount) * 100;
   }
 }

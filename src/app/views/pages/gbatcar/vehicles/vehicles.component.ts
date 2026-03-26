@@ -82,7 +82,8 @@ export class VehiclesComponent implements OnInit {
       yearMin: this.advYearMin,
       yearMax: this.advYearMax,
       mileageMin: this.advMileageMin,
-      mileageMax: this.advMileageMax
+      mileageMax: this.advMileageMax,
+      limit: this.advCountFilter
     };
 
     // Tab specific overrides
@@ -103,31 +104,52 @@ export class VehiclesComponent implements OnInit {
           v.year = v.annee;
           v.gpsStatus = v.gpsStatus || 'Non installé';
 
-          // Client mapping
+          // Client mapping (Legacy singular + Fleet assignment)
           if (v.client) {
             v.assignedClient = `${v.client.firstName || ''} ${v.client.lastName || v.client.name || ''}`.trim();
+          } else if (v.vehicleDemands?.length > 0 && v.vehicleDemands[0].contract?.client) {
+            const cl = v.vehicleDemands[0].contract.client;
+            v.assignedClient = `${cl.firstName || ''} ${cl.lastName || cl.name || ''}`.trim();
           } else {
             v.assignedClient = 'Aucun';
           }
 
           // Contract details aggregation
-          // Usually the 'active' contract is the one with 'En cours' or 'Actif' status
-          const activeContract = v.contracts?.find((c: any) =>
-            c.status === 'En cours' || c.status === 'Actif' || c.status === 'Acting'
+          // 1. Direct active contract (legacy Singular)
+          let activeContract = v.contracts?.find((c: any) =>
+            c.status === 'En cours' || c.status === 'Actif' || c.status === 'VALIDÉ'
           );
 
+          // 2. Or from fleet demands (New)
+          if (!activeContract && v.vehicleDemands?.length > 0) {
+            const firstDemand = v.vehicleDemands[0]; // Usually a vehicle is in one active demand
+            if (firstDemand.contract) {
+              activeContract = firstDemand.contract;
+            }
+          }
+
           if (activeContract) {
-            v.totalContractAmount = activeContract.totalAmount || 0;
-            v.paidAmount = activeContract.paidAmount || 0;
-            v.contractProgress = v.totalContractAmount > 0
-              ? Math.round((v.paidAmount / v.totalContractAmount) * 100)
+            // Count total vehicles in this contract for repartition (pro-rata display)
+            const totalVehicles = activeContract.vehicleCount || activeContract.vehicleDemands?.reduce((acc: number, d: any) => acc + (d.quantity || 0), 0) || 1;
+
+            // Pro-rated amounts for display on the vehicle row
+            v.totalContractAmount = (activeContract.totalAmount || 0) / (totalVehicles || 1);
+            v.paidAmount = (activeContract.paidAmount || 0) / (totalVehicles || 1);
+
+            // Progress percentage is the same as the contract
+            v.contractProgress = activeContract.totalAmount > 0
+              ? (activeContract.paidAmount / activeContract.totalAmount) * 100
               : 0;
+
             v.paymentStatus = activeContract.paymentStatus || v.paymentStatus;
             v.daysLate = activeContract.daysLate || 0;
+            // Fix for Redevance journalière (Divided by total vehicles for unit display)
+            v.dailyRate = (activeContract.dailyRate || 0) / (totalVehicles || 1);
           } else {
             v.totalContractAmount = 0;
             v.paidAmount = 0;
             v.contractProgress = 0;
+            v.dailyRate = v.prixParJour || 0;
             if (!v.paymentStatus) v.paymentStatus = '-';
           }
 
@@ -192,7 +214,7 @@ export class VehiclesComponent implements OnInit {
     this.advYearMax = null;
     this.advMileageMin = null;
     this.advMileageMax = null;
-    this.advCountFilter = 20;
+    this.advCountFilter = 10;
     this.quickSearchTerm = '';
     this.quickStatusFilter = '';
     this.loadVehicles();

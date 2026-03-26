@@ -170,4 +170,49 @@ export class VehicleService {
             catchError((error: any) => throwError(() => error))
         );
     }
+
+    getBrands(): Observable<any[]> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._get('private/brand/').pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    addBrand(name: string): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._post('private/brand/new', { name }).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    getModels(brandId?: number): Observable<any[]> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        const params = brandId ? { brandId } : {};
+        return this.api._get('private/vehicle-model/', params).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    addModel(brandId: number, name: string): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._post('private/vehicle-model/new', { brand: brandId, name }).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
 }

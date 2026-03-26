@@ -95,10 +95,12 @@
                         <label class="form-label fs-12px text-secondary mb-1">Statut du Dossier</label>
                         <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
                             <option value="">Tous</option>
-                            <option value="Actif">Actif</option>
-                            <option value="Actif (Retard)">Actif (Retard)</option>
-                            <option value="En Attente Validation">En Attente Validation</option>
+                            <option value="Dossier Approuvé">Actif (Dossier Approuvé)</option>
+                            <option value="En Cours de Contrat">En Cours de Contrat</option>
+                            <option value="En attente de Validation">En Attente Validation</option>
+                            <option value="Prospect">Prospect</option>
                             <option value="Inactif">Inactif</option>
+                            <option value="Litige / Bloqué">Litige / Bloqué</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -175,9 +177,11 @@
                             style="width: 180px; background-color: #f9fafb;" [(ngModel)]="quickStatusFilter"
                             (change)="applyQuickFilters()">
                             <option value="">Tous les statuts</option>
-                            <option value="Dossier Approuvé">Actif</option>
+                            <option value="Dossier Approuvé">Actifs</option>
+                            <option value="Dossier Validé">Validés (En attente contrat)</option>
                             <option value="En attente de Validation">En Attente</option>
-                            <option value="Inactif">Inactif</option>
+                            <option value="Prospect">Prospects</option>
+                            <option value="Inactif">Inactifs</option>
                         </select>
                     </div>
                 </div>
@@ -207,22 +211,36 @@
                                     <div class="text-muted fs-11px">{{ client.email }}</div>
                                 </td>
                                 <td>
-                                    <span *ngIf="client.vehicle" class="fs-13px fw-bold">
-                                        {{ client.vehicle.marque }} {{ client.vehicle.modele }} - {{
-                                        client.vehicle.immatriculation }}
-                                    </span>
-                                    <span *ngIf="!client.vehicle" class="text-muted fs-13px">Non assigné</span>
+                                    <div *ngIf="client.vehicle">
+                                        <div class="fs-13px fw-bold text-danger mb-1">
+                                            {{ client.vehicle.marque }} {{ client.vehicle.modele }} - {{
+                                            client.vehicle.immatriculation }}
+                                        </div>
+                                        <div *ngIf="client.vehicle.compliance?.technicalInspectionDeliveryDate"
+                                            class="fs-11px text-muted">
+                                            Dernière visite technique : <span class="fw-bold text-dark">{{
+                                                client.vehicle.compliance?.technicalInspectionDeliveryDate | date:'dd
+                                                MMM yyyy' }}</span>
+                                        </div>
+                                        <div *ngIf="client.vehicle.prochainEntretien !== null && client.vehicle.prochainEntretien !== undefined"
+                                            class="fs-11px text-muted mt-1">
+                                            Prochaine vidange : <span class="text-warning fw-bold">Dans {{
+                                                (client.vehicle.prochainEntretien - (client.vehicle.kilometrage || 0)) |
+                                                number:'1.0-0' }} km</span>
+                                        </div>
+                                    </div>
+                                    <span *ngIf="!client.vehicle" class="text-muted fs-13px italic">Non assigné</span>
                                 </td>
                                 <td>
                                     <span class="badge rounded-pill px-2" [ngClass]="{
                                         'bg-success': client.status === 'Dossier Approuvé' || client.status === 'En Cours de Contrat',
+                                        'bg-info text-white': client.status === 'Dossier Validé',
                                         'bg-warning text-dark': client.status === 'En attente de Validation',
                                         'bg-danger': client.status === 'Litige / Bloqué',
                                         'bg-secondary': client.status === 'Inactif',
                                         'bg-primary-subtle text-primary border border-primary-subtle': client.status === 'Prospect'
                                     }">
-                                        {{ client.status === 'Dossier Approuvé' || client.status === 'En Cours de
-                                        Contrat' ? 'Actif' : client.status }}
+                                        {{ client.status }}
                                     </span>
                                 </td>
                                 <td>

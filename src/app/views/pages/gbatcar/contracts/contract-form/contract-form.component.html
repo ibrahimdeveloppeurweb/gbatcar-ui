@@ -56,11 +56,34 @@
                                 </ng-template>
                             </ng-select>
                         </div>
+                    </div>
+
+                    <div class="row">
                         <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Type d'Affectation <span
+                                    class="text-danger">*</span></label>
+                            <div class="d-flex gap-3 mt-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" value="Specific"
+                                        formControlName="assignmentType" id="specificMode">
+                                    <label class="form-check-label" for="specificMode">Véhicule Spécifique</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" value="Fleet"
+                                        formControlName="assignmentType" id="fleetMode">
+                                    <label class="form-check-label" for="fleetMode">Flotte / Sur Commande</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mode Véhicule Spécifique -->
+                    <div class="row" *ngIf="contractForm.get('assignmentType')?.value === 'Specific'">
+                        <div class="col-sm-12 mb-3">
                             <label class="form-label text-dark fw-medium">Véhicule Assigné <span
                                     class="text-danger">*</span></label>
                             <ng-select [items]="vehicles" bindLabel="immatriculation" bindValue="uuid"
-                                placeholder="-- Sélectionner un véhicule --" formControlName="vehicleId"
+                                placeholder="-- Sélectionner un véhicule du parc --" formControlName="vehicleId"
                                 [loading]="loadingVehicles" [searchFn]="customSearchFn"
                                 [ngClass]="{'is-invalid': submit && contractForm.get('vehicleId')?.invalid}">
                                 <ng-template ng-option-tmp let-item="item">
@@ -80,6 +103,124 @@
                                     </ng-container>
                                 </ng-template>
                             </ng-select>
+                        </div>
+                    </div>
+
+                    <!-- Mode Flotte / Commande -->
+                    <div class="row" *ngIf="contractForm.get('assignmentType')?.value === 'Fleet'">
+                        <div class="col-sm-12 mb-3">
+                            <label class="form-label text-dark fw-medium mb-3">Véhicules de la Flotte <span
+                                    class="text-danger">*</span></label>
+
+                            <div class="table-responsive border rounded mb-2">
+                                <table class="table table-sm mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>Marque</th>
+                                            <th>Modèle</th>
+                                            <th style="width: 120px;">Quantité</th>
+                                            <th style="width: 60px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody formArrayName="vehicleDemands">
+                                        <ng-container *ngFor="let demand of vehicleDemandsArray.controls; let i=index">
+                                            <tr [formGroupName]="i">
+                                                <td>
+                                                    <ng-select [items]="brands" bindLabel="name" bindValue="id"
+                                                        placeholder="Marque" formControlName="brandId"
+                                                        [clearable]="false">
+                                                    </ng-select>
+                                                </td>
+                                                <td>
+                                                    <ng-select
+                                                        [items]="modelsByBrand[demand.get('brandId')?.value] || []"
+                                                        bindLabel="name" bindValue="id" placeholder="Modèle"
+                                                        formControlName="modelId" [clearable]="false"
+                                                        [disabled]="!demand.get('brandId')?.value">
+                                                    </ng-select>
+                                                </td>
+                                                <td>
+                                                    <input type="number" class="form-control form-control-sm"
+                                                        formControlName="quantity" min="1">
+                                                </td>
+                                                <td class="text-center align-middle">
+                                                    <button type="button" class="btn btn-xs btn-outline-danger btn-icon"
+                                                        (click)="removeVehicleDemand(i)"
+                                                        [disabled]="vehicleDemandsArray.length === 1">
+                                                        <i data-feather="trash-2" appFeatherIcon class="icon-xs"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <!-- Panel v\u00e9hicules disponibles -->
+                                            <tr
+                                                *ngIf="availableVehiclesByDemand[i] && availableVehiclesByDemand[i].length">
+                                                <td colspan="4" class="bg-light border-top p-0">
+                                                    <div class="p-2">
+                                                        <div
+                                                            class="d-flex align-items-center justify-content-between mb-2">
+                                                            <small class="text-muted fw-bold">
+                                                                <i data-feather="check-square" appFeatherIcon
+                                                                    class="icon-xs me-1 text-primary"></i>
+                                                                {{ (selectedVehiclesByDemand[i] || []).length }} / {{
+                                                                (availableVehiclesByDemand[i] || []).length }}
+                                                                véhicule(s)
+                                                                sélectionné(s)
+                                                            </small>
+                                                            <div class="d-flex gap-2">
+                                                                <button type="button"
+                                                                    class="btn btn-xs btn-outline-success"
+                                                                    (click)="selectAllVehicles(i)">
+                                                                    Tout cocher
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="btn btn-xs btn-outline-secondary"
+                                                                    (click)="deselectAllVehicles(i)">
+                                                                    Tout décocher
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            <div *ngFor="let v of availableVehiclesByDemand[i]"
+                                                                class="form-check border rounded px-3 py-2 mb-0"
+                                                                [ngClass]="isVehicleSelected(i, v.uuid) ? 'bg-primary bg-opacity-10 border-primary' : 'bg-white'"
+                                                                style="cursor: pointer;"
+                                                                (click)="toggleVehicle(i, v.uuid)">
+                                                                <input class="form-check-input me-2" type="checkbox"
+                                                                    [checked]="isVehicleSelected(i, v.uuid)"
+                                                                    (change)="toggleVehicle(i, v.uuid)"
+                                                                    (click)="$event.stopPropagation()">
+                                                                <label class="form-check-label mb-0"
+                                                                    style="cursor:pointer;">
+                                                                    <span class="fw-bold tx-13">{{ v.immatriculation
+                                                                        }}</span>
+                                                                    <small class="text-muted d-block tx-11">{{ v.couleur
+                                                                        }} - {{ v.annee }}</small>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <!-- Message si aucun v\u00e9hicule disponible -->
+                                            <tr
+                                                *ngIf="availableVehiclesByDemand[i] !== undefined && availableVehiclesByDemand[i].length === 0">
+                                                <td colspan="4" class="bg-light text-center py-2">
+                                                    <small class="text-warning">
+                                                        <i data-feather="alert-circle" appFeatherIcon
+                                                            class="icon-xs me-1"></i>
+                                                        Aucun véhicule de ce modèle n'est disponible dans le
+                                                        parc.
+                                                    </small>
+                                                </td>
+                                            </tr>
+                                        </ng-container>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-primary mt-1"
+                                (click)="addVehicleDemand()">
+                                <i data-feather="plus" appFeatherIcon class="icon-xs me-1"></i> Ajouter un modèle
+                            </button>
                         </div>
                     </div>
 
@@ -182,7 +323,8 @@
                         <div class="col-sm-6 mb-3">
                             <label class="form-label text-dark fw-medium">Délai de Grâce (Jours)</label>
                             <input type="number" class="form-control" formControlName="gracePeriod">
-                            <small class="text-muted tx-11">Nombre de jours de retard toléré avant pénalités.</small>
+                            <small class="text-muted tx-11">Nombre de jours de retard toléré avant
+                                pénalités.</small>
                         </div>
                         <div class="col-sm-6 mb-3">
                             <label class="form-label text-dark fw-medium">Taux de Pénalité (%)</label>
@@ -215,22 +357,25 @@
                     <div class="d-flex flex-column gap-3 mt-4">
                         <div class="p-3 bg-primary-subtle rounded border border-primary-subtle">
                             <p class="text-primary fs-12px mb-1 text-uppercase fw-bold">Valeur Totale du Contrat</p>
-                            <h3 class="fw-bold mb-0 text-primary">{{ contractForm.get('totalAmount')?.value | number }}
+                            <h3 class="fw-bold mb-0 text-primary">{{ contractForm.get('totalAmount')?.value | number
+                                }}
                                 <small class="fs-14px">FCFA</small>
                             </h3>
-                            <p class="tx-11 text-muted mt-1">Sur {{ contractForm.get('duration')?.value }} mois amortis
+                            <p class="tx-11 text-muted mt-1">Sur {{ contractForm.get('duration')?.value }} mois
+                                amortis
                             </p>
                         </div>
 
                         <div class="list-group list-group-flush">
                             <div class="list-group-item px-0 d-flex justify-content-between">
                                 <span class="text-muted">Apport Initial :</span>
-                                <span class="fw-bold text-dark">{{ contractForm.get('cautionAmount')?.value | number }}
+                                <span class="fw-bold text-dark">{{ contractForm.get('cautionAmount')?.value | number
+                                    }}
                                     FCFA</span>
                             </div>
                             <div class="list-group-item px-0 d-flex justify-content-between">
-                                <span class="text-muted">Redevance / {{ contractForm.get('paymentFrequency')?.value }}
-                                    :</span>
+                                <span class="text-muted">Redevance / {{
+                                    translateFrequency(contractForm.get('paymentFrequency')?.value) }} :</span>
                                 <span class="fw-bold text-success">{{ contractForm.get('dailyRate')?.value | number
                                     }} FCFA</span>
                             </div>

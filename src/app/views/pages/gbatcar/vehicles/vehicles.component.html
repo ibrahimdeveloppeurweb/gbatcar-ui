@@ -228,36 +228,37 @@
                         </thead>
                         <tbody>
                             <tr *ngFor="let vehicle of filteredVehicles"
-                                [class.table-danger]="vehicle.paymentStatus === 'Critique'"
-                                [class.table-warning]="vehicle.paymentStatus === 'En retard'">
+                                [class.table-danger-light]="vehicle.paymentStatus === 'Critique'"
+                                [class.table-warning-light]="vehicle.paymentStatus === 'En retard'">
                                 <td>
-                                    <div class="fw-medium text-dark">{{ vehicle.brand }} {{ vehicle.model }}</div>
-                                    <small class="text-muted">{{ vehicle.trim }} • {{ vehicle.year }}</small>
+                                    <div class="fw-bolder text-dark tx-14">{{ vehicle.brand }} {{ vehicle.model }}</div>
+                                    <small class="text-secondary">{{ vehicle.trim }} • {{ vehicle.year }}</small>
                                     <!-- Alerte entretien -->
-                                    <span class="badge bg-warning text-dark ms-1" *ngIf="vehicle.maintenanceAlert">
+                                    <span class="badge bg-warning text-dark ms-1 p-1" *ngIf="vehicle.maintenanceAlert"
+                                        style="font-size: 0.65rem;">
                                         <i data-feather="tool" appFeatherIcon class="icon-xs"></i> Entretien
                                     </span>
                                 </td>
-                                <td class="fw-bold text-primary">{{ vehicle.licensePlate }}</td>
-                                <td>{{ vehicle.mileage | number }} km</td>
+                                <td class="fw-bold text-danger">{{ vehicle.licensePlate }}</td>
+                                <td class="tx-13">{{ vehicle.mileage | number }} km</td>
                                 <td>
-                                    <span class="badge" [ngClass]="{
+                                    <span class="badge rounded-1 px-2" [ngClass]="{
                                         'bg-success': vehicle.status === 'Disponible',
-                                        'bg-primary': vehicle.status === 'Assigné',
+                                        'bg-danger': vehicle.status === 'Assigné',
                                         'bg-warning text-dark': vehicle.status === 'En Maintenance',
                                         'bg-secondary': vehicle.status === 'Hors Service'
                                     }">
                                         {{ vehicle.status }}
                                     </span>
                                 </td>
-                                <td>
+                                <td class="fw-medium">
                                     <span [ngClass]="{'text-muted fst-italic': vehicle.assignedClient === 'Aucun'}">
                                         {{ vehicle.assignedClient }}
                                     </span>
                                 </td>
                                 <!-- Santé financière du contrat -->
                                 <td>
-                                    <span *ngIf="vehicle.paymentStatus !== '-'" class="badge" [ngClass]="{
+                                    <span *ngIf="vehicle.paymentStatus !== '-'" class="badge rounded-1 px-2" [ngClass]="{
                                         'bg-success': vehicle.paymentStatus === 'À jour',
                                         'bg-warning text-dark': vehicle.paymentStatus === 'En retard',
                                         'bg-danger': vehicle.paymentStatus === 'Critique',
@@ -269,19 +270,20 @@
                                     <span *ngIf="vehicle.paymentStatus === '-'" class="text-muted fst-italic">-</span>
                                 </td>
                                 <!-- Barre de progression remboursement -->
-                                <td style="min-width: 150px;">
+                                <td style="min-width: 220px;">
                                     <div *ngIf="(vehicle.totalContractAmount ?? 0) > 0">
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <small class="text-muted">{{ vehicle.contractProgress }}%</small>
-                                            <small class="text-muted">{{ vehicle.paidAmount | number }} / {{
-                                                vehicle.totalContractAmount | number }} FCFA</small>
+                                        <div class="d-flex justify-content-between mb-1 tx-11">
+                                            <span class="text-muted fw-bold">{{ (vehicle.contractProgress ?? 0) |
+                                                number:'1.1-1' }}%</span>
+                                            <span class="text-muted fw-medium">{{ (vehicle.paidAmount ?? 0) | number }}
+                                                / {{ (vehicle.totalContractAmount ?? 0) | number }} FCFA</span>
                                         </div>
-                                        <div class="progress" style="height: 6px;">
+                                        <div class="progress" style="height: 6px; background-color: #f1f5f9;">
                                             <div class="progress-bar" [ngClass]="{
-                                                'bg-success': (vehicle.contractProgress ?? 0) > 50,
-                                                'bg-primary': (vehicle.contractProgress ?? 0) > 20 && (vehicle.contractProgress ?? 0) <= 50,
-                                                'bg-warning': (vehicle.contractProgress ?? 0) <= 20,
-                                                'bg-danger': vehicle.paymentStatus === 'Critique'
+                                                'bg-success': vehicle.paymentStatus === 'À jour' || vehicle.paymentStatus === 'Soldé',
+                                                'bg-warning': vehicle.paymentStatus === 'En retard',
+                                                'bg-danger': vehicle.paymentStatus === 'Critique' || vehicle.paymentStatus === 'Impayé définitif',
+                                                'bg-primary': !vehicle.paymentStatus || vehicle.paymentStatus === 'À jour'
                                             }" role="progressbar" [style.width.%]="vehicle.contractProgress"></div>
                                         </div>
                                     </div>
@@ -290,28 +292,32 @@
                                 </td>
                                 <!-- Statut GPS -->
                                 <td>
-                                    <span class="badge rounded-pill" [ngClass]="{
+                                    <span class="badge rounded-pill px-3 py-1" [ngClass]="{
                                         'bg-success': vehicle.gpsStatus === 'Connecté',
                                         'bg-danger': vehicle.gpsStatus === 'Déconnecté',
                                         'bg-secondary': vehicle.gpsStatus === 'Non installé'
                                     }">
-                                        <i data-feather="map-pin" appFeatherIcon class="icon-xs me-1"></i>
+                                        <i data-feather="crosshair" appFeatherIcon class="icon-xs me-1"></i>
                                         {{ vehicle.gpsStatus }}
                                     </span>
                                 </td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary me-1"
-                                        [routerLink]="['/gbatcar/vehicles/details', vehicle.uuid]" title="Voir détails">
-                                        <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-secondary me-1"
-                                        [routerLink]="['/gbatcar/vehicles/edit', vehicle.uuid]" title="Éditer">
-                                        <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" title="Immobiliser (GPS)"
-                                        *ngIf="vehicle.paymentStatus === 'Critique' && vehicle.gpsStatus === 'Connecté'">
-                                        <i data-feather="zap-off" appFeatherIcon class="icon-sm"></i>
-                                    </button>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <button class="btn btn-xs btn-icon btn-outline-danger border-1 shadow-none"
+                                            [routerLink]="['/gbatcar/vehicles/details', vehicle.uuid]"
+                                            title="Voir détails">
+                                            <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                        </button>
+                                        <button class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
+                                            [routerLink]="['/gbatcar/vehicles/edit', vehicle.uuid]" title="Éditer">
+                                            <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
+                                        </button>
+                                        <button class="btn btn-xs btn-icon btn-outline-danger border-1 shadow-none"
+                                            title="Immobiliser (GPS)"
+                                            *ngIf="vehicle.paymentStatus === 'Critique' && vehicle.gpsStatus === 'Connecté'">
+                                            <i data-feather="zap-off" appFeatherIcon class="icon-sm"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             <tr *ngIf="filteredVehicles.length === 0">

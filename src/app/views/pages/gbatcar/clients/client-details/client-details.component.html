@@ -14,12 +14,20 @@
         </div>
     </div>
     <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button type="button" class="btn btn-outline-success btn-icon-text me-2 mb-2 mb-md-0"
+            *ngIf="client.status === 'En attente de Validation' || client.status === 'Prospect'"
+            (click)="validateClient()">
+            <i data-feather="check-square" appFeatherIcon class="btn-icon-prepend"></i>
+            Valider le Dossier
+        </button>
         <button type="button" class="btn btn-outline-primary btn-icon-text me-2 mb-2 mb-md-0"
             [routerLink]="['/gbatcar/clients/edit', client.uuid]">
             <i data-feather="edit" appFeatherIcon class="btn-icon-prepend"></i>
             Modifier Infos
         </button>
-        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0">
+        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0"
+            *ngIf="client.status === 'Dossier Validé' || client.status === 'Dossier Approuvé'"
+            [routerLink]="['/gbatcar/contracts/new']" [queryParams]="{clientUuid: client.uuid}">
             <i data-feather="file-text" appFeatherIcon class="btn-icon-prepend"></i>
             Nouveau Contrat
         </button>
@@ -55,6 +63,7 @@
                             5).toUpperCase() : '' }}</p>
                         <span class="badge mt-2" [ngClass]="{
                             'bg-success': client.status === 'Dossier Approuvé' || client.status === 'En Cours de Contrat',
+                            'bg-info text-white': client.status === 'Dossier Validé',
                             'bg-warning text-dark': client.status === 'En attente de Validation',
                             'bg-danger': client.status === 'Litige / Bloqué',
                             'bg-secondary': client.status === 'Inactif',
@@ -62,7 +71,23 @@
                         }">
                             {{ client.status }}
                         </span>
+                        <div *ngIf="client.validationDate" class="mt-2 tx-10 text-success fw-bold">
+                            Validé le {{ client.validationDate | date:'dd/MM/yyyy HH:mm' }}
+                        </div>
                     </div>
+                </div>
+
+                <div class="mb-4 bg-light p-3 rounded shadow-xs border">
+                    <div class="d-flex align-items-center mb-2">
+                        <i data-feather="calendar" appFeatherIcon class="icon-sm text-muted me-2"></i>
+                        <span class="tx-11 fw-bold text-uppercase text-muted">Traçabilité Dossier</span>
+                    </div>
+                    <p class="mb-1 tx-12 text-dark">
+                        <strong>Créé le :</strong> {{ client.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                    </p>
+                    <p class="mb-0 tx-12 text-dark" *ngIf="client.create">
+                        <strong>Par :</strong> {{ client.create }}
+                    </p>
                 </div>
 
                 <div class="mt-3">
@@ -91,63 +116,144 @@
     <!-- Colonne Droite : Véhicule & Finances -->
     <div class="col-md-8">
         <!-- Dashboard Rapide (2 Cards) -->
-        <div class="row">
-            <div class="col-md-6 grid-margin stretch-card">
-                <div class="card shadow-sm border-0 border-top border-primary border-3">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-baseline">
-                            <h6 class="card-title mb-0">VÉHICULE ASSIGNÉ</h6>
-                        </div>
-                        <div class="row mt-4">
-                            <div class="col-12" *ngIf="client.vehicle">
-                                <h3 class="fw-bolder fs-5 text-primary">{{ client.vehicle.marque }} {{
-                                    client.vehicle.modele }}</h3>
-                                <p class="text-muted mt-1">Immatriculation : <span class="fw-bold text-dark">{{
-                                        client.vehicle.immatriculation }}</span></p>
+        <!-- Dashboard Rapide (Loop over Active Contracts) -->
+        <ng-container *ngFor="let contract of activeContracts">
+            <div class="row mb-3">
+                <div class="col-md-6 grid-margin stretch-card">
+                    <div class="card shadow-sm border-0 border-top border-primary border-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-baseline">
+                                <h6 class="card-title mb-0">VÉHICULE ASSIGNÉ</h6>
                             </div>
-                            <div class="col-12" *ngIf="!client.vehicle">
-                                <p class="text-muted italic">Aucun véhicule n'est actuellement assigné à ce dossier.</p>
+                            <div class="row mt-4">
+                                <div class="col-12" *ngIf="contract.vehicle">
+                                    <h3 class="fw-bolder fs-5 text-danger">{{ contract.vehicle.marque }} {{
+                                        contract.vehicle.modele }}</h3>
+                                    <p class="text-muted mt-1">Immatriculation : <span class="fw-bold text-dark">{{
+                                            contract.vehicle.immatriculation }}</span></p>
+                                    <div *ngIf="contract.vehicle.prochainEntretien !== null"
+                                        class="text-muted mt-1 fs-13px">
+                                        Prochaine vidange : <span class="text-warning fw-bold">Dans {{
+                                            (contract.vehicle.prochainEntretien - (contract.vehicle.kilometrage || 0)) |
+                                            number:'1.0-0' }} km</span>
+                                    </div>
+                                </div>
+                                <div class="col-12" *ngIf="!contract.vehicle && contract.vehicleDemands?.length">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i data-feather="truck" appFeatherIcon class="icon-sm me-2 text-primary"></i>
+                                        <h5 class="fw-bold mb-0 text-dark">Véhicules de la Flotte</h5>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div *ngFor="let req of contract.vehicleDemands" class="mb-3">
+                                            <div class="tx-11 fw-bolder text-muted text-uppercase mb-2">
+                                                {{req.brand?.name}} {{req.vehicleModel?.name}} ({{req.quantity}}
+                                                demandés)</div>
+                                            <div class="list-group list-group-flush border rounded overflow-hidden">
+                                                <div *ngFor="let v of req.assignedVehicles"
+                                                    class="list-group-item d-flex align-items-center py-2 bg-white hover-bg-light"
+                                                    [routerLink]="['/gbatcar/vehicles/details', v.uuid || v.id]"
+                                                    style="cursor: pointer;">
+                                                    <div
+                                                        class="wd-40 ht-40 rounded overflow-hidden me-3 border flex-shrink-0 bg-light d-flex align-items-center justify-content-center">
+                                                        <img *ngIf="v.photo" [src]="baseUrl + v.photo"
+                                                            class="img-fluid w-100 h-100 object-fit-cover">
+                                                        <i *ngIf="!v.photo" data-feather="truck" appFeatherIcon
+                                                            class="icon-sm text-secondary"></i>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="mb-0 fs-13px fw-bold text-dark">{{ v.immatriculation
+                                                            || v.licensePlate }}</h6>
+                                                        <p class="mb-0 tx-11 text-muted">{{ v.marque }} {{ v.modele }}
+                                                        </p>
+                                                    </div>
+                                                    <i data-feather="chevron-right" appFeatherIcon
+                                                        class="icon-xs text-muted"></i>
+                                                </div>
+                                                <div *ngIf="!req.assignedVehicles?.length"
+                                                    class="list-group-item py-2 text-muted italic tx-12">
+                                                    Aucun véhicule assigné spécifiquement.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12"
+                                    *ngIf="!contract.vehicle && (!contract.vehicleDemands || contract.vehicleDemands.length === 0)">
+                                    <p class="text-muted italic">Véhicule non défini pour ce contrat.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 grid-margin stretch-card">
+                    <div class="card shadow-sm border-0 border-top border-3" [ngClass]="{
+                        'border-success': contract.paymentStatus === 'À jour' || contract.paymentStatus === 'Soldé',
+                        'border-warning': contract.paymentStatus === 'En retard',
+                        'border-danger': contract.paymentStatus === 'Critique' || (contract.paymentStatus && contract.paymentStatus.includes('Impayé')),
+                        'border-secondary': !contract.paymentStatus || contract.paymentStatus === '-'
+                    }">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-baseline">
+                                <h6 class="card-title mb-0">SITUATION FINANCIÈRE ({{ contract.reference }})</h6>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <h3 class="fw-bolder fs-4" [ngClass]="{
+                                        'text-success': contract.paymentStatus === 'À jour' || contract.paymentStatus === 'Soldé',
+                                        'text-warning': contract.paymentStatus === 'En retard',
+                                        'text-danger': contract.paymentStatus === 'Critique' || (contract.paymentStatus && contract.paymentStatus.includes('Impayé')),
+                                        'text-muted': !contract.paymentStatus
+                                    }">{{ contract.paymentStatus || 'En attente' }}</h3>
+
+                                    <div *ngIf="contract.caution > 0" class="text-muted tx-13 mt-3">
+                                        Caution déposée : <span class="fw-bold text-dark">{{ contract.caution | number
+                                            }} FCFA</span>
+                                    </div>
+
+                                    <!-- Progress Bar Section -->
+                                    <div class="mt-4" *ngIf="contract.totalAmount > 0">
+                                        <div class="d-flex justify-content-between text-muted tx-12 mb-1 fw-medium">
+                                            <span>Montant Payé : <strong>{{ contract.totalPaidAmount | number }}
+                                                    F</strong></span>
+                                            <span>Total : <strong>{{ contract.totalAmount | number }} F</strong></span>
+                                        </div>
+                                        <div class="progress ht-8 rounded-pill">
+                                            <div class="progress-bar rounded-pill" [ngClass]="{
+                                                    'bg-success': contract.paymentStatus === 'À jour' || contract.paymentStatus === 'Soldé',
+                                                    'bg-warning': contract.paymentStatus === 'En retard',
+                                                    'bg-danger': contract.paymentStatus === 'Critique' || (contract.paymentStatus && contract.paymentStatus.includes('Impayé')),
+                                                    'bg-primary': !contract.paymentStatus
+                                                 }" role="progressbar" [style.width.%]="contract.progressPercentage"
+                                                [attr.aria-valuenow]="contract.progressPercentage" aria-valuemin="0"
+                                                aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mt-1">
+                                            <p class="text-muted tx-12">{{ contract.progressPercentage | number:'1.1-1'
+                                                }}% payé</p>
+                                            <p class="tx-12 fw-bold"
+                                                [class.text-danger]="contract.totalAmount - contract.totalPaidAmount > 0">
+                                                Reste : {{ (contract.totalAmount - contract.totalPaidAmount > 0 ?
+                                                contract.totalAmount -
+                                                contract.totalPaidAmount : 0) | number }} FCFA
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 grid-margin stretch-card">
-                <div class="card shadow-sm border-0 border-top border-3" [ngClass]="{
-                    'border-success': client.paymentStatus === 'À jour' || client.paymentStatus === 'Soldé',
-                    'border-danger': client.paymentStatus && client.paymentStatus.includes('Impayé'),
-                    'border-secondary': !client.paymentStatus || client.paymentStatus === '-'
-                }">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-baseline">
-                            <h6 class="card-title mb-0">SITUATION FINANCIÈRE</h6>
-                        </div>
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <h3 class="fw-bolder fs-4" [ngClass]="{
-                                    'text-success': client.paymentStatus === 'À jour' || client.paymentStatus === 'Soldé',
-                                    'text-danger': client.paymentStatus && client.paymentStatus.includes('Impayé')
-                                }">{{ client.paymentStatus || 'N/A' }}</h3>
+        </ng-container>
 
-                                <!-- Progress Bar Section -->
-                                <div class="mt-4" *ngIf="client.totalAmount > 0">
-                                    <div class="d-flex justify-content-between text-muted tx-12 mb-1 fw-medium">
-                                        <span>{{ client.amountPaid | number }} F</span>
-                                        <span>{{ client.totalAmount | number }} F</span>
-                                    </div>
-                                    <div class="progress ht-8 rounded-pill">
-                                        <div class="progress-bar rounded-pill" [ngClass]="{
-                                                'bg-success': client.paymentStatus === 'À jour' || client.paymentStatus === 'Soldé',
-                                                'bg-danger': client.paymentStatus && client.paymentStatus.includes('Impayé')
-                                             }" role="progressbar" [style.width.%]="progressPercentage"
-                                            [attr.aria-valuenow]="progressPercentage" aria-valuemin="0"
-                                            aria-valuemax="100">
-                                        </div>
-                                    </div>
-                                    <p class="text-muted tx-12 mt-1 text-end">{{ progressPercentage }}% payé</p>
-                                </div>
-                            </div>
-                        </div>
+        <!-- Fallback if NO active contracts -->
+        <div class="row" *ngIf="activeContracts.length === 0">
+            <div class="col-md-6 grid-margin stretch-card">
+                <div class="card shadow-sm border-0 border-top border-primary border-3">
+                    <div class="card-body text-center py-5">
+                        <i data-feather="alert-circle" appFeatherIcon class="text-muted mb-3 icon-lg"></i>
+                        <p class="text-muted italic">Aucun véhicule n'est actuellement assigné à ce dossier.</p>
                     </div>
                 </div>
             </div>
@@ -161,6 +267,10 @@
             <p class="text-muted mb-1 d-flex justify-content-between">
                 <span>Solde Portefeuille :</span>
                 <span class="fw-bold text-success">{{ client.walletBalance || 0 | number }} FCFA</span>
+            </p>
+            <p class="text-muted mb-1 d-flex justify-content-between" *ngIf="client.fines > 0">
+                <span>Amendes cumulées :</span>
+                <span class="fw-bold text-danger">{{ client.fines | number }} FCFA</span>
             </p>
         </div>
     </div>

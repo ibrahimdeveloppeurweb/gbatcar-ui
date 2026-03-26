@@ -98,4 +98,11 @@ export class ClientService {
             catchError((error: any) => throwError(() => error))
         );
     }
+
+    validate(uuid: string): Observable<any> {
+        return this.api._post(`${this.url}/${uuid}/validate`, {}).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
 }

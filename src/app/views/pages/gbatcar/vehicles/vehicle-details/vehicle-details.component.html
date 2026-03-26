@@ -274,7 +274,7 @@
                                     }}
                                 </h3>
                                 <p class="text-muted mt-2">Redevance journalière : <span class="fw-bold text-dark">{{
-                                        (vehicle.prixParJour || vehicle.dailyRate) | number }} FCFA</span></p>
+                                        (vehicle.dailyRate || vehicle.prixParJour) | number }} FCFA</span></p>
                                 <!-- GPS Status Badge -->
                                 <div class="mt-2" *ngIf="vehicle.gpsStatus">
                                     <span class="badge rounded-pill" [ngClass]="{
@@ -347,7 +347,8 @@
                 <div *ngIf="vehicle.reimbursementProgress !== undefined || vehicle.contractProgress !== undefined">
                     <div class="d-flex justify-content-between tx-12 mb-1">
                         <span class="fw-medium">Remboursement du contrat</span>
-                        <span class="text-muted" *ngIf="vehicle.paidAmount">{{ vehicle.paidAmount | number }} FCFA / {{
+                        <span class="text-muted" *ngIf="vehicle.paidAmount !== undefined">{{ vehicle.paidAmount | number
+                            }} FCFA / {{
                             vehicle.totalContractAmount
                             | number }} FCFA</span>
                     </div>
@@ -361,9 +362,9 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-between tx-12">
-                        <span class="text-muted">{{ vehicle.reimbursementProgress || vehicle.contractProgress }}%
-                            payé</span>
-                        <span class="text-muted" *ngIf="vehicle.totalContractAmount && vehicle.paidAmount">Reste : {{
+                        <span class="text-muted">{{ (vehicle.contractProgress) | number:'1.1-1' }}% payé</span>
+                        <span class="text-muted"
+                            *ngIf="vehicle.totalContractAmount && vehicle.paidAmount !== undefined">Reste : {{
                             (vehicle.totalContractAmount - vehicle.paidAmount) | number
                             }} FCFA</span>
                     </div>
@@ -380,7 +381,8 @@
 
                 <!-- Quick Actions -->
                 <div class="d-flex gap-2 mt-3 flex-wrap">
-                    <a class="btn btn-sm btn-outline-danger" [routerLink]="['/gbatcar/contracts']">
+                    <a class="btn btn-sm btn-outline-danger"
+                        [routerLink]="vehicle.activeContractUuid ? ['/gbatcar/contracts/details', vehicle.activeContractUuid] : ['/gbatcar/contracts']">
                         <i data-feather="file-text" appFeatherIcon class="icon-sm me-1"></i> Voir le Contrat
                     </a>
                     <a class="btn btn-sm btn-outline-success" [routerLink]="['/gbatcar/payments']">

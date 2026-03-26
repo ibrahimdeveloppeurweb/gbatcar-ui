@@ -8,10 +8,19 @@ export interface ContractPunctualityItem {
     status: string; // 'À jour', 'En retard', etc.
 }
 
+export interface ContractVehicleDemand {
+    id?: number;
+    brand?: any;
+    vehicleModel?: any;
+    quantity?: number;
+    assignedVehicles?: Vehicle[];
+}
+
 export interface Contract {
     uuid?: string;
     id?: string;
     reference?: string;
+    vehicleSummary?: string; // Summary of all assigned vehicles
 
     // ===================== RELATIONS =====================
     // Un Contrat appartient à UN Client
@@ -19,16 +28,22 @@ export interface Contract {
     clientId?: string;
     clientName?: string;     // Dénomination affichage rapide
 
-    // Un Contrat porte sur UN Véhicule
+    // Un Contrat porte sur UN Véhicule (historique)
     vehicle?: Vehicle;
     vehicleId?: string;
     vehicleName?: string;    // e.g. "Toyota Yaris (1234 AB 01)"
+
+    // Un Contrat "Flotte" peut porter sur plusieurs demandes de modèles
+    vehicleDemands?: ContractVehicleDemand[];
 
     // Un Contrat a plusieurs Paiements
     payments?: Payment[];
 
     // Un Contrat a plusieurs Pénalités (amendes)
     penalties?: Penalty[];
+
+    // Un Contrat a plusieurs Documents (avenants, reçus de signature, etc.)
+    documents?: any[];
 
     // Historique de ponctualité
     punctualityHistory?: ContractPunctualityItem[];
@@ -37,6 +52,7 @@ export interface Contract {
     totalAmount?: number;
     paidAmount?: number;
     caution?: number;             // Dépôt de garantie
+    fraisDossier?: number;        // Frais de dossier
     nextPaymentAmount?: number;
     unpaidAmount?: number;
     projectedMargin?: number;     // Simulation financière / Marge brute projetée

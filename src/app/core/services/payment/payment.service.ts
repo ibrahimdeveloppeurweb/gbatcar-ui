@@ -22,40 +22,42 @@ export class PaymentService {
         return this.payment;
     }
 
-    add(data: Payment): Observable<any> {
+    add(data: any): Observable<any> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();
             return new Observable(obs => { obs.next(); obs.complete(); });
         }
 
-        if (data.uuid) {
+        const uuid = data instanceof FormData ? data.get('uuid') : data.uuid;
+        if (uuid) {
             return this.update(data);
         } else {
             return this.create(data);
         }
     }
 
-    create(data: Payment): Observable<any> {
+    create(data: any): Observable<any> {
         return this.api._post(`${this.url}/new`, data).pipe(
             map((response: any) => response),
             catchError((error: any) => throwError(error))
         );
     }
 
-    update(data: Payment): Observable<any> {
-        return this.api._post(`${this.url}/${data.uuid}/edit`, data).pipe(
+    update(data: any): Observable<any> {
+        const uuid = data instanceof FormData ? data.get('uuid') : data.uuid;
+        return this.api._post(`${this.url}/${uuid}/edit`, data).pipe(
             map((response: any) => response),
             catchError((error: any) => throwError(error))
         );
     }
 
-    getList(statut?: string, contractUuid?: string): Observable<Payment[]> {
+    getList(filters: any = {}): Observable<Payment[]> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();
             return new Observable(obs => { obs.next(); obs.complete(); });
         }
 
-        return this.api._get(`${this.url}/`, { statut, contractUuid }).pipe(
+        return this.api._get(`${this.url}/`, filters).pipe(
             map((response: any) => response),
             catchError((error: any) => throwError(error))
         );
@@ -93,6 +95,30 @@ export class PaymentService {
 
         return this.api._get(`${this.url}/dashboard`, filters).pipe(
             map((response: any) => response.data || response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    changeStatus(uuid: string, status: string): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+
+        return this.api._post(`${this.url}/${uuid}/status`, { status }).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    delete(uuid: string): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+
+        return this.api._delete(`${this.url}/${uuid}/delete`).pipe(
+            map((response: any) => response),
             catchError((error: any) => throwError(() => error))
         );
     }

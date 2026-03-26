@@ -25,6 +25,10 @@ export const paymentsRoutes: Routes = [
         component: PaymentDetailsComponent
     },
     {
+        path: 'edit/:id',
+        component: PaymentFormComponent
+    },
+    {
         path: 'penalties',
         component: PenaltiesComponent
     },

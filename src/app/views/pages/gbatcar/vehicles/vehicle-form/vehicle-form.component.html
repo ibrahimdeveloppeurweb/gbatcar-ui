@@ -40,16 +40,24 @@
                         <div class="col-sm-6">
                             <label class="form-label text-dark fw-medium">Marque <span
                                     class="text-danger">*</span></label>
-                            <input type="text" class="form-control" formControlName="marque" placeholder="Ex: Toyota"
+                            <ng-select [items]="brands" bindLabel="name" bindValue="name" [addTag]="addBrandTag"
+                                addTagText="Ajouter cette marque" placeholder="Sélectionnez ou ajoutez..."
+                                formControlName="marque"
                                 [ngClass]="{'is-invalid': submit && form.get('marque')?.invalid}">
-                            <div class="invalid-feedback">Marque requise.</div>
+                            </ng-select>
+                            <div class="invalid-feedback d-block" *ngIf="submit && form.get('marque')?.invalid">Marque
+                                requise.</div>
                         </div>
                         <div class="col-sm-6">
                             <label class="form-label text-dark fw-medium">Modèle <span
                                     class="text-danger">*</span></label>
-                            <input type="text" class="form-control" formControlName="modele" placeholder="Ex: Yaris"
+                            <ng-select [items]="models" bindLabel="name" bindValue="name" [addTag]="addModelTag"
+                                addTagText="Ajouter ce modèle" placeholder="Sélectionnez ou ajoutez..."
+                                formControlName="modele"
                                 [ngClass]="{'is-invalid': submit && form.get('modele')?.invalid}">
-                            <div class="invalid-feedback">Modèle requis.</div>
+                            </ng-select>
+                            <div class="invalid-feedback d-block" *ngIf="submit && form.get('modele')?.invalid">Modèle
+                                requis.</div>
                         </div>
                     </div>
                     <div class="row mb-3">
