@@ -136,17 +136,30 @@
                         <tbody>
                             <tr *ngFor="let contract of filteredContracts">
                                 <td>
-                                    <a [routerLink]="['/gbatcar/clients/details', contract.clientId]"
-                                        class="text-primary fw-medium d-block">{{ contract.clientName }}</a>
-                                    <span class="text-muted tx-11">{{ contract.clientId }}</span>
+                                    <a [routerLink]="['/gbatcar/clients/details', contract.client?.uuid]"
+                                        class="text-primary fw-medium d-block">
+                                        {{ contract.client?.firstName }} {{ contract.client?.lastName }}
+                                    </a>
+                                    <span class="text-muted tx-11">{{ contract.client?.reference }}</span>
                                 </td>
                                 <td>
-                                    <div class="tx-13 fw-medium">{{ contract.id }}</div>
-                                    <div class="text-muted tx-11">{{ contract.vehicle }}</div>
+                                    <div class="tx-13 fw-medium text-dark">{{ contract.reference }}</div>
+                                    <div class="text-muted tx-11 mt-1">
+                                        <span *ngIf="contract.vehicle; else fleetInfo">
+                                            {{ contract.vehicle.marque || 'Véhicule' }} {{ contract.vehicle.modele }}
+                                            <span class="text-secondary">({{ contract.vehicle.immatriculation }})</span>
+                                        </span>
+                                        <ng-template #fleetInfo>
+                                            <span class="text-secondary italic">
+                                                {{ contract.vehicleSummary || 'Pas de véhicule assigné' }}
+                                            </span>
+                                        </ng-template>
+                                    </div>
                                 </td>
                                 <td>
-                                    <span class="text-danger fw-bold fs-14px">{{ calculateLateDays(contract.id) }}
-                                        jours</span>
+                                    <span class="text-danger fw-bold fs-14px">
+                                        {{ getLateDays(contract) }} jours
+                                    </span>
                                     <i data-feather="trending-up" appFeatherIcon class="icon-xs text-danger ms-1"></i>
                                 </td>
                                 <td>
@@ -160,7 +173,7 @@
                                     </span>
                                 </td>
                                 <td class="fw-bold text-dark">
-                                    {{ (contract.totalAmount - contract.paidAmount) | number }} <small>FCFA</small>
+                                    {{ (contract.riskAnalysis?.unpaidArrears || 0) | number }} <small>FCFA</small>
                                 </td>
                                 <td>
                                     <div class="btn-group">
@@ -172,8 +185,7 @@
                                             <i data-feather="message-square" appFeatherIcon class="icon-xs"></i>
                                         </button>
                                         <button class="btn btn-icon btn-xs btn-outline-danger"
-                                            title="Inhiber GPS / Coupure Moteur"
-                                            *ngIf="calculateLateDays(contract.id) > 15">
+                                            title="Inhiber GPS / Coupure Moteur" *ngIf="getLateDays(contract) > 15">
                                             <i data-feather="power" appFeatherIcon class="icon-xs"></i>
                                         </button>
                                         <button class="btn btn-icon btn-xs btn-outline-secondary"

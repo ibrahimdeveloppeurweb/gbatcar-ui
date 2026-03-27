@@ -118,6 +118,8 @@
                                 <span class="text-muted me-2 text-uppercase fw-bold">Niveau de Risque :</span>
                                 <span class="fw-bold" [ngClass]="getRiskLevel(contract).class">{{
                                     getRiskLevel(contract).label }}</span>
+                                <small class="d-block text-muted tx-10 ms-2" *ngIf="getRiskLevel(contract).reason">({{
+                                    getRiskLevel(contract).reason }})</small>
                             </div>
                         </div>
                     </div>

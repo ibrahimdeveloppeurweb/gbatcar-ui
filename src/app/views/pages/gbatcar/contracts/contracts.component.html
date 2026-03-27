@@ -276,13 +276,17 @@
                                         {{ (contract.paidAmount ?? 0) | number }} FCFA
                                     </div>
                                 </td>
-                                <td>
+                                <td [title]="getRiskLevel(contract).reason || ''">
                                     <div class="d-flex align-items-center">
                                         <div class="rounded-circle me-2"
                                             [ngClass]="'bg-' + getRiskLevel(contract).class.split('-')[1]"
                                             style="width: 8px; height: 8px;"></div>
-                                        <span class="fs-12px fw-medium" [ngClass]="getRiskLevel(contract).class">{{
-                                            getRiskLevel(contract).label }}</span>
+                                        <div class="d-flex flex-column">
+                                            <span class="fs-12px fw-medium" [ngClass]="getRiskLevel(contract).class">{{
+                                                getRiskLevel(contract).label }}</span>
+                                            <span class="fs-10px text-muted" *ngIf="getRiskLevel(contract).reason">{{
+                                                getRiskLevel(contract).reason }}</span>
+                                        </div>
                                     </div>
                                 </td>
                                 <td>

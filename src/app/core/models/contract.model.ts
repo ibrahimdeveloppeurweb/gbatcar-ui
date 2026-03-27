@@ -16,6 +16,14 @@ export interface ContractVehicleDemand {
     assignedVehicles?: Vehicle[];
 }
 
+export interface RiskAnalysis {
+    level: string;
+    code: string;
+    reason: string;
+    dpd: number;
+    class: string;
+}
+
 export interface Contract {
     uuid?: string;
     id?: string;
@@ -61,14 +69,16 @@ export interface Contract {
     startDate?: string;
     endDate?: string;
 
-    // ===================== STATUTS =====================
+    // ===================== STATUTS & RISQUES =====================
     status?: string;              // 'En cours', 'Soldé', 'Résilié', 'En Attente'
     paymentStatus?: string;       // 'À jour', 'En retard', 'Impayé définitif', 'En attente'
+    riskLevel?: 'Bas' | 'Moyen' | 'Élevé' | 'Critique';
+    hasSchedules?: boolean;
+    riskAnalysis?: RiskAnalysis;
 
     // ===================== PROGRESSION =====================
     progressPercentage?: number;
     daysLate?: number;
-    riskLevel?: 'Bas' | 'Moyen' | 'Élevé' | 'Critique';
 
     // ===================== PARAMÈTRES DU CONTRAT =====================
     usageType?: string;           // 'VTC (Yango/Heetch)', 'Taxi Compteur', 'Personnel / Privé'

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MOCK_CONTRACTS } from '../../../../../core/mock/gbatcar-admin.mock';
+import { ContractService } from '../../../../../core/services/contract/contract.service';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 
 @Component({
@@ -14,36 +14,14 @@ import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-i
 })
 export class ContractsLateComponent implements OnInit {
 
-  contracts = MOCK_CONTRACTS.filter(c => c.paymentStatus === 'En retard' || c.paymentStatus === 'Impayé définitif');
+  contracts: any[] = [];
+  kpis: any = {
+    totalArrears: 0,
+    criticalCasesCount: 0,
+    promiseToPayCount: 0
+  };
 
-  // Recovery KPIs
-  get totalArrears(): number {
-    return this.contracts.reduce((sum, c) => sum + (c.totalAmount - c.paidAmount), 0);
-  }
-
-  get criticalCasesCount(): number {
-    return this.contracts.filter(c => c.paymentStatus === 'Impayé définitif').length;
-  }
-
-  get promiseToPayCount(): number {
-    // Simulation: 20% of late contracts have a promise
-    return Math.ceil(this.contracts.length * 0.2);
-  }
-
-  showAdvancedFilters: boolean = false;
-
-  toggleAdvancedFilters() {
-    this.showAdvancedFilters = !this.showAdvancedFilters;
-  }
-
-  // Aging Balance Logic
-  getAgingSegment(contract: any): string {
-    const days = this.calculateLateDays(contract.id);
-    if (days > 30) return '30j+';
-    if (days > 15) return '16-30j';
-    if (days > 7) return '8-15j';
-    return '1-7j';
-  }
+  loading: boolean = false;
 
   // 1. Quick Filters
   quickSearchTerm: string = '';
@@ -52,35 +30,82 @@ export class ContractsLateComponent implements OnInit {
   // 2. Advanced Filters Form State
   advSearchTerm: string = '';
   advAlertFilter: string = '';
-  advCountFilter: number = 10;
+  advCountFilter: number = 20;
 
   // 3. ACTUALLY APPLIED Filters
   appliedSearchTerm: string = '';
   appliedAlertFilter: string = '';
-  appliedCountFilter: number = 10;
+  appliedCountFilter: number = 20;
 
-  constructor() { }
+  showAdvancedFilters: boolean = false;
 
-  ngOnInit(): void { }
+  constructor(private contractService: ContractService) { }
+
+  ngOnInit(): void {
+    this.loadLateContracts();
+  }
+
+  loadLateContracts() {
+    this.loading = true;
+    const filters = {
+      count: this.appliedCountFilter,
+      search: this.appliedSearchTerm
+    };
+
+    this.contractService.getLateContracts(filters).subscribe({
+      next: (res: any) => {
+        // Backend returns { kpis: {...}, contracts: [...] }
+        this.contracts = res.contracts || [];
+        this.kpis = res.kpis || this.kpis;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error loading late contracts', err);
+        this.loading = false;
+      }
+    });
+  }
+
+  // Recovery KPIs
+  get totalArrears(): number {
+    return this.kpis.totalArrears;
+  }
+
+  get criticalCasesCount(): number {
+    return this.kpis.criticalCasesCount;
+  }
+
+  get promiseToPayCount(): number {
+    return this.kpis.promiseToPayCount;
+  }
+
+  toggleAdvancedFilters() {
+    this.showAdvancedFilters = !this.showAdvancedFilters;
+  }
+
+  // Aging Balance Logic
+  getAgingSegment(contract: any): string {
+    const days = this.getLateDays(contract);
+    if (days > 30) return '30j+';
+    if (days > 15) return '16-30j';
+    if (days > 7) return '8-15j';
+    return '1-7j';
+  }
+
+  getLateDays(contract: any): number {
+    return contract.riskAnalysis?.dpd || 0;
+  }
 
   get filteredContracts() {
-    let result = this.contracts.filter(contract => {
-      // 1. Text Search
-      const searchStr = `${contract.id} ${contract.clientName} ${contract.vehicle} ${contract.clientId}`.toLowerCase();
-      const matchesSearch = !this.appliedSearchTerm || searchStr.includes(this.appliedSearchTerm.toLowerCase());
-
-      // 2. Alert Level (Risque Modéré = En retard, Critique = Impayé définitif)
+    // We already have filtered contracts from backend, but we can do a secondary local filter for alert level if needed
+    // or if the backend adds support for it. Currently, we'll keep the local alert filter for the UI feel.
+    return this.contracts.filter(contract => {
       let matchesAlert = true;
       if (this.appliedAlertFilter) {
-        const expectedStatus = this.appliedAlertFilter === 'Risque Modéré' ? 'En retard' : 'Impayé définitif';
-        matchesAlert = contract.paymentStatus === expectedStatus;
+        matchesAlert = contract.riskAnalysis?.level === (this.appliedAlertFilter === 'Risque Modéré' ? 'ÉLEVÉ' : 'CRITIQUE');
       }
-
-      return matchesSearch && matchesAlert;
+      return matchesAlert;
     });
-
-    // Apply Count Limit
-    return result.slice(0, this.appliedCountFilter);
   }
 
   applyQuickFilters() {
@@ -89,6 +114,8 @@ export class ContractsLateComponent implements OnInit {
 
     this.advSearchTerm = this.quickSearchTerm;
     this.advAlertFilter = this.quickAlertFilter;
+
+    this.loadLateContracts();
   }
 
   applyAdvancedFilters() {
@@ -98,23 +125,18 @@ export class ContractsLateComponent implements OnInit {
 
     this.quickSearchTerm = this.advSearchTerm;
     this.quickAlertFilter = this.advAlertFilter;
+
+    this.loadLateContracts();
   }
 
   resetFilters() {
     this.advSearchTerm = '';
     this.advAlertFilter = '';
-    this.advCountFilter = 10;
+    this.advCountFilter = 20;
 
     this.quickSearchTerm = '';
     this.quickAlertFilter = '';
 
     this.applyAdvancedFilters();
-  }
-
-  calculateLateDays(contractId: string = ''): number {
-    // Deterministic simulation based on ID for consistency in UI
-    if (contractId.includes('002')) return 5;
-    if (contractId.includes('045')) return 45;
-    return 12;
   }
 }

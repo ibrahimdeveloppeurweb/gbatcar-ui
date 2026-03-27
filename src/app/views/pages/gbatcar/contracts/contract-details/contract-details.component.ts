@@ -531,10 +531,22 @@ export class ContractDetailsComponent implements OnInit {
     return status;
   }
 
-  getRiskLevel(contract: Contract | null): { label: string, class: string } {
+  getRiskLevel(contract: Contract | null): { label: string, class: string, reason?: string } {
     if (!contract) return { label: 'Inconnu', class: 'text-muted' };
+
+    if (contract.riskAnalysis) {
+      return {
+        label: contract.riskAnalysis.level,
+        class: contract.riskAnalysis.class || 'text-muted',
+        reason: contract.riskAnalysis.reason
+      };
+    }
+
+    // Fallback
     if (contract.paymentStatus === 'Impayé définitif') return { label: 'CRITIQUE', class: 'text-danger' };
     if (contract.paymentStatus === 'En retard') return { label: 'ÉLEVÉ', class: 'text-warning' };
+
+    if (!contract.hasSchedules) return { label: 'NON DÉFINI', class: 'text-muted' };
 
     const paid = this.totalPaidIncludingDeposit;
     const total = contract.totalAmount || 1;
