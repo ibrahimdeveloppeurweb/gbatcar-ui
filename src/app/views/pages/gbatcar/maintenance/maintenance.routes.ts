@@ -31,8 +31,16 @@ export const maintenanceRoutes: Routes = [
         component: MaintenanceAlertDetailsComponent
     },
     {
+        path: 'alerts/edit/:uuid',
+        component: MaintenanceAlertFormComponent
+    },
+    {
         path: 'edit/:uuid',
         loadComponent: () => import('./maintenance-form/maintenance-form.component').then(m => m.MaintenanceFormComponent)
+    },
+    {
+        path: 'print/:id',
+        loadComponent: () => import('./maintenance-print/maintenance-print.component').then(m => m.MaintenancePrintComponent)
     },
     {
         path: 'details/:id',

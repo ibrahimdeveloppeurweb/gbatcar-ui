@@ -5,6 +5,7 @@ import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-i
 import { PaymentService } from '../../../../../core/services/payment/payment.service';
 import { ContractService } from '../../../../../core/services/contract/contract.service';
 import Swal from 'sweetalert2';
+import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-payment-details',
@@ -24,7 +25,7 @@ export class PaymentDetailsComponent implements OnInit {
   payment: any = null;
   isLoading: boolean = false;
   errorMessage: string | null = null;
-  serverUrl: string = 'http://localhost:8000'; // Fallback for local dev
+  serverUrl = environment.serverUrl.replace('/api', '');
 
   ngOnInit(): void {
     this.paymentUuid = this.route.snapshot.paramMap.get('id');
@@ -106,7 +107,7 @@ export class PaymentDetailsComponent implements OnInit {
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
-    if (file && this.payment?.contract?.uuid) {
+    if (file && this.paymentUuid) {
       Swal.fire({
         title: 'Ajout de document',
         text: 'Donnez un nom à ce document :',
@@ -126,7 +127,7 @@ export class PaymentDetailsComponent implements OnInit {
           formData.append('files', file);
           formData.append('libelle', result.value);
 
-          this.contractService.uploadDocument(this.payment.contract.uuid, formData).subscribe({
+          this.paymentService.uploadDocument(this.paymentUuid!, formData).subscribe({
             next: () => {
               this.isLoading = false;
               Swal.fire('Succès', 'Document ajouté avec succès', 'success');
@@ -142,8 +143,13 @@ export class PaymentDetailsComponent implements OnInit {
     }
   }
 
+  downloadDocument(docUuid: string) {
+    if (!this.paymentUuid) return;
+    this.paymentService.downloadDocument(this.paymentUuid, docUuid);
+  }
+
   deleteDocument(docUuid: string) {
-    if (!this.payment?.contract?.uuid) return;
+    if (!this.paymentUuid) return;
 
     Swal.fire({
       title: 'Supprimer ce document ?',
@@ -155,7 +161,7 @@ export class PaymentDetailsComponent implements OnInit {
       cancelButtonText: 'Annuler'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.contractService.deleteDocument(this.payment.contract.uuid, docUuid).subscribe({
+        this.paymentService.deleteDocument(this.paymentUuid!, docUuid).subscribe({
           next: () => {
             Swal.fire('Supprimé !', 'Le document a été retiré.', 'success');
             this.loadPaymentDetails(this.paymentUuid!);

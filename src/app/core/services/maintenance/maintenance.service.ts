@@ -50,6 +50,13 @@ export class MaintenanceService {
         );
     }
 
+    changeStatus(uuid: string, status: string): Observable<any> {
+        return this.api._put(`${this.url}/${uuid}/status`, { status }).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(error))
+        );
+    }
+
     getList(filters?: any): Observable<Maintenance[]> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();

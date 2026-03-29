@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MOCK_ALERTS } from '../../../../../core/mock/gbatcar-admin.mock';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
+import { MaintenanceAlertService } from '../../../../../core/services/maintenance/maintenance-alert.service';
 
 @Component({
   selector: 'app-maintenance-alerts',
@@ -14,7 +14,10 @@ import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-i
 })
 export class MaintenanceAlertsComponent implements OnInit {
 
-  alerts = MOCK_ALERTS;
+  private alertService = inject(MaintenanceAlertService);
+  
+  alerts: any[] = [];
+  loading: boolean = false;
 
   showAdvancedFilters: boolean = true;
 
@@ -44,12 +47,30 @@ export class MaintenanceAlertsComponent implements OnInit {
 
   constructor() { }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {
+    this.loadAlerts();
+  }
+
+  loadAlerts(): void {
+    this.loading = true;
+    this.alertService.getList().subscribe({
+      next: (data: any) => {
+        this.alerts = data;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error loading alerts:', err);
+        this.loading = false;
+      }
+    });
+  }
 
   get filteredAlerts() {
     let result = this.alerts.filter(alert => {
       // 1. Text Search
-      const searchStr = `${alert.vehicle} ${alert.client} ${alert.type} ${alert.description}`.toLowerCase();
+      const vehicleStr = alert.vehicle ? `${alert.vehicle.marque} ${alert.vehicle.modele} ${alert.vehicle.immatriculation}` : '';
+      const clientStr = alert.client ? `${alert.client.firstName} ${alert.client.lastName} ${alert.client.name}` : '';
+      const searchStr = `${vehicleStr} ${clientStr} ${alert.type} ${alert.description}`.toLowerCase();
       const matchesSearch = !this.appliedSearchTerm || searchStr.includes(this.appliedSearchTerm.toLowerCase());
 
       // 2. Exact Selectors
@@ -57,12 +78,12 @@ export class MaintenanceAlertsComponent implements OnInit {
       const matchesStatus = !this.appliedStatusFilter || alert.status === this.appliedStatusFilter;
 
       // 3. Date Ranges
-      const alertDate = new Date(alert.date);
+      const alertDate = alert.date ? new Date(alert.date) : null;
       const minDate = this.appliedDateMin ? new Date(this.appliedDateMin) : null;
       const maxDate = this.appliedDateMax ? new Date(this.appliedDateMax) : null;
 
-      const matchesDateMin = !minDate || alertDate >= minDate;
-      const matchesDateMax = !maxDate || alertDate <= maxDate;
+      const matchesDateMin = !minDate || (alertDate && alertDate >= minDate);
+      const matchesDateMax = !maxDate || (alertDate && alertDate <= maxDate);
       const matchesDate = matchesDateMin && matchesDateMax;
 
       return matchesSearch && matchesSeverity && matchesStatus && matchesDate;
@@ -104,5 +125,9 @@ export class MaintenanceAlertsComponent implements OnInit {
     this.quickStatusFilter = '';
 
     this.applyAdvancedFilters();
+  }
+
+  printAlert(alert: any) {
+    window.print();
   }
 }

@@ -1,0 +1,70 @@
+<div *ngIf="loading" class="text-center mt-5">
+    Chargement de l'ordre de réparation...
+</div>
+
+<div *ngIf="record && !loading" class="print-container pb-5">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <div>
+            <h2 class="mb-0 fw-bold text-uppercase">Ordre de Réparation</h2>
+            <p class="mb-0 fs-5 text-muted"><strong>N° {{ record.reference }}</strong></p>
+        </div>
+        <div class="text-end">
+            <h4 class="fw-bolder gb-brand">GBATCAR S.A.</h4>
+            <p class="mb-0 fs-12px">Département Parc Automobile</p>
+            <p class="mb-0 fs-12px">Imprimé le {{ today | date:'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+    </div>
+
+    <!-- Vehicule Info -->
+    <div class="row mb-4">
+        <div class="col-6">
+            <h6 class="text-uppercase fw-bold text-muted mb-2 border-bottom pb-1">Véhicule</h6>
+            <div *ngIf="record.vehicle">
+                <p class="mb-1"><strong>Marque / Modèle :</strong> {{ record.vehicle.marque }} {{ record.vehicle.modele }}</p>
+                <p class="mb-1"><strong>Immatriculation :</strong> <span class="badge border border-dark text-dark">{{ record.vehicle.immatriculation }}</span></p>
+                <p class="mb-0"><strong>Kilométrage Actuel :</strong> {{ record.kilometrage ? (record.kilometrage | number) + ' km' : 'Non précisé' }}</p>
+            </div>
+            <div *ngIf="!record.vehicle">
+                <p class="text-muted fst-italic">Aucun véhicule renseigné.</p>
+            </div>
+        </div>
+        <div class="col-6">
+            <h6 class="text-uppercase fw-bold text-muted mb-2 border-bottom pb-1">Intervention</h6>
+            <p class="mb-1"><strong>Date prévue :</strong> {{ record.dateIntervention | date:'dd/MM/yyyy' }}</p>
+            <p class="mb-1"><strong>Type / Motif :</strong> {{ record.type || 'Non défini' }}</p>
+            <p class="mb-1"><strong>Garagiste / Prestataire :</strong> {{ record.provider || 'En attente' }}</p>
+            <p class="mb-0"><strong>Statut :</strong> {{ record.status }}</p>
+        </div>
+    </div>
+
+    <!-- Description -->
+    <div class="mb-5">
+        <h6 class="text-uppercase fw-bold text-muted mb-2 border-bottom pb-1">Travaux Demandés / Description</h6>
+        <div class="border p-3 mt-2" style="min-height: 150px;">
+            <p class="mb-0" style="white-space: pre-wrap;">{{ record.description || record.observation || 'Aucune description spécifique...' }}</p>
+        </div>
+    </div>
+
+    <!-- Footer Signatures -->
+    <div class="row mt-5 pt-5">
+        <div class="col-4 text-center">
+            <p class="fw-bold fs-12px">Visa Chef de Parc</p>
+            <div class="mt-5 border-bottom w-75 mx-auto border-dark"></div>
+        </div>
+        <div class="col-4 text-center">
+            <p class="fw-bold fs-12px">Visa Chauffeur</p>
+            <div class="mt-5 border-bottom w-75 mx-auto border-dark"></div>
+        </div>
+        <div class="col-4 text-center">
+            <p class="fw-bold fs-12px">Visa Garagiste / Prestataire</p>
+            <div class="mt-5 border-bottom w-75 mx-auto border-dark"></div>
+        </div>
+    </div>
+
+    <!-- Hide the print button when printing -->
+    <div class="text-center mt-5 d-print-none">
+        <button class="btn btn-primary" onclick="window.print()">Imprimer</button>
+        <button class="btn btn-secondary ms-2" onclick="window.close()">Fermer</button>
+    </div>
+</div>

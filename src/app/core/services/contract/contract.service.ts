@@ -179,4 +179,16 @@ export class ContractService {
             catchError((error: any) => throwError(() => error))
         );
     }
+
+    addPromise(contractUuid: string, data: any): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+
+        return this.api._post(`${this.url}/${contractUuid}/promises/new`, data).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
 }

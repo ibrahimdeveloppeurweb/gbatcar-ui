@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ContractService } from '../../../../../core/services/contract/contract.service';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-contracts-late',
@@ -39,7 +41,18 @@ export class ContractsLateComponent implements OnInit {
 
   showAdvancedFilters: boolean = false;
 
-  constructor(private contractService: ContractService) { }
+  // Promise Form State
+  currentContract: any = null;
+  promiseData: any = {
+    expectedDate: '',
+    amount: null,
+    note: ''
+  };
+
+  constructor(
+    private contractService: ContractService,
+    private modalService: NgbModal
+  ) { }
 
   ngOnInit(): void {
     this.loadLateContracts();
@@ -138,5 +151,38 @@ export class ContractsLateComponent implements OnInit {
     this.quickAlertFilter = '';
 
     this.applyAdvancedFilters();
+  }
+
+  // --- PROMISE TO PAY LOGIC ---
+
+  openPromiseModal(content: any, contract: any) {
+    this.currentContract = contract;
+    this.promiseData = {
+      expectedDate: new Date().toISOString().split('T')[0],
+      amount: contract.riskAnalysis?.unpaidArrears || 0,
+      note: ''
+    };
+    this.modalService.open(content, { centered: true });
+  }
+
+  submitPromise(modal: any) {
+    if (!this.promiseData.expectedDate) {
+      Swal.fire('Erreur', 'La date est obligatoire', 'error');
+      return;
+    }
+
+    this.loading = true;
+    this.contractService.addPromise(this.currentContract.uuid, this.promiseData).subscribe({
+      next: (res) => {
+        Swal.fire('Succès', 'Promesse de paiement enregistrée', 'success');
+        modal.close();
+        this.loadLateContracts(); // Refresh KPIs and list
+      },
+      error: (err) => {
+        console.error('Error saving promise', err);
+        Swal.fire('Erreur', 'Impossible d\'enregistrer la promesse', 'error');
+        this.loading = false;
+      }
+    });
   }
 }

@@ -14,8 +14,9 @@
                 <li class="breadcrumb-item active" aria-current="page">{{ record.reference }}</li>
             </ol>
         </nav>
-        <h4 class="mb-3 mb-md-0 fw-bold">Fiche d'Intervention <span class="text-primary">{{ record.reference }}</span>
+        <h4 class="mb-1 fw-bold">Fiche d'Intervention <span class="text-primary">{{ record.reference }}</span>
         </h4>
+        <p class="text-muted fs-12px mb-3 mb-md-0">Enregistré par <span class="fw-medium text-dark">{{ record.create || 'Inconnu' }}</span> le {{ record.createdAt | date:'dd/MM/yyyy' }}</p>
     </div>
     <div class="d-flex align-items-center flex-wrap text-nowrap gap-2">
         <button [routerLink]="['/gbatcar/maintenance']" class="btn btn-secondary btn-icon-text mb-2 mb-md-0">
@@ -23,16 +24,29 @@
         </button>
         <!-- Edit button -->
         <button [routerLink]="['/gbatcar/maintenance/edit', record.uuid]"
+            *ngIf="record.status !== 'Terminé' && record.status !== 'Annulé'"
             class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0">
             <i data-feather="edit-2" appFeatherIcon class="btn-icon-prepend"></i> Modifier
         </button>
+        <button class="btn btn-outline-warning btn-icon-text mb-2 mb-md-0" title="Refacturer au client"
+            (click)="refactureClient()" *ngIf="record.cost > 0 && record.status !== 'Terminé' && record.status !== 'Annulé'">
+            <i data-feather="dollar-sign" appFeatherIcon class="btn-icon-prepend"></i> Refacturer
+        </button>
         <button class="btn btn-outline-secondary btn-icon-text mb-2 mb-md-0"
-            title="Imprimer l'ordre de réparation (PDF)">
+            title="Imprimer l'ordre de réparation (PDF)" (click)="printWorkOrder()">
             <i data-feather="printer" appFeatherIcon class="btn-icon-prepend"></i> Générer l'Ordre
         </button>
+        <button class="btn btn-primary btn-icon-text mb-2 mb-md-0" title="Démarrer l'intervention"
+            *ngIf="record.status === 'Planifié'" (click)="changeStatus('En cours')">
+            <i data-feather="play" appFeatherIcon class="btn-icon-prepend"></i> Démarrer
+        </button>
         <button class="btn btn-success btn-icon-text mb-2 mb-md-0" title="Marquer l'intervention comme terminée"
-            *ngIf="record.status !== 'Terminé'">
+            *ngIf="record.status === 'En cours' || record.status === 'Planifié'" (click)="changeStatus('Terminé')">
             <i data-feather="check-square" appFeatherIcon class="btn-icon-prepend"></i> Clôturer
+        </button>
+        <button class="btn btn-danger btn-icon-text mb-2 mb-md-0" title="Annuler l'intervention"
+            *ngIf="record.status !== 'Terminé' && record.status !== 'Annulé'" (click)="changeStatus('Annulé')">
+            <i data-feather="x-circle" appFeatherIcon class="btn-icon-prepend"></i> Annuler
         </button>
     </div>
 </div>
@@ -51,7 +65,8 @@
                 <span class="badge fs-13px" [ngClass]="{
                     'bg-info': record.status === 'Planifié',
                     'bg-warning text-dark': record.status === 'En cours',
-                    'bg-success': record.status === 'Terminé'
+                    'bg-success': record.status === 'Terminé',
+                    'bg-danger': record.status === 'Annulé'
                 }">{{ record.status }}</span>
             </div>
             <div class="card-body">
@@ -147,6 +162,72 @@
             </div>
         </div>
 
+        <!-- Card 4: Informations de Facturation -->
+        <div class="card border-0 shadow-sm mb-4 border-start border-info border-4 shadow-sm" style="background: rgba(102, 209, 209, 0.05);">
+            <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center">
+                    <div class="bg-white shadow-sm rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i data-feather="dollar-sign" appFeatherIcon class="text-info icon-md"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1 fw-bold text-dark tx-14">Informations de Facturation</h6>
+                        <p class="mb-0 text-muted tx-12">
+                            Cet incident a été pris en charge par : 
+                            <span class="badge bg-info bg-opacity-75 ms-1 text-white py-1 px-2" style="font-size: 10px;">🏢 LA SOCIÉTÉ</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a *ngIf="record.vehicle?.uuid" 
+                       [routerLink]="['/gbatcar/payments']" 
+                       [queryParams]="{ vehicle: record.vehicle.uuid }"
+                       class="btn btn-outline-info btn-sm px-3 tx-12">
+                        Voir les Paiements
+                    </a>
+                    <a *ngIf="record.vehicle?.uuid" 
+                       [routerLink]="['/gbatcar/vehicles/details', record.vehicle.uuid]"
+                       class="btn btn-outline-secondary btn-sm px-3 tx-12">
+                        Voir l'Historique
+                    </a>
+                </div>
+            </div>
+
+            <!-- Associated Payments (Direct display) -->
+            <div class="card-footer bg-transparent border-top p-0" *ngIf="payments.length > 0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 tx-11">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="py-2 border-0 ps-3">Date</th>
+                                <th class="py-2 border-0">Référence & Note</th>
+                                <th class="py-2 border-0">Méthode</th>
+                                <th class="py-2 border-0">Montant</th>
+                                <th class="py-2 border-0 text-end pe-3">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let p of payments">
+                                <td class="py-2 ps-3">{{ p.date | date:'dd/MM/yyyy' }}</td>
+                                <td class="py-2">
+                                    <span class="fw-bold text-dark">{{ p.reference }}</span><br>
+                                    <small class="text-muted fst-italic">{{ p.observation }}</small>
+                                </td>
+                                <td class="py-2">{{ p.method }}</td>
+                                <td class="py-2 fw-bold text-primary">{{ p.amount | number }} F</td>
+                                <td class="py-2 text-end pe-3">
+                                    <span class="badge py-1" [ngClass]="{
+                                        'bg-success': p.status === 'VALIDÉ' || p.status === 'Validé',
+                                        'bg-warning text-dark': p.status === 'En attente' || p.status === 'PENDING',
+                                        'bg-danger': p.status === 'REJETE' || p.status === 'REJETÉ'
+                                    }">{{ p.status }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <div class="col-lg-4">
@@ -209,18 +290,20 @@
                     <div class="d-flex align-items-center ms-2 gap-1">
                         <!-- Download (Blob based for auth) -->
                         <button type="button" (click)="downloadDoc(doc)" class="btn btn-xs btn-outline-primary"
-                            title="Télécharger">
-                            <i data-feather="download" appFeatherIcon class="icon-xs"></i>
+                            title="Voir le document">
+                            <i data-feather="eye" appFeatherIcon class="icon-xs"></i>
                         </button>
                         <!-- Delete -->
-                        <button class="btn btn-xs btn-outline-danger" title="Supprimer" (click)="deleteDoc(doc)">
+                        <button class="btn btn-xs btn-outline-danger" title="Supprimer" (click)="deleteDoc(doc)"
+                            *ngIf="record.status !== 'Terminé' && record.status !== 'Annulé'">
                             <i data-feather="trash-2" appFeatherIcon class="icon-xs"></i>
                         </button>
                     </div>
                 </div>
 
                 <!-- Upload button (hidden input) -->
-                <label class="btn btn-sm btn-light w-100 mt-2 cursor-pointer" style="cursor:pointer">
+                <label *ngIf="record.status !== 'Terminé' && record.status !== 'Annulé'" 
+                    class="btn btn-sm btn-light w-100 mt-2 cursor-pointer" style="cursor:pointer">
                     <input type="file" hidden multiple (change)="onFilesSelected($event)"
                         accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg">
                     <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Ajouter un fichier

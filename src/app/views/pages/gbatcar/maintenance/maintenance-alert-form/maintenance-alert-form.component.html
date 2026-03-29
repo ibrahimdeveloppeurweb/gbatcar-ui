@@ -3,10 +3,10 @@
         <nav class="page-breadcrumb mb-1">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a routerLink="/gbatcar/maintenance/alerts">Alertes & Sinistres</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Déclarer un Incident</li>
+                <li class="breadcrumb-item active" aria-current="page">{{ isEditMode ? 'Modifier' : 'Déclarer' }} un Incident</li>
             </ol>
         </nav>
-        <h4 class="mb-3 mb-md-0 text-warning">Déclarer un Sinistre ou une Panne</h4>
+        <h4 class="mb-3 mb-md-0 text-warning">{{ isEditMode ? 'Modifier le Sinistre' : 'Déclarer un Sinistre ou une Panne' }}</h4>
     </div>
     <div class="d-flex align-items-center flex-wrap text-nowrap">
         <button [routerLink]="['/gbatcar/maintenance/alerts']"
@@ -14,14 +14,15 @@
             <i data-feather="x" appFeatherIcon class="btn-icon-prepend"></i>
             Annuler
         </button>
-        <button class="btn btn-warning btn-icon-text mb-2 mb-md-0">
-            <i data-feather="save" appFeatherIcon class="btn-icon-prepend"></i>
+        <button class="btn btn-warning btn-icon-text mb-2 mb-md-0" (click)="onSubmit()" [disabled]="isSubmitting">
+            <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1" role="status"></span>
+            <i *ngIf="!isSubmitting" data-feather="save" appFeatherIcon class="btn-icon-prepend"></i>
             Enregistrer la Déclaration
         </button>
     </div>
 </div>
 
-<div class="row">
+<div class="row" *ngIf="!loading">
     <div class="col-md-12 stretch-card">
         <div class="card">
             <div class="card-body">
@@ -31,45 +32,47 @@
                         <div class="col-sm-6 mb-3">
                             <label class="form-label text-dark fw-medium">Véhicule impliqué (Locataire) <span
                                     class="text-danger">*</span></label>
-                            <select class="form-select" formControlName="vehicleId"
-                                [ngClass]="{'is-invalid': alertForm.get('vehicleId')?.invalid && alertForm.get('vehicleId')?.touched}">
-                                <option value="">Sélectionnez le véhicule...</option>
-                                <option value="VHC-1001">Toyota Corolla (7890 IJ 01) - Jean Dubois</option>
-                                <option value="VHC-1002">Suzuki Swift (9012 EF 01) - Fatou Sylla</option>
-                                <option value="VHC-1003">Kia Rio (3456 GH 01) - Marie Koné</option>
-                            </select>
+                            <ng-select [items]="vehicles" 
+                                       bindLabel="immatriculation" 
+                                       bindValue="uuid"
+                                       placeholder="Sélectionner le véhicule..." 
+                                       formControlName="vehicle"
+                                       [loading]="loadingVehicles"
+                                       [ngClass]="{'is-invalid': alertForm.get('vehicle')?.invalid && alertForm.get('vehicle')?.touched}">
+                                <ng-template ng-option-tmp let-item="item" let-index="index">
+                                    <b>{{ item.marque }} {{ item.modele }}</b><br/>
+                                    <small class="text-muted">{{ item.immatriculation }} - {{ item.client?.name || 'Pas de client' }}</small>
+                                </ng-template>
+                            </ng-select>
                         </div>
                         <div class="col-sm-6 mb-3">
                             <label class="form-label text-dark fw-medium">Date & Heure de l'incident <span
                                     class="text-danger">*</span></label>
-                            <input type="datetime-local" class="form-control" formControlName="date"
+                            <input type="date" class="form-control" formControlName="date"
                                 [ngClass]="{'is-invalid': alertForm.get('date')?.invalid && alertForm.get('date')?.touched}">
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-sm-6 mb-3">
+                        <div class="col-sm-4 mb-3">
                             <label class="form-label text-dark fw-medium">Nature / Type de sinistre <span
                                     class="text-danger">*</span></label>
                             <select class="form-select" formControlName="type"
                                 [ngClass]="{'is-invalid': alertForm.get('type')?.invalid && alertForm.get('type')?.touched}">
-                                <option value="">Sélectionnez la nature...</option>
-                                <option value="Accident Matériel">Accident Matériel (Choc)</option>
-                                <option value="Accident Corporel">Accident Corporel</option>
-                                <option value="Panne Mécanique">Panne Mécanique / Moteur</option>
-                                <option value="Vol ou Tentative">Vol ou Tentative de Vol</option>
-                                <option value="Bris de glace">Bris de glace</option>
-                                <option value="Incendie">Incendie</option>
+                                <option [ngValue]="null">Sélectionnez la nature...</option>
+                                <option *ngFor="let s of typeOptions" [value]="s">{{ s }}</option>
                             </select>
                         </div>
-                        <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Niveau de Gravité (Estimmé) <span
+                        <div class="col-sm-4 mb-3">
+                            <label class="form-label text-dark fw-medium">Niveau de Gravité (Estimé) <span
                                     class="text-danger">*</span></label>
                             <select class="form-select" formControlName="severity">
-                                <option value="Faible">Faible (Dégâts mineurs, rayures)</option>
-                                <option value="Moyenne">Moyenne (Réparation avec immobilisation courte)</option>
-                                <option value="Critique">Critique (Véhicule gravement endommagé ou détruit)</option>
+                                <option *ngFor="let s of severityOptions" [value]="s">{{ s }}</option>
                             </select>
+                        </div>
+                        <div class="col-sm-4 mb-3">
+                            <label class="form-label text-dark fw-medium">Coût estimatif (XOF)</label>
+                            <input type="number" class="form-control" formControlName="repairCost" placeholder="0">
                         </div>
                     </div>
 
@@ -85,28 +88,35 @@
 
                     <div class="row">
                         <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Informations sur l'autre chauffeur /
-                                Tiers</label>
-                            <textarea class="form-control" formControlName="driverInfo" rows="2"
+                            <label class="form-label text-dark fw-medium">Informations sur l'autre chauffeur / Tiers</label>
+                            <textarea class="form-control" formControlName="driverInfo" rows="3"
                                 placeholder="S'il y a un tiers (nom, assurance, immatriculation)..."></textarea>
                         </div>
                         <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Constat de police / Rapport officiel
-                                (PDF)</label>
-                            <input type="file" class="form-control" formControlName="policeReport"
-                                accept="application/pdf">
-                            <small class="text-muted mt-1 d-block">Obligatoire pour les accidents corporels.</small>
+                            <label class="form-label text-dark fw-medium">Observations de gestion (Optionnel)</label>
+                            <textarea class="form-control" formControlName="observation" rows="3"
+                                placeholder="Notes internes..."></textarea>
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-sm-12 mb-3">
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label text-dark fw-medium">Constat de police / Rapport officiel (PDF)</label>
+                            <input type="file" class="form-control" (change)="onFileChange($event)" accept="application/pdf">
+                            <small class="text-muted mt-1 d-block">Obligatoire pour les accidents corporels.</small>
+                        </div>
+                        <div class="col-sm-6 mb-3">
                             <label class="form-label text-dark fw-medium">Photos du sinistre (Max 5)</label>
-                            <input type="file" class="form-control" formControlName="photos" multiple accept="image/*">
+                            <input type="file" class="form-control" (change)="onPhotosChange($event)" multiple accept="image/*">
                         </div>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+</div>
+
+<div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-warning" role="status"></div>
+    <p class="mt-2 text-muted">Chargement des données...</p>
 </div>

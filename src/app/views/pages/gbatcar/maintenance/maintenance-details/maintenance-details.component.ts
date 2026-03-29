@@ -3,7 +3,11 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { MaintenanceService } from '../../../../../core/services/maintenance/maintenance.service';
+import { PaymentService } from '../../../../../core/services/payment/payment.service';
 import { ApiService } from '../../../../../utils/api.service';
+import { PenaltyService } from '../../../../../core/services/penalty/penalty.service';
+import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-maintenance-details',
@@ -19,9 +23,13 @@ export class MaintenanceDetailsComponent implements OnInit {
   loading = true;
   uploading = false;
   docs: any[] = [];
+  payments: any[] = [];
 
   private maintenanceService = inject(MaintenanceService);
+  private paymentService = inject(PaymentService);
   private apiService = inject(ApiService);
+  private penaltyService = inject(PenaltyService);
+  private router = inject(Router);
 
   constructor(private route: ActivatedRoute) { }
 
@@ -33,6 +41,7 @@ export class MaintenanceDetailsComponent implements OnInit {
           this.record = res.data ?? res;
           this.docs = this.record?.documents ?? [];
           this.loading = false;
+          this.loadAssociatedPayments();
         },
         error: () => { this.loading = false; }
       });
@@ -70,13 +79,9 @@ export class MaintenanceDetailsComponent implements OnInit {
     this.maintenanceService.downloadDocument(this.record.uuid, doc.uuid).subscribe({
       next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = doc.originalName;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        window.open(url, '_blank');
+        // Revoke the URL after a short delay so the new window has time to load it
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
       },
       error: () => {
         // Fallback or error message
@@ -110,5 +115,91 @@ export class MaintenanceDetailsComponent implements OnInit {
     if (mime.includes('word') || mime.includes('document')) return 'file-text';
     if (mime.includes('excel') || mime.includes('sheet')) return 'bar-chart-2';
     return 'paperclip';
+  }
+
+  changeStatus(status: string) {
+    if (!this.record?.uuid) return;
+    Swal.fire({
+      title: 'Changer le statut ?',
+      text: `Vous allez passer cette intervention à "${status}"`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#1bc943',
+      cancelButtonText: 'Annuler',
+      confirmButtonText: 'Oui, confirmer'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.maintenanceService.changeStatus(this.record.uuid, status).subscribe({
+          next: () => {
+            this.record.status = status;
+            Swal.fire('Succès', 'Le statut a été mis à jour.', 'success');
+          },
+          error: () => Swal.fire('Erreur', 'Impossible de changer le statut', 'error')
+        });
+      }
+    });
+  }
+
+  refactureClient() {
+    if (!this.record?.vehicle?.client?.uuid) {
+      Swal.fire('Information', "Aucun client n'est associé à ce véhicule pour la facturation.", 'info');
+      return;
+    }
+    const cost = this.record.cost || 0;
+    Swal.fire({
+      title: 'Refacturer au client ?',
+      html: `
+        <p class="text-muted tx-13 mb-3">Une pénalité sera ajoutée au dossier du client.</p>
+        <div class="mb-3 text-start">
+            <label class="form-label fw-bold">Montant à facturer (FCFA)</label>
+            <input type="number" id="swal-amount" class="form-control" value="${cost}">
+        </div>
+        <div class="mb-3 text-start">
+            <label class="form-label fw-bold">Motif de facturation</label>
+            <textarea id="swal-reason" class="form-control" rows="3">Frais de maintenance - Réf: ${this.record.reference}</textarea>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Facturer le client',
+      cancelButtonText: 'Annuler',
+      preConfirm: () => {
+        const amount = (document.getElementById('swal-amount') as HTMLInputElement).value;
+        const reason = (document.getElementById('swal-reason') as HTMLTextAreaElement).value;
+        if (!amount || !reason) {
+          Swal.showValidationMessage('Veuillez remplir le montant et le motif');
+        }
+        return { amount: Number(amount), reason };
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        const payload = {
+          clientId: this.record.vehicle.client.uuid,
+          vehicleId: this.record.vehicle.uuid,
+          amount: result.value.amount,
+          reason: result.value.reason,
+          status: 'Non payé',
+          date: new Date().toISOString()
+        };
+        this.penaltyService.add(payload).subscribe({
+          next: () => Swal.fire('Facturé !', 'La pénalité a été ajoutée.', 'success'),
+          error: () => Swal.fire('Erreur', 'Impossible de refacturer le client.', 'error')
+        });
+      }
+    });
+  }
+
+  private loadAssociatedPayments() {
+    if (!this.record?.reference) return;
+    this.paymentService.getList({ search: this.record.reference }).subscribe({
+      next: (payments: any) => {
+        this.payments = payments?.data || payments || [];
+      }
+    });
+  }
+
+  printWorkOrder() {
+    if (!this.record?.uuid) return;
+    const url = this.router.serializeUrl(this.router.createUrlTree(['/gbatcar/maintenance/print', this.record.uuid]));
+    window.open(url, '_blank');
   }
 }

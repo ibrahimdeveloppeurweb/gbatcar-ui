@@ -18,7 +18,15 @@ export class PaymentScheduleService {
         return this.http.get(`${this.apiUrl}/list/${contractUuid}`);
     }
 
-    markOverdue(): Observable<any> {
-        return this.http.post(`${this.apiUrl}/mark-overdue`, {});
+    markOverdue(contractUuid: string): Observable<any> {
+        return this.http.post(`${this.apiUrl}/mark-overdue`, { contractUuid });
+    }
+
+    prolong(data: { contractUuid: string, days: number }): Observable<any> {
+        return this.http.post(`${this.apiUrl}/prolong`, data);
+    }
+
+    suspend(data: { contractUuid: string, suspend: boolean }): Observable<any> {
+        return this.http.post(`${this.apiUrl}/suspend`, data);
     }
 }

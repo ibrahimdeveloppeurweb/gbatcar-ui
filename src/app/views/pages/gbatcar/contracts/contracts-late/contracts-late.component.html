@@ -188,6 +188,10 @@
                                             title="Inhiber GPS / Coupure Moteur" *ngIf="getLateDays(contract) > 15">
                                             <i data-feather="power" appFeatherIcon class="icon-xs"></i>
                                         </button>
+                                        <button class="btn btn-icon btn-xs btn-outline-success" title="Enregistrer une Promesse"
+                                            (click)="openPromiseModal(promiseModal, contract)">
+                                            <i data-feather="calendar" appFeatherIcon class="icon-xs"></i>
+                                        </button>
                                         <button class="btn btn-icon btn-xs btn-outline-secondary"
                                             title="Plus d'actions">
                                             <i data-feather="more-vertical" appFeatherIcon class="icon-xs"></i>
@@ -209,3 +213,39 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Promesse de Paiement -->
+<ng-template #promiseModal let-modal>
+    <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">Enregistrer une Promesse de Paiement</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body">
+        <div class="alert alert-info py-2 mb-3" *ngIf="currentContract">
+            <i data-feather="info" appFeatherIcon class="icon-sm me-1"></i>
+            Client: <strong>{{ currentContract.client?.firstName }} {{ currentContract.client?.lastName }}</strong>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label text-secondary fs-12px mb-1">Date de paiement promise</label>
+                <input type="date" class="form-control" [(ngModel)]="promiseData.expectedDate">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label text-secondary fs-12px mb-1">Montant promis (FCFA)</label>
+                <input type="number" class="form-control" [(ngModel)]="promiseData.amount">
+            </div>
+            <div class="col-md-12">
+                <label class="form-label text-secondary fs-12px mb-1">Notes / Commentaire</label>
+                <textarea class="form-control" rows="3" [(ngModel)]="promiseData.note"
+                    placeholder="Détails de l'échange téléphonique..."></textarea>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Annuler</button>
+        <button type="button" class="btn btn-success" (click)="submitPromise(modal)" [disabled]="loading">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+            Enregistrer la Promesse
+        </button>
+    </div>
+</ng-template>

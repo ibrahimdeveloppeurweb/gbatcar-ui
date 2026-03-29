@@ -385,7 +385,7 @@
                         [routerLink]="vehicle.activeContractUuid ? ['/gbatcar/contracts/details', vehicle.activeContractUuid] : ['/gbatcar/contracts']">
                         <i data-feather="file-text" appFeatherIcon class="icon-sm me-1"></i> Voir le Contrat
                     </a>
-                    <a class="btn btn-sm btn-outline-success" [routerLink]="['/gbatcar/payments']">
+                    <a class="btn btn-sm btn-outline-success" [routerLink]="['/gbatcar/payments']" [queryParams]="{ vehicle: vehicle.uuid }">
                         <i data-feather="dollar-sign" appFeatherIcon class="icon-sm me-1"></i> Historique Paiements
                     </a>
                     <a class="btn btn-sm btn-outline-warning" [routerLink]="['/gbatcar/payments/penalties']">
@@ -405,7 +405,7 @@
                         <a ngbNavLink>Historique des Interventions</a>
                         <ng-template ngbNavContent>
                             <div class="d-flex justify-content-end mb-3">
-                                <button class="btn btn-warning btn-sm text-dark">
+                                <button (click)="openAddMaintenanceModal(maintenanceModal)" class="btn btn-warning btn-sm text-dark">
                                     <i data-feather="tool" appFeatherIcon class="icon-sm me-1"></i> Ajouter Intervention
                                 </button>
                             </div>
@@ -413,24 +413,54 @@
                                 <table class="table table-hover mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Date</th>
-                                            <th>Type d'intervention</th>
-                                            <th>Kilométrage</th>
-                                            <th>Garagiste</th>
-                                            <th>Coût (FCFA)</th>
+                                            <th>DATE</th>
+                                            <th>N° BON</th>
+                                            <th>MOTIF / TYPE</th>
+                                            <th>KILOMÉTRAGE</th>
+                                            <th>GARAGISTE / PRESTATAIRE</th>
+                                            <th>COÛT (FCFA)</th>
+                                            <th>STATUT</th>
+                                            <th class="text-end">ACTIONS</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr *ngFor="let m of vehicle.maintenances">
-                                            <td>{{ m.dateIntervention | date:'dd MMM yyyy' }}</td>
+                                            <td class="py-3 text-nowrap">
+                                                <div class="tx-14 fw-medium text-dark mb-1">{{ m.dateIntervention | date:'dd/MM/yyyy' }}</div>
+                                                <div class="tx-11 text-muted" *ngIf="m.create">
+                                                    Créé par : <span class="fw-bold text-dark">{{ m.create }}</span>
+                                                </div>
+                                            </td>
+                                            <td><span class="fw-bold text-dark">{{ m.reference || 'N/A' }}</span></td>
                                             <td class="fw-medium">{{ m.type }}</td>
                                             <td>{{ m.kilometrage | number }} km</td>
-                                            <td>{{ m.garagiste || 'Garage Auto GbatCar' }}</td>
-                                            <td>{{ m.cout | number }}</td>
+                                            <td>{{ m.provider || 'Garage Auto GbatCar' }}</td>
+                                            <td><span class="fw-bolder text-dark">{{ m.cost | number }}</span></td>
+                                            <td>
+                                                <span class="badge" [ngClass]="{
+                                                    'bg-success': m.status === 'Terminé' || m.status === 'VALIDÉ',
+                                                    'bg-info': m.status === 'En cours' || m.status === 'Planifié',
+                                                    'bg-danger': m.status === 'Annulé',
+                                                    'bg-secondary': !m.status
+                                                }">{{ m.status || 'N/A' }}</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="d-flex justify-content-end gap-1">
+                                                    <a [routerLink]="['/gbatcar/maintenance/details', m.uuid]" 
+                                                        class="btn btn-xs btn-outline-danger btn-icon" title="Voir détails">
+                                                        <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                                    </a>
+                                                    <button class="btn btn-xs btn-outline-secondary btn-icon" title="Imprimer">
+                                                        <i data-feather="printer" appFeatherIcon class="icon-sm"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                         <tr *ngIf="!vehicle.maintenances || vehicle.maintenances.length === 0">
-                                            <td colspan="5" class="text-center text-muted py-3">Aucune intervention
-                                                enregistrée</td>
+                                            <td colspan="8" class="text-center text-muted py-4">
+                                                <i data-feather="info" appFeatherIcon class="icon-md mb-2 d-block mx-auto text-light"></i>
+                                                Aucune intervention enregistrée pour ce véhicule
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -517,6 +547,120 @@
         </div>
     </div>
 </div>
+
+<!-- ════════════ ADD MAINTENANCE MODAL ════════════ -->
+<ng-template #maintenanceModal let-modal>
+    <div class="modal-header bg-warning text-dark border-0">
+        <h5 class="modal-title fw-bold">
+            <i data-feather="tool" appFeatherIcon class="icon-sm me-2"></i>
+            Nouvelle Intervention : {{ vehicle?.immatriculation || vehicle?.licensePlate }}
+        </h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body p-4">
+        <form [formGroup]="maintenanceForm">
+            <div class="row">
+                <!-- Type & Date -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Type d'intervention <span class="text-danger">*</span></label>
+                    <ng-select [items]="interventionTypes" 
+                               placeholder="Sélectionner un type" 
+                               formControlName="type">
+                    </ng-select>
+                </div>
+                <div class="col-md-6 mb-3" *ngIf="isTypeAutre">
+                    <label class="form-label fw-bold">Préciser le type <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="typeAutre" placeholder="Ex: Réparation Turbo...">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" formControlName="dateIntervention">
+                </div>
+
+                <!-- Mileage & Cost -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Kilométrage (km) <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" formControlName="kilometrage">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Coût (FCFA) <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" formControlName="cost">
+                        <span class="input-group-text bg-light">FCFA</span>
+                    </div>
+                </div>
+
+                <!-- Status Select -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Statut <span class="text-danger">*</span></label>
+                    <select class="form-select" formControlName="status">
+                        <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+                    </select>
+                </div>
+
+                <!-- Provider -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Prestataire / Garage <span class="text-danger">*</span></label>
+                    <ng-select [items]="providers" 
+                               placeholder="Sélectionner le garage" 
+                               formControlName="provider">
+                    </ng-select>
+                </div>
+                <div class="col-md-6 mb-3" *ngIf="isProviderAutre">
+                    <label class="form-label fw-bold">Nom du prestataire <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="providerAutre" placeholder="Ex: Garage Speedy...">
+                </div>
+
+                <!-- Description -->
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Description / Observations</label>
+                    <textarea class="form-control" formControlName="description" rows="2" placeholder="Détails des réparations effectuées..."></textarea>
+                </div>
+
+                <!-- Documents Joints Section -->
+                <div class="col-md-12">
+                    <label class="form-label fw-bold d-flex justify-content-between align-items-center mb-2">
+                        <span><i data-feather="paperclip" appFeatherIcon class="icon-sm me-1 text-info"></i> Documents Joints</span>
+                        <div *ngIf="uploading" class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    </label>
+
+                    <!-- File List -->
+                    <div *ngIf="selectedFiles.length > 0" class="mb-2">
+                        <div *ngFor="let file of selectedFiles; let i = index" 
+                             class="bg-soft-primary p-2 rounded d-flex align-items-center border border-primary border-opacity-25 mb-2">
+                            <i data-feather="file" appFeatherIcon class="icon-sm text-primary me-2"></i>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <p class="mb-0 tx-12 fw-medium text-truncate" [title]="file.name">{{ file.name }}</p>
+                                <span class="tx-10 text-muted">{{ formatSize(file.size) }}</span>
+                            </div>
+                            <button type="button" class="btn btn-link text-danger p-0 ms-2" (click)="removeSelectedFile(i)">
+                                <i data-feather="x-circle" appFeatherIcon class="icon-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Upload Button -->
+                    <div class="upload-zone p-3 border border-dashed rounded text-center bg-light">
+                        <input type="file" #fileInput (change)="onFilesSelected($event)" multiple hidden>
+                        <button type="button" class="btn btn-sm btn-outline-info" (click)="fileInput.click()">
+                            <i data-feather="upload-cloud" appFeatherIcon class="icon-sm me-1"></i>
+                            Choisir des fichiers (Factures, photos...)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer border-0 p-4 pt-0">
+        <button type="button" class="btn btn-light" (click)="modal.dismiss('Cancel')">Annuler</button>
+        <button type="button" class="btn btn-warning text-dark px-4 fw-bold" 
+                [disabled]="maintenanceForm.invalid || isSubmitting"
+                (click)="modal.close('save')">
+            <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+            Enregistrer l'intervention
+        </button>
+    </div>
+</ng-template>
 
 <!-- ════════════ LIGHTBOX MODAL ════════════ -->
 <div *ngIf="lightboxOpen"

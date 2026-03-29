@@ -25,6 +25,16 @@ export class ContractDetailsComponent implements OnInit {
   loading: boolean = true;
   activeId = 1;
 
+  scrollToTabs(tabId: number): void {
+    this.activeId = tabId;
+    setTimeout(() => {
+      const element = document.getElementById('contract-tabs');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }
+
   private contractService = inject(ContractService);
   private route = inject(ActivatedRoute);
   private paymentService = inject(PaymentService);
@@ -36,6 +46,7 @@ export class ContractDetailsComponent implements OnInit {
 
   schedules: any[] = [];
   scheduleForm: FormGroup;
+  promiseForm: FormGroup;
 
   constructor() {
     this.scheduleForm = this.fb.group({
@@ -43,7 +54,13 @@ export class ContractDetailsComponent implements OnInit {
       installments: [1, [Validators.required, Validators.min(1)]],
       startDate: ['', Validators.required],
       ruleDay: [1, Validators.required],
-      excludeSundays: [false]
+      includeSundays: [false]
+    });
+
+    this.promiseForm = this.fb.group({
+      expectedDate: ['', Validators.required],
+      amount: [null, [Validators.min(1)]],
+      note: ['']
     });
   }
 
@@ -129,6 +146,8 @@ export class ContractDetailsComponent implements OnInit {
   }
 
   punctualityHistory: any[] = [];
+  reliabilityScore: number | null = null;
+  reliabilityClass: string = 'text-success';
 
   gpsStatus = {
     connected: false,
@@ -175,67 +194,96 @@ export class ContractDetailsComponent implements OnInit {
   }
 
   generatePunctualityHistory(): void {
-    if (!this.contract) return;
-
-    const frequency = (this.contract.paymentFrequency || 'Monthly').toLowerCase();
-    let prefix = 'M';
-    let unit: 'month' | 'week' | 'day' = 'month';
-
-    if (frequency === 'daily') {
-      prefix = 'J';
-      unit = 'day';
-    } else if (frequency === 'weekly') {
-      prefix = 'S';
-      unit = 'week';
+    if (!this.contract || !this.schedules || this.schedules.length === 0) {
+      this.punctualityHistory = [];
+      return;
     }
 
-    this.punctualityHistory = [];
+    // 1. Trier par date croissante
+    const sortedSchedules = [...this.schedules].sort((a, b) =>
+      new Date(a.expectedDate).getTime() - new Date(b.expectedDate).getTime()
+    );
+
+    // 2. Trouver l'échéance "Actuelle" par rapport à la DATE DU JOUR
+    // On cherche la première échéance >= Aujourd'hui
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const startDate = this.contract.startDate ? new Date(this.contract.startDate) : null;
-    if (startDate) startDate.setHours(0, 0, 0, 0);
+    const todayStr = this.formatDateYYYYMMDD(today);
 
-    for (let i = 5; i >= 0; i--) {
-      const periodDate = new Date(today);
-      if (unit === 'day') periodDate.setDate(today.getDate() - i);
-      else if (unit === 'week') periodDate.setDate(today.getDate() - (i * 7));
-      else periodDate.setMonth(today.getMonth() - i);
+    let currentIndex = sortedSchedules.findIndex(s => s.expectedDate?.substring(0, 10) >= todayStr);
 
-      let status = 'À jour';
+    // Si toutes les échéances sont passées, on prend la dernière comme référence
+    if (currentIndex === -1) currentIndex = sortedSchedules.length - 1;
 
-      // Si la période est avant le début du contrat
-      if (startDate && periodDate < startDate) {
-        status = 'N/A';
+    const startIndex = Math.max(0, currentIndex - 5);
+    const windowSchedules = sortedSchedules.slice(startIndex, currentIndex + 1);
+
+    this.punctualityHistory = windowSchedules.map((s, idx) => {
+      const sDateObj = new Date(s.expectedDate);
+      const sDateStr = s.expectedDate?.substring(0, 10);
+
+      let finalStatus = 'N/A';
+      if (s.status === 'Payé') {
+        finalStatus = 'À jour';
+      } else if (s.status === 'En retard' || s.status === 'Impayé' || (sDateStr < todayStr)) {
+        finalStatus = 'En retard';
       } else {
-        // Logique de retard :
-        // Si c'est une période passée (i > 0) et qu'il n'y a AUCUN paiement
-        const hasPayments = (this.contract.payments && this.contract.payments.length > 0);
-        if (i > 0 && !hasPayments) {
-          status = 'En retard';
-        }
-        // Pour la période actuelle (i = 0), on se base sur le statut global de paiement du contrat
-        if (i === 0) {
-          status = (this.contract.paymentStatus === 'En retard' || this.contract.paymentStatus === 'Impayé définitif' || this.contract.paymentStatus === 'PENDING')
-            ? 'En retard' : 'À jour';
-        }
+        finalStatus = 'N/A';
       }
 
-      let label = `${prefix}-${i}`;
-      if (i === 0) {
-        if (unit === 'day') label = 'Aujourd\'hui';
-        else if (unit === 'week') label = 'Cette Semaine';
-        else label = 'Ce Mois';
-      } else if (i === 1) {
-        if (unit === 'day') label = 'Hier';
-        else if (unit === 'week') label = 'Semaine Dernière';
-        else label = 'Mois Dernier';
+      // Utilisation de la chaîne de date brute pour éviter les décalages de fuseau horaire
+      const dateParts = s.expectedDate?.split('T')[0].split('-');
+      let formattedDate = s.expectedDate?.substring(0, 10);
+      if (dateParts && dateParts.length === 3) {
+        formattedDate = `${dateParts[2]}/${dateParts[1]}`;
       }
 
-      this.punctualityHistory.push({
+      let label = formattedDate;
+      if (startIndex + idx === currentIndex) label = `Actuelle (${formattedDate})`;
+
+      return {
         month: label,
-        status: status
-      });
+        status: finalStatus
+      };
+    });
+
+    this.calculateReliabilityScore();
+  }
+
+  calculateReliabilityScore(): void {
+    if (!this.schedules || this.schedules.length === 0) {
+      this.reliabilityScore = null;
+      return;
     }
+
+    // On compte les faits réels : ce qui est payé vs ce qui est en échec (Retards/Impayés)
+    // On compte tout ce qui n'est pas "À venir" (donc tout ce qui a eu un mouvement : Payé, Retard, Partiel)
+    const activeSchedules = this.schedules.filter(s => s.status !== 'À venir');
+
+    const paidCount = activeSchedules.filter(s => s.status === 'Payé').length;
+    const totalCount = activeSchedules.length;
+
+    if (totalCount === 0) {
+      this.reliabilityScore = null;
+      return;
+    }
+
+    this.reliabilityScore = Math.round((paidCount / totalCount) * 100);
+
+    // Définition de la classe de couleur
+    if (this.reliabilityScore >= 80) {
+      this.reliabilityClass = 'text-success';
+    } else if (this.reliabilityScore >= 50) {
+      this.reliabilityClass = 'text-warning';
+    } else {
+      this.reliabilityClass = 'text-danger';
+    }
+  }
+
+  private formatDateYYYYMMDD(date: Date): string {
+    return date.getFullYear() + '-' +
+      String(date.getMonth() + 1).padStart(2, '0') + '-' +
+      String(date.getDate()).padStart(2, '0');
   }
 
   getFrequencyLabel(): string {
@@ -284,11 +332,18 @@ export class ContractDetailsComponent implements OnInit {
     return 'monthly';
   }
 
-  // --- Payment Schedule Logic ---
+  private normalizeSchedules(res: any): any[] {
+    return (res || []).map((s: any) => ({
+      ...s,
+      localDate: s.expectedDate?.split('T')[0]
+    }));
+  }
+
   loadSchedules(contractUuid: string): void {
     this.scheduleService.getList(contractUuid).subscribe({
       next: (res: any) => {
-        this.schedules = res || [];
+        this.schedules = this.normalizeSchedules(res);
+        this.generatePunctualityHistory();
       },
       error: (err) => console.error('Error fetching schedules', err)
     });
@@ -313,9 +368,9 @@ export class ContractDetailsComponent implements OnInit {
     this.scheduleForm.patchValue({
       totalAmount: balance > 0 ? balance : netTotal,
       installments: defaultInstallments,
-      startDate: today.toISOString().substring(0, 10),
+      startDate: this.formatDateYYYYMMDD(today),
       ruleDay: defaultRuleDay,
-      excludeSundays: false
+      includeSundays: false
     });
 
     this.modalService.open(content, { centered: true });
@@ -330,15 +385,22 @@ export class ContractDetailsComponent implements OnInit {
     if (!this.contract || !this.contract.uuid) return;
 
     this.loading = true;
+
+    // Ensure startDate is sent as a string YYYY-MM-DD to avoid timezone shifts during JSON serialization
+    const formValue = { ...this.scheduleForm.value };
+    if (formValue.startDate instanceof Date) {
+      formValue.startDate = this.formatDateYYYYMMDD(formValue.startDate);
+    }
+
     const data = {
       contractUuid: this.contract.uuid,
-      ...this.scheduleForm.value
+      ...formValue
     };
 
     this.scheduleService.generateSchedule(data).subscribe({
       next: (res) => {
         Swal.fire('Succès', 'Échéancier généré avec succès', 'success');
-        this.schedules = res || [];
+        this.schedules = this.normalizeSchedules(res);
         modal.close();
         this.loading = false;
       },
@@ -351,7 +413,7 @@ export class ContractDetailsComponent implements OnInit {
 
   markOverdueSchedules(): void {
     this.loading = true;
-    this.scheduleService.markOverdue().subscribe({
+    this.scheduleService.markOverdue(this.contract!.uuid!).subscribe({
       next: (res) => {
         if (res?.updated > 0) {
           Swal.fire('Mise à jour', `${res.updated} échéance(s) passée(s) en "En retard".`, 'warning');
@@ -369,7 +431,83 @@ export class ContractDetailsComponent implements OnInit {
     });
   }
 
+  toggleSuspension(): void {
+    if (!this.contract || !this.contract.uuid) return;
+    const isSuspended = this.contract.status === 'SUSPENDU';
+    const action = isSuspended ? 'réactiver' : 'suspendre';
+    const confirmButtonText = isSuspended ? 'Oui, réactiver' : 'Oui, suspendre';
+
+    Swal.fire({
+      title: 'Confirmation',
+      text: `Voulez-vous vraiment ${action} ce contrat ?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: confirmButtonText,
+      cancelButtonText: 'Annuler'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.loading = true;
+        this.scheduleService.suspend({ contractUuid: this.contract!.uuid!, suspend: !isSuspended }).subscribe({
+          next: (res) => {
+            Swal.fire('Succès', res.message, 'success');
+            if (this.contract) this.contract.status = res.status;
+            this.loading = false;
+          },
+          error: (err) => {
+            Swal.fire('Erreur', err?.error?.message || 'Erreur lors du changement de statut', 'error');
+            this.loading = false;
+          }
+        });
+      }
+    });
+  }
+
+  prolongContract(): void {
+    if (!this.contract || !this.contract.uuid) return;
+
+    Swal.fire({
+      title: 'Prolongement (Force Majeure)',
+      text: 'De combien de jours voulez-vous décaler les prochaines échéances ?',
+      input: 'number',
+      inputAttributes: {
+        min: '1',
+        step: '1'
+      },
+      inputValue: 30,
+      showCancelButton: true,
+      confirmButtonText: 'Prolonger',
+      cancelButtonText: 'Annuler',
+      inputValidator: (value) => {
+        if (!value || parseInt(value) <= 0) {
+          return 'Veuillez saisir un nombre de jours positif !';
+        }
+        return null;
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.loading = true;
+        const days = parseInt(result.value);
+        this.scheduleService.prolong({ contractUuid: this.contract!.uuid!, days }).subscribe({
+          next: (res) => {
+            Swal.fire('Succès', res.message, 'success');
+            if (this.contract?.uuid) this.loadSchedules(this.contract.uuid);
+            this.loading = false;
+          },
+          error: (err) => {
+            Swal.fire('Erreur', err?.error?.message || 'Erreur lors du prolongement', 'error');
+            this.loading = false;
+          }
+        });
+      }
+    });
+  }
+
   // File Upload Logic
+  triggerContractDocUpload(): void {
+    const fileInput = document.getElementById('contractDocUpload') as HTMLInputElement;
+    if (fileInput) fileInput.click();
+  }
+
   onFileSelected(event: any): void {
     const files: FileList = event.target.files;
     if (files && files.length > 0) {
@@ -554,5 +692,50 @@ export class ContractDetailsComponent implements OnInit {
 
     if (progress < 25) return { label: 'MOYEN', class: 'text-info' };
     return { label: 'BAS', class: 'text-success' };
+  }
+
+  // Promise Management
+  openPromiseModal(content: any): void {
+    if (!this.contract) return;
+    
+    this.promiseForm.patchValue({
+      expectedDate: new Date().toISOString().split('T')[0],
+      amount: (this.contract as any).riskAnalysis?.unpaidArrears || this.contract.unpaidAmount || 0,
+      note: ''
+    });
+    
+    this.modalService.open(content, { centered: true });
+  }
+
+  submitPromise(modal: any): void {
+    if (this.promiseForm.invalid || !this.contract?.uuid) {
+      Swal.fire('Erreur', 'Veuillez remplir correctement le formulaire.', 'warning');
+      return;
+    }
+
+    this.loading = true;
+    this.contractService.addPromise(this.contract.uuid, this.promiseForm.value).subscribe({
+      next: (res) => {
+        Swal.fire('Succès', 'Promesse de paiement enregistrée avec succès.', 'success');
+        modal.close();
+        // Reload contract to see the new promise in the list
+        this.loadContract(this.contract!.uuid!);
+      },
+      error: (err) => {
+        console.error('Error saving promise', err);
+        Swal.fire('Erreur', 'Impossible d\'enregistrer la promesse.', 'error');
+        this.loading = false;
+      }
+    });
+  }
+
+  translatePromiseStatus(status: string): string {
+    if (!status) return 'Inconnu';
+    const s = status.toUpperCase();
+    if (s === 'PENDING' || s === 'EN ATTENTE') return 'EN ATTENTE';
+    if (s === 'KEPT' || s === 'TENUE') return 'TENUE';
+    if (s === 'BROKEN' || s === 'ROMPUE') return 'ROMPUE';
+    if (s === 'CANCELLED' || s === 'ANNULÉE') return 'ANNULÉE';
+    return status;
   }
 }

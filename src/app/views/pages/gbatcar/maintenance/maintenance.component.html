@@ -163,6 +163,7 @@
                             <option value="Planifié">Planifié</option>
                             <option value="En cours">En cours</option>
                             <option value="Terminé">Terminé</option>
+                            <option value="Annulé">Annulé</option>
                         </select>
                     </div>
                 </div>
@@ -187,7 +188,12 @@
                         </thead>
                         <tbody>
                             <tr *ngFor="let mnt of maintenanceItems">
-                                <td class="text-muted">{{ mnt.dateIntervention | date:'dd/MM/yyyy' }}</td>
+                                <td>
+                                    <span class="d-block text-muted">{{ mnt.dateIntervention | date:'dd/MM/yyyy'
+                                        }}</span>
+                                    <span class="d-block fs-12px text-secondary mt-1">Créé par : <span
+                                            class="fw-medium text-dark">{{ mnt.create || 'Inconnu' }}</span></span>
+                                </td>
                                 <td class="fw-medium text-dark">{{ mnt.reference }}</td>
                                 <td>
                                     <a *ngIf="mnt.vehicle"
@@ -204,7 +210,8 @@
                                     <span class="badge" [ngClass]="{
                                         'bg-info': mnt.status === 'Planifié',
                                         'bg-warning text-dark': mnt.status === 'En cours',
-                                        'bg-success': mnt.status === 'Terminé'
+                                        'bg-success': mnt.status === 'Terminé',
+                                        'bg-danger': mnt.status === 'Annulé'
                                     }">
                                         {{ mnt.status }}
                                     </span>

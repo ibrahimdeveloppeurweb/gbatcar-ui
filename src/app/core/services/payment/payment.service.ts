@@ -122,4 +122,58 @@ export class PaymentService {
             catchError((error: any) => throwError(() => error))
         );
     }
+
+    uploadDocument(uuid: string, formData: FormData): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._post(`${this.url}/${uuid}/documents`, formData).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    downloadDocument(paymentUuid: string, docUuid: string): void {
+        const urlOptions = {
+            responseType: 'blob' as 'json'
+        };
+        this.api._get(`${this.url}/${paymentUuid}/documents/${docUuid}/download`, {}, urlOptions).subscribe({
+            next: (response: any) => {
+                const blob = new Blob([response.body || response], { type: response.type });
+                const url = window.URL.createObjectURL(blob);
+
+                let filename = 'document.pdf';
+                const disposition = response.headers ? response.headers.get('Content-Disposition') : null;
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+                    if (matches != null && matches[1]) {
+                        filename = matches[1].replace(/['"]/g, '');
+                    }
+                }
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            },
+            error: (error) => {
+                console.error('Download error:', error);
+            }
+        });
+    }
+
+    deleteDocument(paymentUuid: string, docUuid: string): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._delete(`${this.url}/${paymentUuid}/documents/${docUuid}/delete`).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
 }

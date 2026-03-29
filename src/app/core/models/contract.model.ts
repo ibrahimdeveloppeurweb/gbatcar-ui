@@ -56,6 +56,9 @@ export interface Contract {
     // Historique de ponctualité
     punctualityHistory?: ContractPunctualityItem[];
 
+    // Promesses de paiement
+    promises?: any[];
+
     // ===================== FINANCIER =====================
     totalAmount?: number;
     paidAmount?: number;

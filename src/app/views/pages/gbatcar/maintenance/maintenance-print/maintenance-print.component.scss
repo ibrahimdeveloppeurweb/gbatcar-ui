@@ -1,0 +1,42 @@
+// Hide everything outside the container when printing
+@media print {
+    :host {
+        display: block !important;
+        background: white !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding: 20px;
+        z-index: 9999;
+    }
+    
+    .d-print-none {
+        display: none !important;
+    }
+    
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: white;
+    }
+
+    .gb-brand {
+        color: #000 !important;
+    }
+}
+
+.print-container {
+    background: #fff;
+    padding: 30px;
+    max-width: 900px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+.gb-brand {
+    color: #1b68ff;
+    letter-spacing: 1px;
+}

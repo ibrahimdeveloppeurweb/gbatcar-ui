@@ -1,9 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon.directive';
 import { PaymentService } from '../../../../core/services/payment/payment.service';
+import { VehicleService } from '../../../../core/services/vehicle/vehicle.service';
 import { Payment } from '../../../../core/models/payment.model';
 import Swal from 'sweetalert2';
 
@@ -16,6 +17,8 @@ import Swal from 'sweetalert2';
 })
 export class PaymentsComponent implements OnInit {
   private paymentService = inject(PaymentService);
+  private vehicleService = inject(VehicleService);
+  private route = inject(ActivatedRoute);
 
   payments: Payment[] = [];
   loading: boolean = false;
@@ -72,10 +75,38 @@ export class PaymentsComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
-    this.loadPayments();
+    this.route.queryParams.subscribe(params => {
+      const vehicleParam = params['vehicle'];
+      const vehicleIdParam = params['vehicleId'];
+      
+      if (vehicleIdParam) {
+        this.loadPayments({ vehicleId: vehicleIdParam });
+      } else if (vehicleParam) {
+        // Resolve UUID to ID internally to keep URL clean
+        this.resolveAndLoadVehicle(vehicleParam.trim());
+      } else {
+        this.loadPayments();
+      }
+    });
   }
 
-  loadPayments() {
+  private resolveAndLoadVehicle(uuid: string) {
+    this.loading = true;
+    this.vehicleService.getSingle(uuid).subscribe({
+      next: (v) => {
+        if (v && v.id) {
+          this.loadPayments({ vehicleId: v.id });
+        } else {
+          this.loadPayments({ vehicle: uuid });
+        }
+      },
+      error: () => {
+        this.loadPayments({ vehicle: uuid });
+      }
+    });
+  }
+
+  loadPayments(extraFilters: any = {}) {
     this.loading = true;
     const rawFilters: any = {
       search: this.advSearchTerm,
@@ -85,7 +116,8 @@ export class PaymentsComponent implements OnInit {
       dateMax: this.advDateMax,
       amountMin: this.advAmountMin,
       amountMax: this.advAmountMax,
-      count: this.advCountFilter
+      count: this.advCountFilter,
+      ...extraFilters
     };
 
     // Remove null, undefined, and empty string values

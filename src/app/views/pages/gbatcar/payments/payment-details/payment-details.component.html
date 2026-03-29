@@ -136,29 +136,29 @@
                             style="max-width: 450px;">
                             <i data-feather="file-text" appFeatherIcon class="text-primary me-3 icon-lg"></i>
                             <div class="flex-grow-1 overflow-hidden">
-                                <p class="mb-0 tx-13 fw-medium text-truncate">Reçu de paiement - {{ payment.reference }}
+                                <p class="mb-0 tx-13 fw-medium text-truncate">Reçu originel téléversé
                                 </p>
-                                <span class="tx-11 text-muted">Justificatif de versement</span>
+                                <span class="tx-11 text-muted">Justificatif existant</span>
                             </div>
                             <a [href]="serverUrl + payment.receiptUrl" target="_blank"
-                                class="btn btn-sm btn-outline-primary ms-3">
+                                class="btn btn-sm btn-outline-primary ms-3" title="Télécharger">
                                 <i data-feather="download" appFeatherIcon class="icon-sm"></i>
                             </a>
                         </div>
 
-                        <!-- Documents du Contrat -->
-                        <div *ngFor="let doc of payment.contract?.documents"
+                        <!-- Documents Liés au Paiement -->
+                        <div *ngFor="let doc of payment.documents"
                             class="bg-light p-3 rounded d-flex align-items-center w-100" style="max-width: 450px;">
                             <i data-feather="file" appFeatherIcon class="text-secondary me-3 icon-lg"></i>
                             <div class="flex-grow-1 overflow-hidden">
                                 <p class="mb-0 tx-13 fw-medium text-truncate">{{ doc.libelle || doc.originalName }}</p>
-                                <span class="tx-11 text-muted">Pièce jointe au contrat</span>
+                                <span class="tx-11 text-muted">Pièce jointe au paiement</span>
                             </div>
                             <div class="d-flex ms-3">
-                                <a [href]="serverUrl + '/uploads/contract/' + payment.contract.uuid + '/' + doc.storedName"
-                                    target="_blank" class="btn btn-xs btn-outline-secondary me-1" title="Télécharger">
+                                <button (click)="downloadDocument(doc.uuid)"
+                                    class="btn btn-xs btn-outline-secondary me-1" title="Télécharger">
                                     <i data-feather="download" appFeatherIcon class="icon-xs"></i>
-                                </a>
+                                </button>
                                 <button (click)="deleteDocument(doc.uuid)" class="btn btn-xs btn-outline-danger"
                                     title="Supprimer">
                                     <i data-feather="trash-2" appFeatherIcon class="icon-xs"></i>
@@ -167,7 +167,7 @@
                         </div>
 
                         <!-- État vide -->
-                        <p *ngIf="!payment.receiptUrl && (!payment.contract?.documents || payment.contract.documents.length === 0)"
+                        <p *ngIf="!payment.receiptUrl && (!payment.documents || payment.documents.length === 0)"
                             class="text-muted tx-12 italic">
                             Aucun document associé à cette transaction.
                         </p>
