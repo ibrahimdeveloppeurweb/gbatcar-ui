@@ -6,11 +6,13 @@ import { RouterLink } from '@angular/router';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { ThemeCssVariableService } from '../../../../../core/services/theme-css-variable.service';
 import { ClientService } from '../../../../../core/services/client/client.service';
+import { NgSelectModule } from '@ng-select/ng-select';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-client-dashboard',
     standalone: true,
-    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, RouterLink, FeatherIconDirective],
+    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, RouterLink, FeatherIconDirective, NgSelectModule, FormsModule],
     templateUrl: './client-dashboard.component.html',
     styleUrl: './client-dashboard.component.scss'
 })
@@ -43,13 +45,16 @@ export class ClientDashboardComponent implements OnInit {
     public clientStatusChartOptions: ApexOptions | any;
     public clientGrowthChartOptions: ApexOptions | any;
 
+    monthsList: number[] = Array.from({ length: 36 }, (_, i) => i + 1);
+    selectedMonth: number = 6;
+
     ngOnInit(): void {
         this.loadDashboardData();
     }
 
     loadDashboardData() {
         this.loading = true;
-        this.clientService.getDashboardData().subscribe({
+        this.clientService.getDashboardData(this.selectedMonth).subscribe({
             next: (data: any) => {
                 this.stats = data.kpis || this.stats;
                 this.distribution = data.distribution || {};
@@ -66,6 +71,10 @@ export class ClientDashboardComponent implements OnInit {
                 this.refreshCharts(); // Load empty charts at least
             }
         });
+    }
+
+    onMonthChange() {
+        this.loadDashboardData();
     }
 
     refreshCharts() {
@@ -113,30 +122,42 @@ export class ClientDashboardComponent implements OnInit {
     buildClientGrowthChart() {
         const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
         const categories = [];
-        const newData = [0, 0, 0, 0, 0, 0];
-        const lostData = [0, 0, 0, 0, 0, 0];
+        const vertData = new Array(this.selectedMonth).fill(0);
+        const grisData = new Array(this.selectedMonth).fill(0);
+        const rougeData = new Array(this.selectedMonth).fill(0);
 
-        // Generate the last 6 months globally
-        for (let i = 5; i >= 0; i--) {
+        // Generate the last X months globally
+        for (let i = this.selectedMonth - 1; i >= 0; i--) {
             const d = new Date();
             d.setMonth(d.getMonth() - i);
-            categories.push(monthNames[d.getMonth()]);
 
-            // match new from trends DB
-            const nM = this.trends.new?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
-            if (nM) newData[5 - i] = parseInt(nM.count);
+            let catName = monthNames[d.getMonth()];
+            if (this.selectedMonth > 12) {
+                catName += ' ' + d.getFullYear().toString().substring(2); // ex: Jan 24
+            }
+            categories.push(catName);
 
-            const lM = this.trends.lost?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
-            if (lM) lostData[5 - i] = parseInt(lM.count);
+            const arrIndex = (this.selectedMonth - 1) - i;
+
+            // match vert, gris, rouge from trends DB
+            const vM = this.trends.vert?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
+            if (vM) vertData[arrIndex] = parseInt(vM.count);
+
+            const gM = this.trends.gris?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
+            if (gM) grisData[arrIndex] = parseInt(gM.count);
+
+            const rM = this.trends.rouge?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
+            if (rM) rougeData[arrIndex] = parseInt(rM.count);
         }
 
         return {
             series: [
-                { name: 'Nouveaux Clients', data: newData },
-                { name: 'Clients Perdus', data: lostData },
+                { name: 'Sains', data: vertData },
+                { name: 'Terminés/Vendus', data: grisData },
+                { name: 'Rompus', data: rougeData },
             ],
             chart: { type: 'bar', height: 270, toolbar: { show: false }, stacked: false },
-            colors: ['#2ecc71', '#e74c3c'],
+            colors: ['#2ecc71', '#6c757d', '#e74c3c'],
             plotOptions: { bar: { columnWidth: '50%', borderRadius: 3 } },
             xaxis: {
                 categories: categories,
@@ -166,9 +187,11 @@ export class ClientDashboardComponent implements OnInit {
     }
 
     getCalculatedRiskLevel(c: any): string {
-        if (!c.unpaidAmount) return 'Modéré';
-        if (c.unpaidAmount > 2000000) return 'Critique';
-        if (c.unpaidAmount > 500000) return 'Élevé';
+        const delay = parseInt(c.delayDays || 0);
+        const amount = parseFloat(c.totalDue || 0);
+
+        if (delay > 30 || amount > 1000000) return 'Critique';
+        if (delay > 15 || amount > 500000) return 'Élevé';
         return 'Modéré';
     }
 

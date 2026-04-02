@@ -12,6 +12,7 @@ export interface VehicleDocumentStatus {
 export interface Vehicle {
     uuid?: string;
     id?: string;
+    reliabilityScore?: number;
 
     // ===================== IDENTIFICATION =====================
     immatriculation?: string;

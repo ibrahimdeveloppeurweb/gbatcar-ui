@@ -28,6 +28,7 @@
     </div>
     <div class="d-flex align-items-center flex-wrap text-nowrap">
         <button type="button" class="btn btn-outline-primary btn-icon-text me-2 mb-2 mb-md-0"
+            *ngIf="(vehicle.statut || vehicle.status) !== 'Vendu'"
             [routerLink]="['/gbatcar/vehicles/edit', vehicle.uuid || vehicle.id]">
             <i data-feather="edit" appFeatherIcon class="btn-icon-prepend"></i>
             Modifier Infos
@@ -117,11 +118,12 @@
                             vehicle.model }}</p>
                         <span class="badge mt-2" [ngClass]="{
                             'bg-success': (vehicle.statut || vehicle.status) === 'Disponible',
-                            'bg-primary': (vehicle.statut || vehicle.status) === 'Assigné',
-                            'bg-warning text-dark': (vehicle.statut || vehicle.status) === 'En Maintenance',
-                            'bg-secondary': (vehicle.statut || vehicle.status) === 'Hors Service'
+                            'bg-primary': (vehicle.statut || vehicle.status) === 'Assigné' || (vehicle.statut || vehicle.status) === 'En Location-Vente',
+                            'bg-warning text-dark': (vehicle.statut || vehicle.status) === 'En Maintenance' || (vehicle.statut || vehicle.status) === 'Réservé',
+                            'bg-secondary': (vehicle.statut || vehicle.status) === 'Hors Service',
+                            'bg-dark': (vehicle.statut || vehicle.status) === 'Vendu'
                         }">
-                            {{ vehicle.statut || vehicle.status }}
+                            {{ (vehicle.statut || vehicle.status) }}
                         </span>
                     </div>
                 </div>
@@ -177,10 +179,20 @@
                     </div>
                     <span class="badge fs-13px" [ngClass]="{
                         'bg-success': (vehicle.statut || vehicle.status) === 'Disponible',
-                        'bg-primary': (vehicle.statut || vehicle.status) === 'Assigné',
-                        'bg-warning text-dark': (vehicle.statut || vehicle.status) === 'En Maintenance',
-                        'bg-secondary': (vehicle.statut || vehicle.status) === 'Hors Service'
+                        'bg-primary': (vehicle.statut || vehicle.status) === 'Assigné' || (vehicle.statut || vehicle.status) === 'En Location-Vente',
+                        'bg-warning text-dark': (vehicle.statut || vehicle.status) === 'En Maintenance' || (vehicle.statut || vehicle.status) === 'Réservé',
+                        'bg-secondary': (vehicle.statut || vehicle.status) === 'Hors Service',
+                        'bg-dark': (vehicle.statut || vehicle.status) === 'Vendu'
                     }">{{ vehicle.statut || vehicle.status }}</span>
+                </div>
+
+                <!-- Reservation Details -->
+                <div class="mb-4 mt-n2" *ngIf="vehicle.preReservedBy">
+                    <small class="text-muted me-1">Pré-réservé par :</small>
+                    <span class="badge bg-info text-dark rounded-pill">
+                        <i data-feather="bookmark" appFeatherIcon class="icon-xs me-1"></i>
+                        {{ vehicle.preReservedBy }}
+                    </span>
                 </div>
 
                 <div class="row">
@@ -262,19 +274,26 @@
             <div class="col-md-6 grid-margin stretch-card">
                 <div class="card">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-baseline">
-                            <h6 class="card-title mb-0">AFFECTATION ACTUELLE</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="card-title mb-0">{{ (vehicle.statut || vehicle.status) === 'Vendu' ? 'DERNIÈRE
+                                AFFECTATION' : 'AFFECTATION ACTUELLE' }}</h6>
                         </div>
                         <div class="row mt-4">
                             <div class="col-12 text-center">
                                 <h3 class="fw-bolder fs-5"
-                                    [ngClass]="{'text-success': (vehicle.statut || vehicle.status) === 'Disponible', 'text-primary': (vehicle.statut || vehicle.status) === 'Assigné', 'text-warning': (vehicle.statut || vehicle.status) === 'En Maintenance', 'text-muted': (vehicle.statut || vehicle.status) === 'Hors Service'}">
+                                    [ngClass]="{'text-success': (vehicle.statut || vehicle.status) === 'Disponible', 'text-primary': (vehicle.statut || vehicle.status) === 'Assigné' || (vehicle.statut || vehicle.status) === 'En Location-Vente', 'text-warning': (vehicle.statut || vehicle.status) === 'En Maintenance', 'text-muted': (vehicle.statut || vehicle.status) === 'Hors Service', 'text-dark': (vehicle.statut || vehicle.status) === 'Vendu'}">
                                     {{ vehicle.client ? (vehicle.client.firstName + ' ' + vehicle.client.lastName) :
                                     (vehicle.assignedClient !== 'Aucun' ? vehicle.assignedClient : 'Véhicule sur Parc')
                                     }}
                                 </h3>
-                                <p class="text-muted mt-2">Redevance journalière : <span class="fw-bold text-dark">{{
+                                <p class="text-muted mt-2" *ngIf="(vehicle.statut || vehicle.status) !== 'Vendu'">
+                                    Redevance journalière : <span class="fw-bold text-dark">{{
                                         (vehicle.dailyRate || vehicle.prixParJour) | number }} FCFA</span></p>
+                                <p class="text-success fw-bold mt-2"
+                                    *ngIf="(vehicle.statut || vehicle.status) === 'Vendu'">
+                                    <i data-feather="check-circle" appFeatherIcon class="icon-sm me-1"></i> Contrat
+                                    Soldé le {{ vehicle.contractEndDate | date:'dd/MM/yyyy' }}
+                                </p>
                                 <!-- GPS Status Badge -->
                                 <div class="mt-2" *ngIf="vehicle.gpsStatus">
                                     <span class="badge rounded-pill" [ngClass]="{
@@ -339,7 +358,8 @@
                     <span class="badge" [ngClass]="{
                         'bg-success': vehicle.paymentStatus === 'À jour',
                         'bg-warning text-dark': vehicle.paymentStatus === 'En retard',
-                        'bg-danger': vehicle.paymentStatus === 'Critique'
+                        'bg-danger': vehicle.paymentStatus === 'Critique',
+                        'bg-info': vehicle.paymentStatus === 'Soldé'
                     }">{{ vehicle.paymentStatus }}</span>
                 </div>
 
@@ -385,7 +405,8 @@
                         [routerLink]="vehicle.activeContractUuid ? ['/gbatcar/contracts/details', vehicle.activeContractUuid] : ['/gbatcar/contracts']">
                         <i data-feather="file-text" appFeatherIcon class="icon-sm me-1"></i> Voir le Contrat
                     </a>
-                    <a class="btn btn-sm btn-outline-success" [routerLink]="['/gbatcar/payments']" [queryParams]="{ vehicle: vehicle.uuid }">
+                    <a class="btn btn-sm btn-outline-success" [routerLink]="['/gbatcar/payments']"
+                        [queryParams]="{ vehicle: vehicle.uuid }">
                         <i data-feather="dollar-sign" appFeatherIcon class="icon-sm me-1"></i> Historique Paiements
                     </a>
                     <a class="btn btn-sm btn-outline-warning" [routerLink]="['/gbatcar/payments/penalties']">
@@ -405,7 +426,8 @@
                         <a ngbNavLink>Historique des Interventions</a>
                         <ng-template ngbNavContent>
                             <div class="d-flex justify-content-end mb-3">
-                                <button (click)="openAddMaintenanceModal(maintenanceModal)" class="btn btn-warning btn-sm text-dark">
+                                <button (click)="openAddMaintenanceModal(maintenanceModal)"
+                                    class="btn btn-warning btn-sm text-dark">
                                     <i data-feather="tool" appFeatherIcon class="icon-sm me-1"></i> Ajouter Intervention
                                 </button>
                             </div>
@@ -426,7 +448,8 @@
                                     <tbody>
                                         <tr *ngFor="let m of vehicle.maintenances">
                                             <td class="py-3 text-nowrap">
-                                                <div class="tx-14 fw-medium text-dark mb-1">{{ m.dateIntervention | date:'dd/MM/yyyy' }}</div>
+                                                <div class="tx-14 fw-medium text-dark mb-1">{{ m.dateIntervention |
+                                                    date:'dd/MM/yyyy' }}</div>
                                                 <div class="tx-11 text-muted" *ngIf="m.create">
                                                     Créé par : <span class="fw-bold text-dark">{{ m.create }}</span>
                                                 </div>
@@ -446,11 +469,13 @@
                                             </td>
                                             <td class="text-end">
                                                 <div class="d-flex justify-content-end gap-1">
-                                                    <a [routerLink]="['/gbatcar/maintenance/details', m.uuid]" 
-                                                        class="btn btn-xs btn-outline-danger btn-icon" title="Voir détails">
+                                                    <a [routerLink]="['/gbatcar/maintenance/details', m.uuid]"
+                                                        class="btn btn-xs btn-outline-danger btn-icon"
+                                                        title="Voir détails">
                                                         <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
                                                     </a>
-                                                    <button class="btn btn-xs btn-outline-secondary btn-icon" title="Imprimer">
+                                                    <button class="btn btn-xs btn-outline-secondary btn-icon"
+                                                        title="Imprimer">
                                                         <i data-feather="printer" appFeatherIcon class="icon-sm"></i>
                                                     </button>
                                                 </div>
@@ -458,7 +483,8 @@
                                         </tr>
                                         <tr *ngIf="!vehicle.maintenances || vehicle.maintenances.length === 0">
                                             <td colspan="8" class="text-center text-muted py-4">
-                                                <i data-feather="info" appFeatherIcon class="icon-md mb-2 d-block mx-auto text-light"></i>
+                                                <i data-feather="info" appFeatherIcon
+                                                    class="icon-md mb-2 d-block mx-auto text-light"></i>
                                                 Aucune intervention enregistrée pour ce véhicule
                                             </td>
                                         </tr>
@@ -563,14 +589,13 @@
                 <!-- Type & Date -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Type d'intervention <span class="text-danger">*</span></label>
-                    <ng-select [items]="interventionTypes" 
-                               placeholder="Sélectionner un type" 
-                               formControlName="type">
+                    <ng-select [items]="interventionTypes" placeholder="Sélectionner un type" formControlName="type">
                     </ng-select>
                 </div>
                 <div class="col-md-6 mb-3" *ngIf="isTypeAutre">
                     <label class="form-label fw-bold">Préciser le type <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" formControlName="typeAutre" placeholder="Ex: Réparation Turbo...">
+                    <input type="text" class="form-control" formControlName="typeAutre"
+                        placeholder="Ex: Réparation Turbo...">
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Date <span class="text-danger">*</span></label>
@@ -601,39 +626,42 @@
                 <!-- Provider -->
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Prestataire / Garage <span class="text-danger">*</span></label>
-                    <ng-select [items]="providers" 
-                               placeholder="Sélectionner le garage" 
-                               formControlName="provider">
+                    <ng-select [items]="providers" placeholder="Sélectionner le garage" formControlName="provider">
                     </ng-select>
                 </div>
                 <div class="col-md-6 mb-3" *ngIf="isProviderAutre">
                     <label class="form-label fw-bold">Nom du prestataire <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" formControlName="providerAutre" placeholder="Ex: Garage Speedy...">
+                    <input type="text" class="form-control" formControlName="providerAutre"
+                        placeholder="Ex: Garage Speedy...">
                 </div>
 
                 <!-- Description -->
                 <div class="col-md-12 mb-3">
                     <label class="form-label fw-bold">Description / Observations</label>
-                    <textarea class="form-control" formControlName="description" rows="2" placeholder="Détails des réparations effectuées..."></textarea>
+                    <textarea class="form-control" formControlName="description" rows="2"
+                        placeholder="Détails des réparations effectuées..."></textarea>
                 </div>
 
                 <!-- Documents Joints Section -->
                 <div class="col-md-12">
                     <label class="form-label fw-bold d-flex justify-content-between align-items-center mb-2">
-                        <span><i data-feather="paperclip" appFeatherIcon class="icon-sm me-1 text-info"></i> Documents Joints</span>
-                        <div *ngIf="uploading" class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                        <span><i data-feather="paperclip" appFeatherIcon class="icon-sm me-1 text-info"></i> Documents
+                            Joints</span>
+                        <div *ngIf="uploading" class="spinner-border spinner-border-sm text-primary" role="status">
+                        </div>
                     </label>
 
                     <!-- File List -->
                     <div *ngIf="selectedFiles.length > 0" class="mb-2">
-                        <div *ngFor="let file of selectedFiles; let i = index" 
-                             class="bg-soft-primary p-2 rounded d-flex align-items-center border border-primary border-opacity-25 mb-2">
+                        <div *ngFor="let file of selectedFiles; let i = index"
+                            class="bg-soft-primary p-2 rounded d-flex align-items-center border border-primary border-opacity-25 mb-2">
                             <i data-feather="file" appFeatherIcon class="icon-sm text-primary me-2"></i>
                             <div class="flex-grow-1 overflow-hidden">
                                 <p class="mb-0 tx-12 fw-medium text-truncate" [title]="file.name">{{ file.name }}</p>
                                 <span class="tx-10 text-muted">{{ formatSize(file.size) }}</span>
                             </div>
-                            <button type="button" class="btn btn-link text-danger p-0 ms-2" (click)="removeSelectedFile(i)">
+                            <button type="button" class="btn btn-link text-danger p-0 ms-2"
+                                (click)="removeSelectedFile(i)">
                                 <i data-feather="x-circle" appFeatherIcon class="icon-xs"></i>
                             </button>
                         </div>
@@ -653,9 +681,8 @@
     </div>
     <div class="modal-footer border-0 p-4 pt-0">
         <button type="button" class="btn btn-light" (click)="modal.dismiss('Cancel')">Annuler</button>
-        <button type="button" class="btn btn-warning text-dark px-4 fw-bold" 
-                [disabled]="maintenanceForm.invalid || isSubmitting"
-                (click)="modal.close('save')">
+        <button type="button" class="btn btn-warning text-dark px-4 fw-bold"
+            [disabled]="maintenanceForm.invalid || isSubmitting" (click)="modal.close('save')">
             <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
             Enregistrer l'intervention
         </button>

@@ -290,13 +290,8 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge rounded-pill px-2" [ngClass]="{
-                                        'bg-success': contract.status === 'Soldé' || contract.status === 'VALIDATED' || contract.status === 'VALIDÉ',
-                                        'bg-primary': contract.status === 'En cours' || contract.status === 'ACTIVE',
-                                        'bg-warning text-dark': contract.status === 'En Attente' || contract.status === 'NEW' || contract.status === 'PENDING',
-                                        'bg-danger': contract.status === 'Résilié',
-                                        'bg-secondary': !contract.status
-                                    }">
+                                    <span class="badge rounded-pill px-2"
+                                        [ngClass]="getContractStatusClass(contract.status)">
                                         {{ translateStatus(contract.status) }}
                                     </span>
                                 </td>

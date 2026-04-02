@@ -180,6 +180,30 @@ export class ContractService {
         );
     }
 
+    terminate(uuid: string): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+
+        return this.api._post(`${this.url}/${uuid}/terminate`, {}).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    rupture(uuid: string): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+
+        return this.api._post(`${this.url}/${uuid}/rupture`, {}).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
     addPromise(contractUuid: string, data: any): Observable<any> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();

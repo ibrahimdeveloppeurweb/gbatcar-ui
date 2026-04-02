@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { VehicleService } from '../../../../../core/services/vehicle/vehicle.service';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 import { environment } from '../../../../../../environments/environment';
 import Swal from 'sweetalert2';
 
@@ -19,6 +20,7 @@ import { Vehicle } from '../../../../../core/models/vehicle.model';
 export class CatalogComponent implements OnInit {
 
   private vehicleService = inject(VehicleService);
+  private authService = inject(AuthService);
 
   catalogItems: Vehicle[] = [];
   loading: boolean = false;
@@ -185,7 +187,7 @@ export class CatalogComponent implements OnInit {
 
   loadCatalog() {
     this.loading = true;
-    const filters: any = {};
+    const filters: any = { available_only: 'true' };
     if (this.advSearchTerm) filters.search = this.advSearchTerm;
     if (this.advStatusFilter) filters.status = this.advStatusFilter;
     if (this.advYearMin) filters.yearMin = this.advYearMin;
@@ -234,5 +236,69 @@ export class CatalogComponent implements OnInit {
   formatCurrency(amount: number): string {
     if (!amount && amount !== 0) return '0 FCFA';
     return new Intl.NumberFormat('fr-FR').format(Math.round(amount)) + ' FCFA';
+  }
+
+  reserveVehicle(vehicle: Vehicle) {
+    if (vehicle.statut !== 'Disponible') {
+      Swal.fire('Info', 'Ce véhicule n\'est pas disponible à la réservation.', 'info');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Réserver ce véhicule ?',
+      text: `Voulez-vous marquer le ${vehicle.marque} ${vehicle.modele} (${vehicle.immatriculation}) comme RÉSERVÉ ?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Oui, réserver',
+      cancelButtonText: 'Annuler',
+      confirmButtonColor: '#3085d6'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.loading = true;
+        const user = this.authService.getDataToken();
+        const agentName = user ? `${user.firstname} ${user.nom}` : 'Agent';
+
+        this.vehicleService.reserve(vehicle.uuid || '', agentName).subscribe({
+          next: (res: any) => {
+            vehicle.statut = 'Réservé';
+            vehicle.preReservedBy = agentName;
+            this.loading = false;
+            Swal.fire('Succès', 'Véhicule réservé avec succès !', 'success');
+          },
+          error: (err: any) => {
+            this.loading = false;
+            Swal.fire('Erreur', 'Impossible de réserver le véhicule.', 'error');
+          }
+        });
+      }
+    });
+  }
+
+  cancelReservation(vehicle: Vehicle) {
+    Swal.fire({
+      title: 'Annuler la réservation ?',
+      text: `Voulez-vous remettre le ${vehicle.marque} ${vehicle.modele} en DISPONIBLE ?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Oui, annuler',
+      cancelButtonText: 'Non, garder',
+      confirmButtonColor: '#d33'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.loading = true;
+        this.vehicleService.updateStatus(vehicle.uuid || '', 'Disponible').subscribe({
+          next: () => {
+            vehicle.statut = 'Disponible';
+            vehicle.preReservedBy = undefined;
+            this.loading = false;
+            Swal.fire('Annulé', 'Le véhicule est à nouveau disponible au catalogue.', 'success');
+          },
+          error: (err) => {
+            this.loading = false;
+            Swal.fire('Erreur', 'Impossible d\'annuler la réservation.', 'error');
+          }
+        });
+      }
+    });
   }
 }

@@ -5,6 +5,11 @@
         <p class="text-muted fs-13px mb-0">Vue globale du portefeuille clients – activité, risques & croissance.</p>
     </div>
     <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end gap-2">
+        <ng-select style="width: 150px; text-align: left;" [items]="monthsList" [clearable]="false"
+            [(ngModel)]="selectedMonth" (change)="onMonthChange()" placeholder="Une durée">
+            <ng-template ng-option-tmp let-item="item">{{ item }} mois</ng-template>
+            <ng-template ng-label-tmp let-item="item">{{ item }} mois</ng-template>
+        </ng-select>
         <button class="btn btn-primary btn-sm d-flex align-items-center" routerLink="/gbatcar/clients/new">
             <i data-feather="user-plus" appFeatherIcon class="icon-sm me-1"></i> Nouveau Dossier
         </button>
@@ -127,7 +132,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <h6 class="card-title mb-3 text-uppercase fs-12px fw-bold text-muted">
-                    Évolution du Portefeuille (6 derniers mois)
+                    Évolution du Portefeuille ({{ selectedMonth }} derniers mois)
                 </h6>
                 <apx-chart [series]="clientGrowthChartOptions.series" [chart]="clientGrowthChartOptions.chart"
                     [colors]="clientGrowthChartOptions.colors" [plotOptions]="clientGrowthChartOptions.plotOptions"
@@ -169,11 +174,11 @@
                                 <td>
                                     <span class="d-block fw-medium text-primary fs-12px">{{ c.lastName }} {{ c.firstName
                                         }}</span>
-                                    <span class="text-muted fs-11px">{{ c.vehicle ? c.vehicle.marque + ' ' +
-                                        c.vehicle.modele : c.phone }}</span>
+                                    <span class="text-muted fs-11px">{{ c.marque ? c.marque + ' ' + c.modele : 'N/A'
+                                        }}</span>
                                 </td>
-                                <td class="text-danger fw-bold fs-12px">--</td>
-                                <td class="fw-bold text-dark fs-12px">{{ formatCurrency(c.unpaidAmount || 0) }}</td>
+                                <td class="text-danger fw-bold fs-12px">{{ c.delayDays || 0 }}j</td>
+                                <td class="fw-bold text-dark fs-12px">{{ formatCurrency(c.totalDue || 0) }}</td>
                                 <td>
                                     <span class="badge" [ngClass]="getCalculatedRiskClass(c)">{{
                                         getCalculatedRiskLevel(c) }}</span>

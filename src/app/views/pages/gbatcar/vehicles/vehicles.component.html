@@ -24,7 +24,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <p class="text-secondary fs-12px mb-1">Flotte Totale</p>
-                        <h4 class="fw-bold mb-0">{{ vehicles.length }}</h4>
+                        <h4 class="fw-bold mb-0">{{ stats.total }}</h4>
                     </div>
                     <i data-feather="truck" appFeatherIcon class="icon-lg text-success"></i>
                 </div>
@@ -37,7 +37,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <p class="text-secondary fs-12px mb-1">Assignés</p>
-                        <h4 class="fw-bold mb-0">{{ vehicles | countWhere:'status':'Assigné' }}</h4>
+                        <h4 class="fw-bold mb-0">{{ stats.assigned }}</h4>
                     </div>
                     <i data-feather="user-check" appFeatherIcon class="icon-lg text-primary"></i>
                 </div>
@@ -168,7 +168,7 @@
                     <li class="nav-item">
                         <a class="nav-link" [class.active]="activeTab==='all'" (click)="setTab('all')"
                             style="cursor:pointer">
-                            Tous <span class="badge bg-secondary ms-1">{{ vehicles.length }}</span>
+                            Tous <span class="badge bg-secondary ms-1">{{ stats.total }}</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -190,6 +190,13 @@
                             (click)="setTab('critical')" style="cursor:pointer">
                             <i data-feather="alert-octagon" appFeatherIcon class="icon-xs me-1"></i>
                             À Récupérer <span class="badge bg-danger ms-1">{{ criticalCount }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" [class.active]="activeTab==='finished'" (click)="setTab('finished')"
+                            style="cursor:pointer">
+                            <i data-feather="archive" appFeatherIcon class="icon-xs me-1 text-info"></i>
+                            Archives / Soldés <span class="badge bg-info ms-1">{{ soldCount }}</span>
                         </a>
                     </li>
                 </ul>
@@ -244,11 +251,13 @@
                                 <td>
                                     <span class="badge rounded-1 px-2" [ngClass]="{
                                         'bg-success': vehicle.status === 'Disponible',
-                                        'bg-danger': vehicle.status === 'Assigné',
+                                        'bg-primary': vehicle.status === 'Assigné' || vehicle.status === 'En Location-Vente',
+                                        'bg-info': vehicle.status === 'Réservé',
                                         'bg-warning text-dark': vehicle.status === 'En Maintenance',
-                                        'bg-secondary': vehicle.status === 'Hors Service'
+                                        'bg-secondary': vehicle.status === 'Hors Service',
+                                        'bg-dark': vehicle.status === 'Vendu'
                                     }">
-                                        {{ vehicle.status }}
+                                        {{ vehicle.status || 'Archivé' }}
                                     </span>
                                 </td>
                                 <td class="fw-medium">
@@ -258,20 +267,46 @@
                                 </td>
                                 <!-- Santé financière du contrat -->
                                 <td>
-                                    <span *ngIf="vehicle.paymentStatus !== '-'" class="badge rounded-1 px-2" [ngClass]="{
-                                        'bg-success': vehicle.paymentStatus === 'À jour',
-                                        'bg-warning text-dark': vehicle.paymentStatus === 'En retard',
-                                        'bg-danger': vehicle.paymentStatus === 'Critique',
-                                        'bg-secondary': vehicle.paymentStatus === 'Soldé'
-                                    }">
-                                        {{ vehicle.paymentStatus }}
-                                        <span *ngIf="(vehicle.daysLate ?? 0) > 0"> (J+{{ vehicle.daysLate }})</span>
-                                    </span>
-                                    <span *ngIf="vehicle.paymentStatus === '-'" class="text-muted fst-italic">-</span>
+                                    <div class="d-flex flex-column">
+                                        <span *ngIf="vehicle.paymentStatus !== '-'" class="badge rounded-1 px-2 mb-1"
+                                            [ngClass]="{
+                                            'bg-success': vehicle.paymentStatus === 'À jour',
+                                            'bg-warning text-dark': vehicle.paymentStatus === 'En retard',
+                                            'bg-danger': vehicle.paymentStatus === 'Critique',
+                                            'bg-secondary': vehicle.paymentStatus === 'Soldé'
+                                        }">
+                                            {{ vehicle.paymentStatus }}
+                                            <span *ngIf="(vehicle.daysLate ?? 0) > 0"> (J+{{ vehicle.daysLate }})</span>
+                                        </span>
+
+                                        <!-- Reliability Index (Bons Payeurs) -->
+                                        <div *ngIf="vehicle.reliabilityScore !== undefined">
+                                            <span
+                                                class="badge border border-success text-success bg-light fs-10px py-0 px-1"
+                                                *ngIf="vehicle.reliabilityScore === 100">
+                                                <i data-feather="award" appFeatherIcon class="icon-xxs me-1"></i> ÉLITE
+                                            </span>
+                                            <span class="badge border border-info text-info bg-light fs-10px py-0 px-1"
+                                                *ngIf="vehicle.reliabilityScore >= 90 && vehicle.reliabilityScore < 100">
+                                                <i data-feather="star" appFeatherIcon class="icon-xxs me-1"></i> FIABLE
+                                            </span>
+                                            <div class="mt-1">
+                                                <div class="progress" style="height: 3px; min-width: 60px;">
+                                                    <div class="progress-bar bg-success" role="progressbar"
+                                                        [style.width.%]="vehicle.reliabilityScore"></div>
+                                                </div>
+                                                <small class="text-muted fs-10px">Fiabilité: {{ vehicle.reliabilityScore
+                                                    }}%</small>
+                                            </div>
+                                        </div>
+
+                                        <span *ngIf="vehicle.paymentStatus === '-'"
+                                            class="text-muted fst-italic">-</span>
+                                    </div>
                                 </td>
                                 <!-- Barre de progression remboursement -->
                                 <td style="min-width: 220px;">
-                                    <div *ngIf="(vehicle.totalContractAmount ?? 0) > 0">
+                                    <div *ngIf="(vehicle.totalContractAmount ?? 0) > 0 || vehicle.status === 'Vendu'">
                                         <div class="d-flex justify-content-between mb-1 tx-11">
                                             <span class="text-muted fw-bold">{{ (vehicle.contractProgress ?? 0) |
                                                 number:'1.1-1' }}%</span>
@@ -309,6 +344,7 @@
                                             <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
                                         </button>
                                         <button class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
+                                            *ngIf="vehicle.status !== 'Vendu'"
                                             [routerLink]="['/gbatcar/vehicles/edit', vehicle.uuid]" title="Éditer">
                                             <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
                                         </button>

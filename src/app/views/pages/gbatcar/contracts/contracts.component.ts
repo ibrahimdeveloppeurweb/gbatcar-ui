@@ -211,7 +211,19 @@ export class ContractsComponent implements OnInit {
     if (normalized === 'ACTIVE' || normalized === 'EN COURS') return 'EN COURS';
     if (normalized === 'SOLDÉ') return 'SOLDÉ';
     if (normalized === 'RÉSILIÉ') return 'RÉSILIÉ';
+    if (normalized === 'TERMINÉ') return 'TERMINÉ';
+    if (normalized === 'ROMPU') return 'ROMPU';
     return status;
+  }
+
+  getContractStatusClass(status?: string): string {
+    if (!status) return 'bg-secondary';
+    const normalized = status.toUpperCase();
+    if (['VALIDATED', 'VALIDÉ', 'ACTIVE', 'EN COURS', 'EN_COURS', 'ACTIF'].includes(normalized)) return 'bg-success';
+    if (['SOLDÉ', 'TERMINÉ'].includes(normalized)) return 'bg-secondary';
+    if (['NEW', 'PENDING', 'EN ATTENTE'].includes(normalized)) return 'bg-warning text-dark';
+    if (['RÉSILIÉ', 'ROMPU', 'ANNULÉ'].includes(normalized)) return 'bg-danger';
+    return 'bg-secondary';
   }
 
   getEffectiveProgress(contract: Contract): number {

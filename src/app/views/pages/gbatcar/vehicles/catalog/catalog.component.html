@@ -153,8 +153,9 @@
                         <!-- Statut commercial -->
                         <span class="badge" [ngClass]="{
                             'bg-success': item.statut === 'Disponible',
-                            'bg-warning text-dark': item.statut === 'En Préparation',
-                            'bg-primary': item.statut === 'En Attente Apport'
+                            'bg-warning text-dark': item.statut === 'En Préparation' || item.statut === 'Réservé',
+                            'bg-primary': item.statut === 'En Attente Apport' || item.statut === 'En Location-Vente',
+                            'bg-secondary': item.statut === 'Vendu' || item.statut === 'Solder'
                         }">{{ item.statut }}</span>
                     </div>
                 </div>
@@ -256,12 +257,14 @@
                         <i data-feather="edit-2" appFeatherIcon class="icon-sm me-1"></i> Éditer l'offre
                     </button>
                     <button class="btn btn-primary btn-sm flex-grow-1"
-                        *ngIf="item.statut === 'Disponible' && !item.preReservedBy" (click)="$event.stopPropagation()">
+                        *ngIf="item.statut === 'Disponible' && !item.preReservedBy"
+                        (click)="$event.stopPropagation(); reserveVehicle(item)">
                         <i data-feather="check" appFeatherIcon class="icon-sm me-1"></i> Réserver
                     </button>
-                    <button class="btn btn-secondary btn-sm flex-grow-1" *ngIf="item.preReservedBy"
-                        (click)="$event.stopPropagation()" disabled>
-                        <i data-feather="lock" appFeatherIcon class="icon-sm me-1"></i> Pré-réservé
+                    <button class="btn btn-outline-danger btn-sm flex-grow-1"
+                        *ngIf="item.statut === 'Réservé' || item.preReservedBy"
+                        (click)="$event.stopPropagation(); cancelReservation(item)">
+                        <i data-feather="x-circle" appFeatherIcon class="icon-sm me-1"></i> Annuler
                     </button>
                 </div>
             </div>

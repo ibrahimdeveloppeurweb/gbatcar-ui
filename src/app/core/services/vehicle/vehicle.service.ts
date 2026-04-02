@@ -160,6 +160,28 @@ export class VehicleService {
         );
     }
 
+    reserve(uuid: string, reservedBy: string): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._post(`${this.url}/${uuid}/reserve`, { reservedBy }).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    updateStatus(uuid: string, status: string): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._put(`${this.url}/${uuid}/status`, { status }).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
     removeGalleryImage(vehicleId: string, photo: string): Observable<any> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();

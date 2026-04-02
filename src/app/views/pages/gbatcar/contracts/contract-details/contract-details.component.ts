@@ -640,6 +640,62 @@ export class ContractDetailsComponent implements OnInit {
     });
   }
 
+  terminateContract() {
+    Swal.fire({
+      title: 'Terminer ce contrat ?',
+      text: "Le contrat passera en statut 'TERMINÉ' et les véhicules seront libérés au catalogue.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#1bc943',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Oui, terminer',
+      cancelButtonText: 'Annuler'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.loading = true;
+        this.contractService.terminate(this.contract!.uuid!).subscribe({
+          next: (res) => {
+            this.loading = false;
+            this.contract = res;
+            Swal.fire('Terminé !', 'Le contrat est fini et les véhicules sont libres.', 'success');
+          },
+          error: (err) => {
+            this.loading = false;
+            Swal.fire('Erreur', err.error.message || 'Impossible de terminer le contrat', 'error');
+          }
+        });
+      }
+    });
+  }
+
+  ruptureContract() {
+    Swal.fire({
+      title: 'Rompre ce contrat ?',
+      text: "ATTENTION : Cette action marquera le contrat comme 'ROMPU' (Résiliation forcée). Les véhicules seront immédiatement libérés.",
+      icon: 'error',
+      showCancelButton: true,
+      confirmButtonColor: '#e74c3c',
+      cancelButtonColor: '#7f8c8d',
+      confirmButtonText: 'Oui, rompre le contrat',
+      cancelButtonText: 'Annuler'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.loading = true;
+        this.contractService.rupture(this.contract!.uuid!).subscribe({
+          next: (res) => {
+            this.loading = false;
+            this.contract = res;
+            Swal.fire('Contrat Rompu', 'Le contrat est désormais résilié et les véhicules sont libres.', 'success');
+          },
+          error: (err) => {
+            this.loading = false;
+            Swal.fire('Erreur', err.error.message || 'Impossible de rompre le contrat', 'error');
+          }
+        });
+      }
+    });
+  }
+
   // Translation helpers for UI
   translateFrequency(value?: string): string {
     if (!value) return 'Non Renseigné';
@@ -665,6 +721,8 @@ export class ContractDetailsComponent implements OnInit {
     if (normalized === 'VALIDATED' || normalized === 'VALIDÉ') return 'VALIDÉ';
     if (normalized === 'ACTIVE' || normalized === 'EN COURS') return 'EN COURS';
     if (normalized === 'SOLDÉ') return 'SOLDÉ';
+    if (normalized === 'TERMINÉ') return 'TERMINÉ';
+    if (normalized === 'ROMPU' || normalized === 'ANNULÉ') return 'ROMPU';
     if (normalized === 'RÉSILIÉ') return 'RÉSILIÉ';
     return status;
   }
@@ -697,13 +755,13 @@ export class ContractDetailsComponent implements OnInit {
   // Promise Management
   openPromiseModal(content: any): void {
     if (!this.contract) return;
-    
+
     this.promiseForm.patchValue({
       expectedDate: new Date().toISOString().split('T')[0],
       amount: (this.contract as any).riskAnalysis?.unpaidArrears || this.contract.unpaidAmount || 0,
       note: ''
     });
-    
+
     this.modalService.open(content, { centered: true });
   }
 

@@ -15,7 +15,7 @@ import { MaintenanceAlertService } from '../../../../../core/services/maintenanc
 export class MaintenanceAlertsComponent implements OnInit {
 
   private alertService = inject(MaintenanceAlertService);
-  
+
   alerts: any[] = [];
   loading: boolean = false;
 
@@ -53,9 +53,26 @@ export class MaintenanceAlertsComponent implements OnInit {
 
   loadAlerts(): void {
     this.loading = true;
-    this.alertService.getList().subscribe({
+    const raw: any = {
+      search: this.advSearchTerm,
+      severity: this.advSeverityFilter,
+      status: this.advStatusFilter,
+      dateMin: this.advDateMin,
+      dateMax: this.advDateMax,
+      limit: this.advCountFilter,
+    };
+
+    const filters: any = {};
+    Object.keys(raw).forEach(k => {
+      const v = raw[k];
+      if (v !== null && v !== undefined && v !== '') {
+        filters[k] = v;
+      }
+    });
+
+    this.alertService.getList(filters).subscribe({
       next: (data: any) => {
-        this.alerts = data;
+        this.alerts = data.data || data;
         this.loading = false;
       },
       error: (err) => {
@@ -66,51 +83,19 @@ export class MaintenanceAlertsComponent implements OnInit {
   }
 
   get filteredAlerts() {
-    let result = this.alerts.filter(alert => {
-      // 1. Text Search
-      const vehicleStr = alert.vehicle ? `${alert.vehicle.marque} ${alert.vehicle.modele} ${alert.vehicle.immatriculation}` : '';
-      const clientStr = alert.client ? `${alert.client.firstName} ${alert.client.lastName} ${alert.client.name}` : '';
-      const searchStr = `${vehicleStr} ${clientStr} ${alert.type} ${alert.description}`.toLowerCase();
-      const matchesSearch = !this.appliedSearchTerm || searchStr.includes(this.appliedSearchTerm.toLowerCase());
-
-      // 2. Exact Selectors
-      const matchesSeverity = !this.appliedSeverityFilter || alert.severity === this.appliedSeverityFilter;
-      const matchesStatus = !this.appliedStatusFilter || alert.status === this.appliedStatusFilter;
-
-      // 3. Date Ranges
-      const alertDate = alert.date ? new Date(alert.date) : null;
-      const minDate = this.appliedDateMin ? new Date(this.appliedDateMin) : null;
-      const maxDate = this.appliedDateMax ? new Date(this.appliedDateMax) : null;
-
-      const matchesDateMin = !minDate || (alertDate && alertDate >= minDate);
-      const matchesDateMax = !maxDate || (alertDate && alertDate <= maxDate);
-      const matchesDate = matchesDateMin && matchesDateMax;
-
-      return matchesSearch && matchesSeverity && matchesStatus && matchesDate;
-    });
-
-    // Apply Count Limit
-    return result.slice(0, this.appliedCountFilter);
+    return this.alerts;
   }
 
   applyQuickFilters() {
-    this.appliedSearchTerm = this.quickSearchTerm;
-    this.appliedStatusFilter = this.quickStatusFilter;
-
     this.advSearchTerm = this.quickSearchTerm;
     this.advStatusFilter = this.quickStatusFilter;
+    this.loadAlerts();
   }
 
   applyAdvancedFilters() {
-    this.appliedSearchTerm = this.advSearchTerm;
-    this.appliedSeverityFilter = this.advSeverityFilter;
-    this.appliedStatusFilter = this.advStatusFilter;
-    this.appliedDateMin = this.advDateMin;
-    this.appliedDateMax = this.advDateMax;
-    this.appliedCountFilter = this.advCountFilter;
-
     this.quickSearchTerm = this.advSearchTerm;
     this.quickStatusFilter = this.advStatusFilter;
+    this.loadAlerts();
   }
 
   resetFilters() {
@@ -124,7 +109,7 @@ export class MaintenanceAlertsComponent implements OnInit {
     this.quickSearchTerm = '';
     this.quickStatusFilter = '';
 
-    this.applyAdvancedFilters();
+    this.loadAlerts();
   }
 
   printAlert(alert: any) {

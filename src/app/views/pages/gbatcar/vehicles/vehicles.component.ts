@@ -28,6 +28,7 @@ export class VehiclesComponent implements OnInit {
   private vehicleService = inject(VehicleService);
 
   vehicles: Vehicle[] = [];
+  recompileTrigger: number = Date.now();
   loading: boolean = false;
   showAdvancedFilters: boolean = true;
 
@@ -37,7 +38,8 @@ export class VehiclesComponent implements OnInit {
     paymentAlert: 0,
     maintenanceAlert: 0,
     critical: 0,
-    goodPayers: 0
+    goodPayers: 0,
+    soldCount: 0
   };
 
   // Active tab
@@ -48,6 +50,7 @@ export class VehiclesComponent implements OnInit {
   get maintenanceAlertCount(): number { return this.stats.maintenanceAlert; }
   get goodPayersCount(): number { return this.stats.goodPayers; }
   get criticalCount(): number { return this.stats.critical; }
+  get soldCount(): number { return this.stats.soldCount; }
   get filteredVehicles(): Vehicle[] { return this.vehicles; }
 
   // 1. Quick Filters
@@ -90,6 +93,7 @@ export class VehiclesComponent implements OnInit {
     if (this.activeTab === 'ok') filters.paymentStatus = 'À jour';
     if (this.activeTab === 'alert') filters.paymentStatus = 'En retard';
     if (this.activeTab === 'critical') filters.paymentStatus = 'Critique';
+    if (this.activeTab === 'finished') filters.paymentStatus = 'Soldé';
 
     this.vehicleService.getList(filters).subscribe({
       next: (data: any) => {
@@ -117,7 +121,7 @@ export class VehiclesComponent implements OnInit {
           // Contract details aggregation
           // 1. Direct active contract (legacy Singular)
           let activeContract = v.contracts?.find((c: any) =>
-            c.status === 'En cours' || c.status === 'Actif' || c.status === 'VALIDÉ'
+            ['En cours', 'Actif', 'VALIDÉ', 'TERMINÉ', 'SOLDÉ', 'Vendu', 'Solder'].includes(c.status)
           );
 
           // 2. Or from fleet demands (New)
@@ -169,7 +173,18 @@ export class VehiclesComponent implements OnInit {
   loadDashboardStats() {
     this.vehicleService.getDashboardData().subscribe({
       next: (res: any) => {
-        this.stats = res;
+        const kpis = res.kpis || {};
+        const alerts = res.alerts || [];
+
+        this.stats.total = kpis.total_fleet || 0;
+        this.stats.assigned = kpis.active_count || 0;
+        this.stats.goodPayers = kpis.good_payers || 0;
+        this.stats.soldCount = kpis.sold_count || 0;
+
+        // Map from alerts
+        this.stats.paymentAlert = alerts.filter((a: any) => a.problem === 'Paiement en retard').length;
+        this.stats.maintenanceAlert = alerts.filter((a: any) => a.problem?.includes('Entretien')).length;
+        this.stats.critical = alerts.filter((a: any) => a.niveau === 'Critique').length;
       }
     });
   }
@@ -186,9 +201,10 @@ export class VehiclesComponent implements OnInit {
   get tabLabel(): string {
     const labels: Record<string, string> = {
       all: 'Flotte GbatCar',
-      ok: 'Bons Payeurs',
+      ok: 'Bons Payeurs (Performants)',
       alert: 'En Alerte Paiement',
       critical: 'À Récupérer (Critique)',
+      finished: 'Archives / Véhicules Soldés',
     };
     return labels[this.activeTab] || 'Flotte';
   }

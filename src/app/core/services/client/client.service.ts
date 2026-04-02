@@ -87,13 +87,13 @@ export class ClientService {
         );
     }
 
-    getDashboardData(filters?: any): Observable<ClientDashboardData> {
+    getDashboardData(months: number = 6): Observable<ClientDashboardData> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();
             return new Observable(obs => { obs.next(); obs.complete(); });
         }
 
-        return this.api._get(`${this.url}/dashboard`, filters).pipe(
+        return this.api._get(`${this.url}/dashboard?months=${months}`).pipe(
             map((response: any) => response.data || response),
             catchError((error: any) => throwError(() => error))
         );

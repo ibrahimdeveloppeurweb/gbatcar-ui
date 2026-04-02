@@ -220,9 +220,8 @@ export class VehicleFormComponent implements OnInit {
       gpsInstallationCost: [null],
       otherCosts: [null],
       // Offre Commerciale
-      totalPrice: [null],
-      depositPercentage: [{ value: null, disabled: true }, [Validators.min(0), Validators.max(100)]],
-      durationInMonths: [{ value: null, disabled: true }, [Validators.min(1)]],
+      depositPercentage: [{ value: null, disabled: false }, [Validators.min(0), Validators.max(100)]],
+      durationInMonths: [{ value: null, disabled: false }, [Validators.min(1)]],
       dailyRate: [0],
       intendedUse: ['VTC'],
       includingInsurance: [false],
@@ -395,8 +394,6 @@ export class VehicleFormComponent implements OnInit {
           preparationCost: v.preparationCost,
           gpsInstallationCost: v.gpsInstallationCost,
           otherCosts: v.otherCosts,
-          totalPrice: v.prixDeVente, // Le prixDeVente sert aussi de totalPrice dans la section commerciale
-          depositPercentage: v.depositPercentage,
           durationInMonths: v.durationInMonths
         });
         this.isPatchingForm = false;
@@ -452,10 +449,6 @@ export class VehicleFormComponent implements OnInit {
 
   saveData(): void {
     this.loading = true;
-
-    // Sync prixDeVente depuis totalPrice si renseigné dans l'UI
-    const tv = this.form.get('totalPrice')?.value;
-    if (tv) this.form.patchValue({ prixDeVente: tv }, { emitEvent: false });
     this.updateTco();
 
     // Construction du FormData (supporte fichiers + champs)

@@ -167,7 +167,7 @@ export class VehicleDetailsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router
-  ) { 
+  ) {
     this.maintenanceForm = this.fb.group({
       type: [null, Validators.required],
       typeAutre: [''],
@@ -196,7 +196,7 @@ export class VehicleDetailsComponent implements OnInit {
 
         // 1. Active contract mapping (Legacy singular)
         let activeContract = vehicleData.contracts?.find((c: any) =>
-          c.status === 'En cours' || c.status === 'Actif' || c.status === 'Acting' || c.status === 'VALIDÉ'
+          ['En cours', 'Actif', 'VALIDÉ', 'TERMINÉ', 'SOLDÉ', 'Vendu', 'Solder'].includes(c.status)
         );
 
         // 2. Or from fleet demands (New)

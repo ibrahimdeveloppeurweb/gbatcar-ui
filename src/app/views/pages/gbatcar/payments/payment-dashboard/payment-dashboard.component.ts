@@ -2,19 +2,29 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgApexchartsModule, ApexOptions } from 'ng-apexcharts';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { RouterModule } from '@angular/router';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { ThemeCssVariableService } from '../../../../../core/services/theme-css-variable.service';
+
+import { NgSelectModule } from '@ng-select/ng-select';
+import { FormsModule } from '@angular/forms';
+import { PaymentService } from '../../../../../core/services/payment/payment.service';
 
 @Component({
     selector: 'app-payment-dashboard',
     standalone: true,
-    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, FeatherIconDirective],
+    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, FeatherIconDirective, NgSelectModule, FormsModule, RouterModule],
     templateUrl: './payment-dashboard.component.html',
     styleUrl: './payment-dashboard.component.scss'
 })
 export class PaymentDashboardComponent implements OnInit {
 
     themeCssVariables = inject(ThemeCssVariableService).getThemeCssVariables();
+    private paymentService = inject(PaymentService);
+
+    selectedMonth = 6;
+    monthsList: number[] = Array.from({ length: 36 }, (_, i) => i + 1);
+    loading = false;
 
     // ===================== KPI DATA =====================
     stats = {
@@ -23,51 +33,104 @@ export class PaymentDashboardComponent implements OnInit {
         collectionRate: 83.5,     // % de recouvrement
         totalOverdue: 9_350_000,  // Total impayés
         overdueCount: 6,          // Nombre de dossiers en retard
-        avgPaymentDelay: 12,      // Jours de retard moyen
-        activePenalties: 3,       // Pénalités actives
-        penaltiesAmount: 540_000, // Total pénalités (FCFA)
-        cashBalance: 14_200_000,  // Trésorerie disponible (FCFA)
-        nextMonthForecast: 30_100_000, // Prévision du mois prochain
+        avgPaymentDelay: 0,
+        activePenalties: 0,
+        penaltiesAmount: 0,
+        cashBalance: 0,
+        nextMonthForecast: 0,
+        totalPaymentsCount: 0
     };
 
-    // ===================== RECENT PAYMENTS =====================
-    recentPayments = [
-        { id: 'PAY-2024-089', client: 'Jean Dubois', contractId: 'CTR-2024-001', amount: 185000, date: '2024-03-08', method: 'Mobile Money', status: 'Validé' },
-        { id: 'PAY-2024-090', client: 'Fatou Sylla', contractId: 'CTR-2024-002', amount: 210000, date: '2024-03-07', method: 'Virement', status: 'En attente' },
-        { id: 'PAY-2024-091', client: 'Marie Koné', contractId: 'CTR-2024-005', amount: 195000, date: '2024-03-06', method: 'Espèces', status: 'Validé' },
-        { id: 'PAY-2024-092', client: 'Amadou Coulibaly', contractId: 'CTR-2022-045', amount: 160000, date: '2024-03-05', method: 'Mobile Money', status: 'Rejeté' },
-        { id: 'PAY-2024-093', client: 'Paul Yao', contractId: 'CTR-2023-089', amount: 220000, date: '2024-03-04', method: 'Chèque', status: 'Validé' },
-    ];
+    // ===================== DATA =====================
+    recentPayments: any[] = [];
+    trends: any = { cashflow: [] };
+    methods: any[] = [];
 
     // ===================== CHARTS =====================
     public cashflowChartOptions: ApexOptions | any;
     public paymentMethodChartOptions: ApexOptions | any;
 
     ngOnInit(): void {
+        this.loadDashboardData();
+    }
+
+    loadDashboardData() {
+        this.loading = true;
+        // For now, we still build charts with hardcoded data until backend is ready
+        // but we prepare the subscription structure
+        this.paymentService.getDashboardData({ months: this.selectedMonth }).subscribe({
+            next: (data: any) => {
+                this.stats = data.kpis;
+                this.stats.totalPaymentsCount = data.totalPaymentsCount;
+                this.trends = data.trends || { cashflow: [] };
+                this.recentPayments = data.recentPayments || [];
+                this.methods = data.methods || [];
+                this.refreshCharts();
+                this.loading = false;
+            },
+            error: (err) => {
+                console.error('Error fetching payment dashboard data', err);
+                this.refreshCharts();
+                this.loading = false;
+            }
+        });
+    }
+
+    onMonthChange() {
+        this.loadDashboardData();
+    }
+
+    refreshCharts() {
         this.cashflowChartOptions = this.buildCashflowChart();
         this.paymentMethodChartOptions = this.buildPaymentMethodChart();
     }
 
     buildCashflowChart() {
+        const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+        const categories = [];
+        const expectedData = new Array(this.selectedMonth).fill(0);
+        const paidData = new Array(this.selectedMonth).fill(0);
+
+        for (let i = this.selectedMonth - 1; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+
+            let catName = monthNames[d.getMonth()];
+            if (this.selectedMonth > 12) {
+                catName += ' ' + d.getFullYear().toString().substring(2);
+            }
+            categories.push(catName);
+
+            const yearStr = d.getFullYear();
+            const monthStr = (d.getMonth() + 1).toString().padStart(2, '0');
+            const key = `${yearStr}-${monthStr}`;
+
+            const item = this.trends.cashflow?.find((x: any) => x.month === key);
+            if (item) {
+                expectedData[(this.selectedMonth - 1) - i] = parseFloat(item.expected);
+                paidData[(this.selectedMonth - 1) - i] = parseFloat(item.paid);
+            }
+        }
+
         return {
             series: [
-                { name: 'Encaissements Réalisés', data: [21500000, 24200000, 22800000, 26100000, 23800000, 28500000] },
-                { name: 'Prévision MRR', data: [25000000, 25000000, 26000000, 27000000, 28000000, 28500000] },
+                { name: 'Montant Attendu', data: expectedData },
+                { name: 'Montant Encaissé', data: paidData },
             ],
             chart: { type: 'area', height: 260, toolbar: { show: false }, sparkline: { enabled: false } },
-            colors: [this.themeCssVariables.primary, this.themeCssVariables.secondary],
+            colors: ['#6c757d', '#2ecc71'], // Gris pour Attendu, Vert pour Encaissé
             stroke: { curve: 'smooth', width: 2 },
             fill: {
                 type: 'gradient',
                 gradient: { opacityFrom: 0.3, opacityTo: 0.05 }
             },
             xaxis: {
-                categories: ['Oct', 'Nov', 'Déc', 'Jan', 'Fév', 'Mar'],
+                categories: categories,
                 axisBorder: { color: this.themeCssVariables.gridBorder },
             },
             yaxis: {
                 labels: {
-                    formatter: (val: number) => (val / 1_000_000).toFixed(1) + 'M'
+                    formatter: (val: number) => (val >= 1_000_000) ? (val / 1_000_000).toFixed(1) + 'M' : (val / 1_000).toFixed(0) + 'k'
                 }
             },
             grid: { borderColor: this.themeCssVariables.gridBorder },
@@ -83,11 +146,14 @@ export class PaymentDashboardComponent implements OnInit {
     }
 
     buildPaymentMethodChart() {
+        const labels = this.methods.map(m => m.name) || [];
+        const series = this.methods.map(m => parseInt(m.value)) || [];
+
         return {
-            series: [45, 30, 18, 7],
+            series: series.length > 0 ? series : [0],
             chart: { type: 'donut', height: 260 },
-            labels: ['Mobile Money', 'Virement', 'Espèces', 'Chèque'],
-            colors: [this.themeCssVariables.primary, '#2ecc71', '#f39c12', '#6c757d'],
+            labels: labels.length > 0 ? labels : ['Aucun'],
+            colors: [this.themeCssVariables.primary, '#2ecc71', '#f39c12', '#6c757d', '#e74c3c'],
             stroke: { colors: ['#fff'] },
             legend: {
                 show: true, position: 'bottom',
@@ -114,26 +180,33 @@ export class PaymentDashboardComponent implements OnInit {
         };
     }
 
-    formatCurrency(amount: number): string {
-        return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
-    }
-
     getStatusClass(status: string): string {
-        const map: Record<string, string> = {
-            'Validé': 'bg-success',
-            'En attente': 'bg-warning text-dark',
-            'Rejeté': 'bg-danger',
-        };
-        return map[status] || 'bg-secondary';
+        switch (status?.toUpperCase()) {
+            case 'VALIDÉ': return 'bg-success text-white';
+            case 'EN ATTENTE': return 'bg-warning text-dark';
+            case 'REJETÉ': return 'bg-danger text-white';
+            case 'INVALIDE': return 'bg-dark text-white';
+            default: return 'bg-secondary text-white';
+        }
     }
 
     getMethodIcon(method: string): string {
-        const map: Record<string, string> = {
-            'Mobile Money': 'smartphone',
-            'Virement': 'arrow-right-circle',
-            'Espèces': 'dollar-sign',
-            'Chèque': 'file-text',
-        };
-        return map[method] || 'credit-card';
+        const m = method?.toLowerCase() || '';
+        if (m.includes('mobile') || m.includes('orange') || m.includes('wave')) return 'smartphone';
+        if (m.includes('espèces') || m.includes('cash')) return 'dollar-sign';
+        if (m.includes('virement') || m.includes('banque')) return 'briefcase';
+        if (m.includes('chèque')) return 'layers';
+        return 'credit-card';
+    }
+
+    getMethodColor(method: string): string {
+        const m = method?.toLowerCase() || '';
+        if (m.includes('mobile')) return '#e74c3c';
+        if (m.includes('espèces')) return '#2ecc71';
+        return '#6c757d';
+    }
+
+    formatCurrency(amount: number): string {
+        return new Intl.NumberFormat('fr-FR').format(amount || 0) + ' FCFA';
     }
 }
