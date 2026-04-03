@@ -562,10 +562,16 @@ export class ContractDetailsComponent implements OnInit {
     }
   }
 
+  viewDocument(docUuid: string): void {
+    if (!this.contract || !this.contract.uuid) return;
+    const contractUuid = this.contract.uuid as string;
+    this.contractService.downloadDocument(contractUuid, docUuid, false);
+  }
+
   downloadDocument(docUuid: string): void {
     if (!this.contract || !this.contract.uuid) return;
     const contractUuid = this.contract.uuid as string;
-    this.contractService.downloadDocument(contractUuid, docUuid);
+    this.contractService.downloadDocument(contractUuid, docUuid, true);
   }
 
   deleteDocument(docUuid: string): void {

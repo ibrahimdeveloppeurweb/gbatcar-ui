@@ -127,8 +127,16 @@
                             </div>
                             <div class="row mt-4">
                                 <div class="col-12" *ngIf="contract.vehicle">
-                                    <h3 class="fw-bolder fs-5 text-danger">{{ contract.vehicle.marque }} {{
-                                        contract.vehicle.modele }}</h3>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h3 class="fw-bolder fs-5 text-danger mb-0">{{ contract.vehicle.marque }} {{
+                                            contract.vehicle.modele }}</h3>
+                                        <span class="badge" [ngClass]="{
+                                            'bg-success': translateVehicleStatus(contract.vehicle.statut) === 'En Location-Vente' || contract.vehicle.statut === 'Actif',
+                                            'bg-warning text-dark': translateVehicleStatus(contract.vehicle.statut) === 'En Maintenance',
+                                            'bg-info': translateVehicleStatus(contract.vehicle.statut) === 'Vendu',
+                                            'bg-primary': translateVehicleStatus(contract.vehicle.statut) === 'Disponible' || !contract.vehicle.statut
+                                        }">{{ translateVehicleStatus(contract.vehicle.statut) }}</span>
+                                    </div>
                                     <p class="text-muted mt-1">Immatriculation : <span class="fw-bold text-dark">{{
                                             contract.vehicle.immatriculation }}</span></p>
                                     <div *ngIf="contract.vehicle.prochainEntretien !== null"
@@ -161,8 +169,16 @@
                                                             class="icon-sm text-secondary"></i>
                                                     </div>
                                                     <div class="flex-grow-1">
-                                                        <h6 class="mb-0 fs-13px fw-bold text-dark">{{ v.immatriculation
-                                                            || v.licensePlate }}</h6>
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <h6 class="mb-0 fs-13px fw-bold text-dark">{{
+                                                                v.immatriculation || v.licensePlate }}</h6>
+                                                            <span class="badge tx-9 py-1" [ngClass]="{
+                                                                'bg-success': translateVehicleStatus(v.statut) === 'En Location-Vente' || v.statut === 'Actif',
+                                                                'bg-warning text-dark': translateVehicleStatus(v.statut) === 'En Maintenance',
+                                                                'bg-info': translateVehicleStatus(v.statut) === 'Vendu',
+                                                                'bg-primary': translateVehicleStatus(v.statut) === 'Disponible' || !v.statut
+                                                            }">{{ translateVehicleStatus(v.statut) }}</span>
+                                                        </div>
                                                         <p class="mb-0 tx-11 text-muted">{{ v.marque }} {{ v.modele }}
                                                         </p>
                                                     </div>
@@ -193,8 +209,14 @@
                         'border-secondary': !contract.paymentStatus || contract.paymentStatus === '-'
                     }">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-baseline">
+                            <div class="d-flex justify-content-between align-items-center">
                                 <h6 class="card-title mb-0">SITUATION FINANCIÈRE ({{ contract.reference }})</h6>
+                                <span class="badge" [ngClass]="{
+                                    'bg-success': translateContractStatus(contract.status) === 'En Cours',
+                                    'bg-danger': translateContractStatus(contract.status) === 'Rompu' || contract.status === 'ANNULÉ',
+                                    'bg-warning text-dark': translateContractStatus(contract.status) === 'En Attente',
+                                    'bg-secondary': translateContractStatus(contract.status) === 'Terminé'
+                                }">{{ translateContractStatus(contract.status) }}</span>
                             </div>
                             <div class="row mt-4">
                                 <div class="col-12">
@@ -240,10 +262,11 @@
                                         </div>
 
                                         <div class="mt-3 text-end" *ngIf="contract.vehicle">
-                                            <a class="btn btn-xs btn-outline-success px-3" 
-                                               [routerLink]="['/gbatcar/payments']" 
-                                               [queryParams]="{ vehicle: contract.vehicle.uuid }">
-                                                <i data-feather="dollar-sign" appFeatherIcon class="icon-xs me-1"></i> Historique Paiements
+                                            <a class="btn btn-xs btn-outline-success px-3"
+                                                [routerLink]="['/gbatcar/payments']"
+                                                [queryParams]="{ vehicle: contract.vehicle.uuid }">
+                                                <i data-feather="dollar-sign" appFeatherIcon class="icon-xs me-1"></i>
+                                                Historique Paiements
                                             </a>
                                         </div>
                                     </div>
@@ -255,13 +278,42 @@
             </div>
         </ng-container>
 
-        <!-- Fallback if NO active contracts -->
+        <!-- Fallback if NO contracts -->
         <div class="row" *ngIf="activeContracts.length === 0">
-            <div class="col-md-6 grid-margin stretch-card">
+            <div class="col-md-6 grid-margin stretch-card" *ngFor="let v of client.vehicles">
+                <div class="card shadow-sm border-0 border-top border-primary border-3"
+                    [routerLink]="['/gbatcar/vehicles/details', v.uuid]">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="card-title mb-0">VÉHICULE ASSIGNÉ (DIRECT)</h6>
+                            <span class="badge" [ngClass]="{
+                                'bg-success': translateVehicleStatus(v.statut) === 'En Location-Vente' || v.statut === 'Actif',
+                                'bg-warning text-dark': translateVehicleStatus(v.statut) === 'En Maintenance',
+                                'bg-info': translateVehicleStatus(v.statut) === 'Vendu',
+                                'bg-primary': translateVehicleStatus(v.statut) === 'Disponible' || !v.statut
+                            }">{{ translateVehicleStatus(v.statut) }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mt-3">
+                            <div
+                                class="wd-50 ht-50 rounded bg-light d-flex align-items-center justify-content-center me-3 border">
+                                <img *ngIf="v.photo" [src]="baseUrl + v.photo" class="img-fluid rounded">
+                                <i *ngIf="!v.photo" data-feather="truck" appFeatherIcon class="icon-sm text-muted"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bolder mb-0 text-dark">{{ v.marque }} {{ v.modele }}</h5>
+                                <p class="text-muted tx-12 mb-0">{{ v.immatriculation }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-12 grid-margin stretch-card" *ngIf="!client.vehicles?.length">
                 <div class="card shadow-sm border-0 border-top border-primary border-3">
                     <div class="card-body text-center py-5">
                         <i data-feather="alert-circle" appFeatherIcon class="text-muted mb-3 icon-lg"></i>
-                        <p class="text-muted italic">Aucun véhicule n'est actuellement assigné à ce dossier.</p>
+                        <p class="text-muted italic">Aucun véhicule ou contrat n'est actuellement assigné à ce dossier.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -371,17 +423,43 @@
                             <thead>
                                 <tr>
                                     <th>Date</th>
+                                    <th>Contrat</th>
                                     <th>Montant</th>
                                     <th>Moyen</th>
                                     <th>Statut</th>
-                                    <th class="text-end">Reçu</th>
+                                    <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-5">
+                                <tr *ngFor="let p of allPayments">
+                                    <td class="text-muted tx-12">{{ p.date | date:'dd/MM/yyyy HH:mm' }}</td>
+                                    <td>
+                                        <a [routerLink]="['/gbatcar/contracts/details', p.contractUuid]"
+                                            class="text-primary fw-medium tx-12">
+                                            {{ p.contractRef }}
+                                        </a>
+                                    </td>
+                                    <td class="fw-bold">{{ p.amount | number }} <small>FCFA</small></td>
+                                    <td class="tx-12">{{ p.method }} <span class="text-muted d-block tx-10">{{ p.period
+                                            }}</span></td>
+                                    <td>
+                                        <span class="badge" [ngClass]="{
+                                            'bg-success': p.status === 'Validé' || p.status === 'VALIDATED' || p.status === 'VALIDÉ',
+                                            'bg-warning text-dark': p.status === 'En attente' || p.status === 'PENDING'
+                                        }">{{ translateContractStatus(p.status) }}</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <button (click)="openReceipt(p.receiptUrl)"
+                                            class="btn btn-xs btn-outline-primary border-0 bg-white"
+                                            title="Visionner le reçu" [disabled]="!p.receiptUrl">
+                                            <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="!allPayments || allPayments.length === 0">
+                                    <td colspan="6" class="text-center text-muted py-5">
                                         <i data-feather="database" appFeatherIcon class="icon-lg mb-2"></i>
-                                        <p>Aucun paiement enregistré pour le moment.</p>
+                                        <p>Aucun paiement trouvé pour ce client.</p>
                                     </td>
                                 </tr>
                             </tbody>
@@ -392,37 +470,67 @@
             <li [ngbNavItem]="5">
                 <a ngbNavLink>Documents Scannés</a>
                 <ng-template ngbNavContent>
-                    <div class="row p-3 g-4">
-                        <div class="col-md-4" *ngIf="client.idScanUrl">
-                            <div class="card shadow-sm border">
-                                <div class="card-header bg-light py-2">
-                                    <h6 class="tx-11 fw-bolder mb-0 text-uppercase">SCAN Pièce Identité</h6>
+                    <div class="row p-3">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h6 class="card-title mb-0">Documents Associés</h6>
+                                <button (click)="triggerFileUpload()" class="btn btn-danger btn-sm btn-icon-text">
+                                    <i data-feather="plus" appFeatherIcon class="btn-icon-prepend"></i> Ajouter
+                                </button>
+                                <input type="file" id="clientDocInput" style="display: none"
+                                    (change)="onFileSelected($event)">
+                            </div>
+
+                            <div class="row g-3">
+                                <!-- Documents officially linked to client or contracts -->
+                                <div class="col-md-6 mb-3" *ngFor="let doc of allDocuments">
+                                    <div class="bg-light p-3 rounded d-flex align-items-center border shadow-xxs h-100">
+                                        <div
+                                            class="wd-40 ht-40 rounded bg-white shadow-sm d-flex align-items-center justify-content-center me-3 border">
+                                            <i *ngIf="doc.isStatic" data-feather="file-text" appFeatherIcon
+                                                class="icon-sm text-primary"></i>
+                                            <i *ngIf="!doc.isStatic" data-feather="file" appFeatherIcon
+                                                class="icon-sm text-secondary"></i>
+                                        </div>
+                                        <div class="flex-grow-1 overflow-hidden text-start">
+                                            <p class="mb-0 tx-13 fw-bolder text-dark text-truncate"
+                                                [title]="doc.libelle || doc.originalName">
+                                                {{ doc.libelle || doc.originalName }}
+                                            </p>
+                                            <span class="tx-11 text-muted">
+                                                {{ doc.isStatic ? 'Document Officiel (Profil)' : 'Pièce jointe - ' +
+                                                doc.contractRef }}
+                                            </span>
+                                        </div>
+                                        <div class="ms-3 d-flex gap-1">
+                                            <button (click)="viewDocument(doc)"
+                                                class="btn btn-xs btn-outline-primary border-0 bg-white"
+                                                title="Visionner">
+                                                <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                            </button>
+                                            <button (click)="downloadDocument(doc)"
+                                                class="btn btn-xs btn-outline-secondary border-0 bg-white"
+                                                title="Télécharger">
+                                                <i data-feather="download" appFeatherIcon class="icon-sm"></i>
+                                            </button>
+                                            <button *ngIf="!doc.isStatic" (click)="deleteDocument(doc)"
+                                                class="btn btn-xs btn-outline-danger border-0 bg-white"
+                                                title="Supprimer">
+                                                <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-body p-1 text-center">
-                                    <a [href]="baseUrl + client.idScanUrl" target="_blank">
-                                        <img [src]="baseUrl + client.idScanUrl" class="img-fluid rounded shadow-sm"
-                                            style="max-height: 250px;">
-                                    </a>
+
+                                <!-- Empty State -->
+                                <div *ngIf="allDocuments.length === 0" class="col-12 text-center py-5 text-muted">
+                                    <div class="mb-3">
+                                        <i data-feather="file-text" appFeatherIcon class="icon-xxl text-light"></i>
+                                    </div>
+                                    <p class="italic">Aucune pièce scannée disponible pour ce dossier.</p>
+                                    <p class="tx-12">Cliquez sur "Ajouter" pour joindre un nouveau document.</p>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-4" *ngIf="client.licenseScanUrl">
-                            <div class="card shadow-sm border">
-                                <div class="card-header bg-light py-2">
-                                    <h6 class="tx-11 fw-bolder mb-0 text-uppercase">SCAN Permis de Conduire</h6>
-                                </div>
-                                <div class="card-body p-1 text-center">
-                                    <a [href]="baseUrl + client.licenseScanUrl" target="_blank">
-                                        <img [src]="baseUrl + client.licenseScanUrl" class="img-fluid rounded shadow-sm"
-                                            style="max-height: 250px;">
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <div *ngIf="!client.idScanUrl && !client.licenseScanUrl"
-                            class="col-12 text-center py-5 text-muted">
-                            <i data-feather="file-text" appFeatherIcon class="icon-xxl mb-3 text-light"></i>
-                            <p>Aucune pièce scannée disponible pour ce dossier.</p>
                         </div>
                     </div>
                 </ng-template>

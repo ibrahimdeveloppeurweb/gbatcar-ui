@@ -422,17 +422,33 @@
                                 class="icon-sm me-1"></i> Reçus & Paiements Liés</a>
                         <ng-template ngbNavContent>
                             <div class="mt-3">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0 text-uppercase fw-bold text-muted tx-12">Journal des Encaissements
+                                    </h6>
+                                    <button [routerLink]="['/gbatcar/payments/new']"
+                                        [queryParams]="{ contractUuid: contract.uuid }"
+                                        class="btn btn-sm btn-primary btn-icon-text shadow-sm"
+                                        title="Enregistrer un nouveau paiement pour ce contrat">
+                                        <i data-feather="plus-circle" appFeatherIcon class="btn-icon-prepend"></i>
+                                        Nouveau Paiement
+                                    </button>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="table table-hover">
                                         <thead>
                                             <tr>
-                                                <th>Date Transaction</th>
-                                                <th>Réf. Encaissement</th>
-                                                <th>Moyen de paiement</th>
-                                                <th>Montant (FCFA)</th>
-                                                <th>Statut</th>
-                                                <th>Créé par / le</th>
-                                                <th>Actions</th>
+                                                <th class="fs-11px text-muted text-uppercase fw-bold">Date Transaction
+                                                </th>
+                                                <th class="fs-11px text-muted text-uppercase fw-bold">Réf. Encaissement
+                                                </th>
+                                                <th class="fs-11px text-muted text-uppercase fw-bold">Moyen de paiement
+                                                </th>
+                                                <th class="fs-11px text-muted text-uppercase fw-bold">Montant (FCFA)
+                                                </th>
+                                                <th class="fs-11px text-muted text-uppercase fw-bold">Statut</th>
+                                                <th class="fs-11px text-muted text-uppercase fw-bold">Créé par / le</th>
+                                                <th class="fs-11px text-muted text-uppercase fw-bold text-end">Actions
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -596,15 +612,19 @@
                                             {{ (doc.size / 1024) | number:'1.0-0' }} KB • {{ doc.originalName }}
                                         </span>
                                     </div>
-                                    <div class="d-flex ms-3">
-                                        <a [href]="baseUrl + '/uploads/contract/' + contract.uuid + '/' + doc.storedName"
-                                            target="_blank" class="btn btn-xs btn-outline-secondary me-1"
-                                            title="Ouvrir">
-                                            <i data-feather="external-link" appFeatherIcon class="icon-xs"></i>
-                                        </a>
-                                        <button (click)="deleteDocument(doc.uuid)" class="btn btn-xs btn-outline-danger"
-                                            title="Supprimer">
-                                            <i data-feather="trash-2" appFeatherIcon class="icon-xs"></i>
+                                    <div class="d-flex ms-3 gap-1">
+                                        <button (click)="viewDocument(doc.uuid)"
+                                            class="btn btn-xs btn-outline-primary border-0 bg-white" title="Visionner">
+                                            <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                        </button>
+                                        <button (click)="downloadDocument(doc.uuid)"
+                                            class="btn btn-xs btn-outline-secondary border-0 bg-white"
+                                            title="Télécharger">
+                                            <i data-feather="download" appFeatherIcon class="icon-sm"></i>
+                                        </button>
+                                        <button (click)="deleteDocument(doc.uuid)"
+                                            class="btn btn-xs btn-outline-danger border-0 bg-white" title="Supprimer">
+                                            <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
                                         </button>
                                     </div>
                                 </div>

@@ -1,27 +1,39 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
-import { NgApexchartsModule } from 'ng-apexcharts';
+import { NgApexchartsModule, ApexOptions } from 'ng-apexcharts';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
+import { ThemeCssVariableService } from '../../../../../core/services/theme-css-variable.service';
+import { ContractService } from '../../../../../core/services/contract/contract.service';
+
+import { NgSelectModule } from '@ng-select/ng-select';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-contract-dashboard',
   standalone: true,
-  imports: [CommonModule, NgbDropdownModule, NgApexchartsModule, FeatherIconDirective],
+  imports: [CommonModule, NgbDropdownModule, NgApexchartsModule, FeatherIconDirective, NgSelectModule, FormsModule],
   templateUrl: './contract-dashboard.component.html',
   styleUrl: './contract-dashboard.component.scss'
 })
 export class ContractDashboardComponent implements OnInit {
 
+  private contractService = inject(ContractService);
+  private themeCssVariables = inject(ThemeCssVariableService).getThemeCssVariables();
+
+  selectedMonth = 6;
+  monthsList: number[] = Array.from({ length: 36 }, (_, i) => i + 1);
+  loading = false;
+
   // KPIs
   stats = {
-    totalContracts: 345,
-    totalContractsGrowth: 12,
-    activeContracts: 310,
-    defectRate: 4.8, // Taux de défaut (impayés graves)
+    totalContracts: 0,
+    totalContractsGrowth: 0,
+    activeContracts: 0,
+    defectRate: 0, // Taux de défaut (impayés graves)
     defectRateTrend: 'down',
-    mrr: 28500000, // Monthly Recurring Revenue attendu FCFA
-    mrrGrowth: 5.4
+    mrr: 0, // Monthly Recurring Revenue attendu FCFA
+    mrrGrowth: 0
   };
 
   // Liste des risques imminents
@@ -33,20 +45,68 @@ export class ContractDashboardComponent implements OnInit {
   ];
 
   // Chart Options
-  cashflowChartOptions: any = {};
+  cashflowChartOptions: ApexOptions | any = {};
+
+  // Trends
+  trends: any = { cashflow: [] };
 
   ngOnInit(): void {
-    this.initCharts();
+    this.loadDashboardData();
+  }
+
+  loadDashboardData() {
+    this.loading = true;
+    this.contractService.getDashboardData({ months: this.selectedMonth }).subscribe({
+      next: (data: any) => {
+        this.stats = data.kpis;
+        this.trends = data.trends;
+        this.imminentRisks = data.imminentRisks;
+        this.initCharts();
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error fetching contract dashboard data', err);
+        this.initCharts(); // Still init charts (maybe empty)
+        this.loading = false;
+      }
+    });
+  }
+
+  onMonthChange() {
+    this.loadDashboardData();
   }
 
   initCharts() {
+    const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+    const categories = [];
+    const expectedData = new Array(this.selectedMonth).fill(0);
+    const paidData = new Array(this.selectedMonth).fill(0);
+
+    for (let i = this.selectedMonth - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      let name = monthNames[d.getMonth()];
+      if (this.selectedMonth > 12) name += ' ' + d.getFullYear().toString().substring(2);
+      categories.push(name);
+
+      const yearStr = d.getFullYear();
+      const monthStr = (d.getMonth() + 1).toString().padStart(2, '0');
+      const key = `${yearStr}-${monthStr}`;
+
+      const item = this.trends.cashflow?.find((x: any) => x.month === key);
+      if (item) {
+        expectedData[(this.selectedMonth - 1) - i] = parseFloat(item.expected);
+        paidData[(this.selectedMonth - 1) - i] = parseFloat(item.paid);
+      }
+    }
+
     this.cashflowChartOptions = {
       series: [{
         name: 'Encaissements Prévus',
-        data: [25, 28, 26, 30, 29, 32, 28] // Millions FCFA
+        data: expectedData
       }, {
         name: 'Encaissements Réalisés',
-        data: [24, 26, 26, 28, 25, 29, 0] // Le dernier mois est en cours
+        data: paidData
       }],
       chart: {
         height: 350,
@@ -54,12 +114,17 @@ export class ContractDashboardComponent implements OnInit {
         fontFamily: 'inherit',
         toolbar: { show: false }
       },
-      colors: ['#05a34a', '#66d1ce'],
+      colors: ['#6c757d', '#05a34a', '#66d1ce'], // Using gray for expected to emphasize collected
       dataLabels: { enabled: false },
       stroke: { curve: 'smooth', width: 2 },
       xaxis: {
-        categories: ['Août', 'Sept', 'Oct', 'Nov', 'Déc', 'Janv', 'Fév'],
+        categories: categories,
         tooltip: { enabled: false }
+      },
+      yaxis: {
+        labels: {
+          formatter: (val: number) => (val >= 1_000_000) ? (val / 1_000_000).toFixed(1) + 'M' : (val / 1_000).toFixed(0) + 'k'
+        }
       },
       legend: { position: 'top' },
       fill: {
@@ -70,6 +135,9 @@ export class ContractDashboardComponent implements OnInit {
           opacityTo: 0.05,
           stops: [0, 90, 100]
         }
+      },
+      tooltip: {
+        y: { formatter: (val: number) => new Intl.NumberFormat('fr-FR').format(val) + ' FCFA' }
       }
     };
   }

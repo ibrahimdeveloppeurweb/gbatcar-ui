@@ -123,32 +123,36 @@ export class ContractService {
         );
     }
 
-    downloadDocument(contractUuid: string, documentUuid: string): void {
+    downloadDocument(contractUuid: string, documentUuid: string, forceDownload: boolean = true): void {
         const urlOptions = {
             responseType: 'blob' as 'json'
         };
         this.api._get(`${this.url}/${contractUuid}/documents/${documentUuid}/download`, {}, urlOptions).subscribe({
             next: (response: any) => {
-                const blob = new Blob([response.body || response], { type: response.type });
+                const blob = new Blob([response.body || response], { type: response.type || 'application/pdf' });
                 const url = window.URL.createObjectURL(blob);
 
-                // Extract filename from Content-Disposition header if possible, else use a fallback
-                let filename = 'document.pdf';
-                const disposition = response.headers ? response.headers.get('Content-Disposition') : null;
-                if (disposition && disposition.indexOf('attachment') !== -1) {
-                    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-                    if (matches != null && matches[1]) {
-                        filename = matches[1].replace(/['"]/g, '');
+                if (forceDownload) {
+                    // Extract filename from Content-Disposition header if possible, else use a fallback
+                    let filename = 'document.pdf';
+                    const disposition = response.headers ? response.headers.get('Content-Disposition') : null;
+                    if (disposition && disposition.indexOf('attachment') !== -1) {
+                        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+                        if (matches != null && matches[1]) {
+                            filename = matches[1].replace(/['"]/g, '');
+                        }
                     }
-                }
 
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    window.open(url, '_blank');
+                }
             },
             error: (error) => {
                 console.error('Download error:', error);

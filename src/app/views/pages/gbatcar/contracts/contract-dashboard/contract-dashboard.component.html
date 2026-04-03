@@ -4,11 +4,22 @@
         <p class="text-muted fs-13px mb-0">Vue globale sur la santé financière et contractuelle du portefeuille
             Rent-to-Own.</p>
     </div>
-    <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end gap-2">
-        <button class="btn btn-primary btn-sm d-flex align-items-center">
+    <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end gap-2 align-items-center">
+        <div class="me-2" style="width: 130px;">
+            <ng-select [items]="monthsList" [(ngModel)]="selectedMonth" [clearable]="false" [searchable]="false"
+                (change)="onMonthChange()" class="custom-select-sm">
+                <ng-template ng-label-tmp let-item="item">
+                    <span class="fw-bold text-dark">{{ item }} mois</span>
+                </ng-template>
+                <ng-template ng-option-tmp let-item="item">
+                    {{ item }} mois
+                </ng-template>
+            </ng-select>
+        </div>
+        <button class="btn btn-primary btn-sm d-flex align-items-center shadow-sm py-2">
             <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Nouveau Contrat
         </button>
-        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center bg-white">
+        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center bg-white shadow-sm py-2">
             <i data-feather="download" appFeatherIcon class="icon-sm me-1"></i> Exporter
         </button>
     </div>
@@ -71,8 +82,8 @@
                 <div class="card border-0 shadow-sm"
                     [ngClass]="stats.defectRate > 5 ? 'border-start border-danger border-3' : ''">
                     <div class="card-body">
-                        <h6 class="card-title mb-2 text-uppercase fs-11px fw-bold text-muted">Taux de Défaut (Impayés >
-                            60j)</h6>
+                        <h6 class="card-title mb-2 text-uppercase fs-11px fw-bold text-muted">Taux de Défaut (Impayés)
+                        </h6>
                         <div class="row align-items-center mt-2">
                             <div class="col-7">
                                 <h3 class="mb-2 fw-bolder"
