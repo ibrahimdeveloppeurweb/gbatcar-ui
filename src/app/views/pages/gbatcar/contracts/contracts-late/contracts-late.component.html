@@ -1,251 +1,284 @@
-<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
-    <div>
-        <h4 class="mb-3 mb-md-0 text-danger">Suivi des Retards & Impayés</h4>
-        <p class="text-secondary">Liste filtrée des contrats de VTC présentant un défaut de paiement.</p>
+<ng-container *ngxPermissionsOnly="['CONTRACT:LATE:LIST']">
+    <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+        <div>
+            <h4 class="mb-3 mb-md-0 text-danger">Suivi des Retards & Impayés</h4>
+            <p class="text-secondary">Liste filtrée des contrats de VTC présentant un défaut de paiement.</p>
+        </div>
+        <div class="d-flex align-items-center flex-wrap text-nowrap">
+            <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0"
+                (click)="toggleAdvancedFilters()">
+                <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
+                {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
+            </button>
+        </div>
     </div>
-    <div class="d-flex align-items-center flex-wrap text-nowrap">
-        <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0"
-            (click)="toggleAdvancedFilters()">
-            <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
-            {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
-        </button>
-    </div>
-</div>
 
-<!-- Recovery Dashboard KPIs -->
-<div class="row mb-4">
-    <div class="col-md-4 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #e74c3c;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Total Arriérés (En souffrance)</p>
-                        <h3 class="fw-bold mb-0 text-danger">{{ totalArrears | number }} <small
-                                class="fs-14px">FCFA</small></h3>
+    <!-- Recovery Dashboard KPIs -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #e74c3c;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Total Arriérés (En souffrance)</p>
+                            <h3 class="fw-bold mb-0 text-danger">{{ totalArrears | number }} <small
+                                    class="fs-14px">FCFA</small></h3>
+                        </div>
+                        <i data-feather="trending-down" appFeatherIcon class="icon-lg text-danger"></i>
                     </div>
-                    <i data-feather="trending-down" appFeatherIcon class="icon-lg text-danger"></i>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-4 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #f39c12;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Cas Critiques (30j+)</p>
-                        <h4 class="fw-bold mb-0 text-dark">{{ criticalCasesCount }} dossiers</h4>
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #f39c12;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Cas Critiques (30j+)</p>
+                            <h4 class="fw-bold mb-0 text-dark">{{ criticalCasesCount }} dossiers</h4>
+                        </div>
+                        <i data-feather="alert-octagon" appFeatherIcon class="icon-lg text-warning"></i>
                     </div>
-                    <i data-feather="alert-octagon" appFeatherIcon class="icon-lg text-warning"></i>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100" style="border-left: 4px solid #2ecc71;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Promesses de Paiement</p>
-                        <h4 class="fw-bold mb-0 text-dark">{{ promiseToPayCount }} en attente</h4>
-                    </div>
-                    <i data-feather="calendar" appFeatherIcon class="icon-lg text-success"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Filtres Avancés -->
-<div class="row mb-3" *ngIf="showAdvancedFilters">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title text-danger mb-3">Filtres de recherche (Souffrance)</h6>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
-                        <input type="text" class="form-control form-control-sm" placeholder="Débiteur, ID contrat..."
-                            [(ngModel)]="advSearchTerm">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fs-12px text-secondary mb-1">Niveau d'Alerte</label>
-                        <select class="form-select form-select-sm" [(ngModel)]="advAlertFilter">
-                            <option value="">Tous</option>
-                            <option value="Risque Modéré">Risque Modéré (En retard)</option>
-                            <option value="Critique">Critique (Impayé définitif)</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fs-12px text-secondary mb-1">Résultats à afficher</label>
-                        <select class="form-select form-select-sm" [(ngModel)]="advCountFilter">
-                            <option [value]="5">Top 5 Urgences</option>
-                            <option [value]="10">10</option>
-                            <option [value]="20">20</option>
-                            <option [value]="50">50</option>
-                            <option [value]="1000">Tous</option>
-                        </select>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="col-md-12 d-flex justify-content-end mt-3">
-                        <button class="btn btn-sm btn-primary me-2" style="width: 120px;"
-                            (click)="applyAdvancedFilters()">
-                            <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Filtrer
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary" style="width: 120px;" (click)="resetFilters()">
-                            <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
-                        </button>
+        <div class="col-md-4">
+            <div class="card h-100" style="border-left: 4px solid #2ecc71;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Promesses de Paiement</p>
+                            <h4 class="fw-bold mb-0 text-dark">{{ promiseToPayCount }} en attente</h4>
+                        </div>
+                        <i data-feather="calendar" appFeatherIcon class="icon-lg text-success"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-md-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="card-title text-danger mb-0">DOSSIERS EN SOUFFRANCE ({{ filteredContracts.length }})</h6>
-                    <div class="d-flex align-items-center">
-                        <input type="text" class="form-control form-control-sm me-2"
-                            placeholder="Chercher un débiteur, ID contrat..." style="width: 250px;"
-                            [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
-                        <select class="form-select form-select-sm" style="width: 150px;" [(ngModel)]="quickAlertFilter"
-                            (change)="applyQuickFilters()">
-                            <option value="">Tous statuts</option>
-                            <option value="Risque Modéré">Risque Modéré</option>
-                            <option value="Critique">Critique</option>
-                        </select>
+    <!-- Filtres Avancés -->
+    <div class="row mb-3" *ngIf="showAdvancedFilters">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-danger mb-3">Filtres de recherche (Souffrance)</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
+                            <input type="text" class="form-control form-control-sm"
+                                placeholder="Débiteur, ID contrat..." [(ngModel)]="advSearchTerm">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fs-12px text-secondary mb-1">Niveau d'Alerte</label>
+                            <select class="form-select form-select-sm" [(ngModel)]="advAlertFilter">
+                                <option value="">Tous</option>
+                                <option value="Risque Modéré">Risque Modéré (En retard)</option>
+                                <option value="Critique">Critique (Impayé définitif)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fs-12px text-secondary mb-1">Résultats à afficher</label>
+                            <select class="form-select form-select-sm" [(ngModel)]="advCountFilter">
+                                <option [value]="5">Top 5 Urgences</option>
+                                <option [value]="10">10</option>
+                                <option [value]="20">20</option>
+                                <option [value]="50">50</option>
+                                <option [value]="1000">Tous</option>
+                            </select>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="col-md-12 d-flex justify-content-end mt-3">
+                            <button class="btn btn-sm btn-primary me-2" style="width: 120px;"
+                                (click)="applyAdvancedFilters()">
+                                <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Filtrer
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" style="width: 120px;"
+                                (click)="resetFilters()">
+                                <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead>
-                            <tr>
-                                <th>Client (Locataire)</th>
-                                <th>Détails Contrat</th>
-                                <th>Retard</th>
-                                <th>Segment (Aging)</th>
-                                <th>Montant Dû</th>
-                                <th>Actions de Recouvrement</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let contract of filteredContracts">
-                                <td>
-                                    <a [routerLink]="['/gbatcar/clients/details', contract.client?.uuid]"
-                                        class="text-primary fw-medium d-block">
-                                        {{ contract.client?.firstName }} {{ contract.client?.lastName }}
-                                    </a>
-                                    <span class="text-muted tx-11">{{ contract.client?.reference }}</span>
-                                </td>
-                                <td>
-                                    <div class="tx-13 fw-medium text-dark">{{ contract.reference }}</div>
-                                    <div class="text-muted tx-11 mt-1">
-                                        <span *ngIf="contract.vehicle; else fleetInfo">
-                                            {{ contract.vehicle.marque || 'Véhicule' }} {{ contract.vehicle.modele }}
-                                            <span class="text-secondary">({{ contract.vehicle.immatriculation }})</span>
-                                        </span>
-                                        <ng-template #fleetInfo>
-                                            <span class="text-secondary italic">
-                                                {{ contract.vehicleSummary || 'Pas de véhicule assigné' }}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="card-title text-danger mb-0">DOSSIERS EN SOUFFRANCE ({{ filteredContracts.length }})
+                        </h6>
+                        <div class="d-flex align-items-center">
+                            <input type="text" class="form-control form-control-sm me-2"
+                                placeholder="Chercher un débiteur, ID contrat..." style="width: 250px;"
+                                [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
+                            <select class="form-select form-select-sm" style="width: 150px;"
+                                [(ngModel)]="quickAlertFilter" (change)="applyQuickFilters()">
+                                <option value="">Tous statuts</option>
+                                <option value="Risque Modéré">Risque Modéré</option>
+                                <option value="Critique">Critique</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Client (Locataire)</th>
+                                    <th>Détails Contrat</th>
+                                    <th>Retard</th>
+                                    <th>Segment (Aging)</th>
+                                    <th>Montant Dû</th>
+                                    <th>Actions de Recouvrement</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let contract of filteredContracts">
+                                    <td>
+                                        <a [routerLink]="['/gbatcar/clients/details', contract.client?.uuid]"
+                                            class="text-primary fw-medium d-block">
+                                            {{ contract.client?.firstName }} {{ contract.client?.lastName }}
+                                        </a>
+                                        <span class="text-muted tx-11">{{ contract.client?.reference }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="tx-13 fw-medium text-dark">{{ contract.reference }}</div>
+                                        <div class="text-muted tx-11 mt-1">
+                                            <span *ngIf="contract.vehicle; else fleetInfo">
+                                                {{ contract.vehicle.marque || 'Véhicule' }} {{ contract.vehicle.modele
+                                                }}
+                                                <span class="text-secondary">({{ contract.vehicle.immatriculation
+                                                    }})</span>
                                             </span>
-                                        </ng-template>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="text-danger fw-bold fs-14px">
-                                        {{ getLateDays(contract) }} jours
-                                    </span>
-                                    <i data-feather="trending-up" appFeatherIcon class="icon-xs text-danger ms-1"></i>
-                                </td>
-                                <td>
-                                    <span class="badge" [ngClass]="{
+                                            <ng-template #fleetInfo>
+                                                <span class="text-secondary italic">
+                                                    {{ contract.vehicleSummary || 'Pas de véhicule assigné' }}
+                                                </span>
+                                            </ng-template>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-danger fw-bold fs-14px">
+                                            {{ getLateDays(contract) }} jours
+                                        </span>
+                                        <i data-feather="trending-up" appFeatherIcon
+                                            class="icon-xs text-danger ms-1"></i>
+                                    </td>
+                                    <td>
+                                        <span class="badge" [ngClass]="{
                                         'bg-info-subtle text-info border border-info': getAgingSegment(contract) === '1-7j',
                                         'bg-warning-subtle text-warning border border-warning': getAgingSegment(contract) === '8-15j',
                                         'bg-orange-subtle text-orange border border-orange': getAgingSegment(contract) === '16-30j',
                                         'bg-danger text-white': getAgingSegment(contract) === '30j+'
                                     }">
-                                        {{ getAgingSegment(contract) }}
-                                    </span>
-                                </td>
-                                <td class="fw-bold text-dark">
-                                    {{ (contract.riskAnalysis?.unpaidArrears || 0) | number }} <small>FCFA</small>
-                                </td>
-                                <td>
-                                    <div class="btn-group">
-                                        <button class="btn btn-icon btn-xs btn-outline-info" title="Journal d'appels">
-                                            <i data-feather="phone" appFeatherIcon class="icon-xs"></i>
-                                        </button>
-                                        <button class="btn btn-icon btn-xs btn-outline-warning"
-                                            title="Envoi SMS Relance">
-                                            <i data-feather="message-square" appFeatherIcon class="icon-xs"></i>
-                                        </button>
-                                        <button class="btn btn-icon btn-xs btn-outline-danger"
-                                            title="Inhiber GPS / Coupure Moteur" *ngIf="getLateDays(contract) > 15">
-                                            <i data-feather="power" appFeatherIcon class="icon-xs"></i>
-                                        </button>
-                                        <button class="btn btn-icon btn-xs btn-outline-success" title="Enregistrer une Promesse"
-                                            (click)="openPromiseModal(promiseModal, contract)">
-                                            <i data-feather="calendar" appFeatherIcon class="icon-xs"></i>
-                                        </button>
-                                        <button class="btn btn-icon btn-xs btn-outline-secondary"
-                                            title="Plus d'actions">
-                                            <i data-feather="more-vertical" appFeatherIcon class="icon-xs"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr *ngIf="filteredContracts.length === 0">
-                                <td colspan="6" class="text-center py-5 text-success fw-medium bg-light">
-                                    <i data-feather="shield-check" appFeatherIcon class="me-2 mb-1"
-                                        style="width: 30px; height: 30px;"></i>
-                                    <div class="mt-2">Excellent : Aucun retard de paiement détecté sur la flotte !</div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                            {{ getAgingSegment(contract) }}
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold text-dark">
+                                        {{ (contract.riskAnalysis?.unpaidArrears || 0) | number }} <small>FCFA</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-icon btn-xs btn-outline-info"
+                                                title="Journal d'appels">
+                                                <i data-feather="phone" appFeatherIcon class="icon-xs"></i>
+                                            </button>
+                                            <button class="btn btn-icon btn-xs btn-outline-warning"
+                                                title="Envoi SMS Relance">
+                                                <i data-feather="message-square" appFeatherIcon class="icon-xs"></i>
+                                            </button>
+                                            <button class="btn btn-icon btn-xs btn-outline-danger"
+                                                title="Inhiber GPS / Coupure Moteur" *ngIf="getLateDays(contract) > 15">
+                                                <i data-feather="power" appFeatherIcon class="icon-xs"></i>
+                                            </button>
+                                            <ng-container *ngxPermissionsOnly="'CONTRACT:PROMISE'">
+                                                <button class="btn btn-icon btn-xs btn-outline-success"
+                                                    title="Enregistrer une Promesse"
+                                                    (click)="openPromiseModal(promiseModal, contract)">
+                                                    <i data-feather="calendar" appFeatherIcon class="icon-xs"></i>
+                                                </button>
+                                            </ng-container>
+                                            <button class="btn btn-icon btn-xs btn-outline-secondary"
+                                                title="Plus d'actions">
+                                                <i data-feather="more-vertical" appFeatherIcon class="icon-xs"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="filteredContracts.length === 0">
+                                    <td colspan="6" class="text-center py-5 text-success fw-medium bg-light">
+                                        <i data-feather="shield-check" appFeatherIcon class="me-2 mb-1"
+                                            style="width: 30px; height: 30px;"></i>
+                                        <div class="mt-2">Excellent : Aucun retard de paiement détecté sur la flotte !
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal Promesse de Paiement -->
-<ng-template #promiseModal let-modal>
-    <div class="modal-header bg-success text-white">
-        <h5 class="modal-title">Enregistrer une Promesse de Paiement</h5>
-        <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
-    </div>
-    <div class="modal-body">
-        <div class="alert alert-info py-2 mb-3" *ngIf="currentContract">
-            <i data-feather="info" appFeatherIcon class="icon-sm me-1"></i>
-            Client: <strong>{{ currentContract.client?.firstName }} {{ currentContract.client?.lastName }}</strong>
+    <!-- Modal Promesse de Paiement -->
+    <ng-template #promiseModal let-modal>
+        <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">Enregistrer une Promesse de Paiement</h5>
+            <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
         </div>
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label text-secondary fs-12px mb-1">Date de paiement promise</label>
-                <input type="date" class="form-control" [(ngModel)]="promiseData.expectedDate">
+        <div class="modal-body">
+            <div class="alert alert-info py-2 mb-3" *ngIf="currentContract">
+                <i data-feather="info" appFeatherIcon class="icon-sm me-1"></i>
+                Client: <strong>{{ currentContract.client?.firstName }} {{ currentContract.client?.lastName }}</strong>
             </div>
-            <div class="col-md-6">
-                <label class="form-label text-secondary fs-12px mb-1">Montant promis (FCFA)</label>
-                <input type="number" class="form-control" [(ngModel)]="promiseData.amount">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label text-secondary fs-12px mb-1">Date de paiement promise</label>
+                    <input type="date" class="form-control" [(ngModel)]="promiseData.expectedDate">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-secondary fs-12px mb-1">Montant promis (FCFA)</label>
+                    <input type="number" class="form-control" [(ngModel)]="promiseData.amount">
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label text-secondary fs-12px mb-1">Notes / Commentaire</label>
+                    <textarea class="form-control" rows="3" [(ngModel)]="promiseData.note"
+                        placeholder="Détails de l'échange téléphonique..."></textarea>
+                </div>
             </div>
-            <div class="col-md-12">
-                <label class="form-label text-secondary fs-12px mb-1">Notes / Commentaire</label>
-                <textarea class="form-control" rows="3" [(ngModel)]="promiseData.note"
-                    placeholder="Détails de l'échange téléphonique..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Annuler</button>
+            <button type="button" class="btn btn-success" (click)="submitPromise(modal)" [disabled]="loading">
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+                Enregistrer la Promesse
+            </button>
+        </div>
+    </ng-template>
+</ng-container>
+
+<ng-container *ngxPermissionsExcept="['CONTRACT:LATE:LIST']">
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+        <div class="card shadow-sm border-0 bg-white" style="max-width: 500px; border-radius: 12px;">
+            <div class="card-body text-center p-5">
+                <div class="rounded-circle bg-danger-transparent d-inline-flex p-3 mb-4">
+                    <i data-feather="lock" appFeatherIcon class="text-danger" style="width: 48px; height: 48px;"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Accès Refusé</h4>
+                <p class="text-secondary mb-4">
+                    Vous ne disposez pas des permissions nécessaires pour accéder au module des retards et impayés.
+                    <br>Veuillez
+                    contacter votre administrateur si vous pensez qu'il s'agit d'une erreur.
+                </p>
+                <button class="btn btn-danger px-4" routerLink="/dashboard">
+                    Retour au tableau de bord
+                </button>
             </div>
         </div>
     </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Annuler</button>
-        <button type="button" class="btn btn-success" (click)="submitPromise(modal)" [disabled]="loading">
-            <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
-            Enregistrer la Promesse
-        </button>
-    </div>
-</ng-template>
+</ng-container>

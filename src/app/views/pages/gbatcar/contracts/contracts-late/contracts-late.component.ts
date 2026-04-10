@@ -6,11 +6,13 @@ import { ContractService } from '../../../../../core/services/contract/contract.
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-contracts-late',
   standalone: true,
-  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule],
+  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule, NgxPermissionsModule],
   templateUrl: './contracts-late.component.html',
   styleUrl: './contracts-late.component.scss'
 })
@@ -51,10 +53,14 @@ export class ContractsLateComponent implements OnInit {
 
   constructor(
     private contractService: ContractService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private permissionsService: NgxPermissionsService,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
     this.loadLateContracts();
   }
 
