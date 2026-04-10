@@ -17,12 +17,13 @@
             </p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end gap-2">
-            <ng-select style="width: 150px; text-align: left;" [items]="monthsList" [clearable]="false"
-                [(ngModel)]="selectedMonth" (change)="onMonthChange()" placeholder="Une durée">
-                <ng-template ng-option-tmp let-item="item">{{ item }} mois</ng-template>
-                <ng-template ng-label-tmp let-item="item">{{ item }} mois</ng-template>
+            <ng-select style="width: 150px; text-align: left;" [items]="monthsList" [clearable]="false" bindLabel="name"
+                [addTag]="addDurationTag" [(ngModel)]="selectedMonth" (change)="onMonthChange($event)"
+                placeholder="Une durée">
+                <ng-template ng-option-tmp let-item="item">{{ item.name }}</ng-template>
+                <ng-template ng-label-tmp let-item="item">{{ item.name || item + ' mois' }}</ng-template>
             </ng-select>
-            <button class="btn btn-primary btn-sm d-flex align-items-center">
+            <button [routerLink]="['/gbatcar/payments/new']" class="btn btn-primary btn-sm d-flex align-items-center">
                 <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Nouveau encaissement
             </button>
             <button class="btn btn-outline-secondary btn-sm d-flex align-items-center bg-white">
@@ -142,10 +143,6 @@
                         <div class="text-center">
                             <h6 class="fw-bold mb-0 text-dark">{{ formatCurrency(stats.penaltiesAmount) }}</h6>
                             <small class="text-muted fs-11px">Total pénalités</small>
-                        </div>
-                        <div class="text-center">
-                            <h6 class="fw-bold mb-0 text-dark">{{ stats.avgPaymentDelay }}j</h6>
-                            <small class="text-muted fs-11px">Retard moyen</small>
                         </div>
                     </div>
                 </div>

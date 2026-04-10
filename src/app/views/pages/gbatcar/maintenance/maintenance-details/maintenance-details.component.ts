@@ -119,19 +119,42 @@ export class MaintenanceDetailsComponent implements OnInit {
 
   changeStatus(status: string) {
     if (!this.record?.uuid) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const isSpecialStatus = status === 'En cours' || status === 'Terminé' || status === 'Résolu';
+
     Swal.fire({
       title: 'Changer le statut ?',
-      text: `Vous allez passer cette intervention à "${status}"`,
+      html: `
+        <p class="mb-3">Vous allez passer cette intervention à "${status}"</p>
+        ${isSpecialStatus ? `
+          <div class="text-start mt-3">
+            <label class="form-label fw-bold">Date de l'événement</label>
+            <input type="date" id="swal-date" class="form-control" value="${today}">
+          </div>
+        ` : ''}
+      `,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#1bc943',
       cancelButtonText: 'Annuler',
-      confirmButtonText: 'Oui, confirmer'
+      confirmButtonText: 'Oui, confirmer',
+      preConfirm: () => {
+        if (isSpecialStatus) {
+          const date = (document.getElementById('swal-date') as HTMLInputElement).value;
+          if (!date) {
+            Swal.showValidationMessage('Veuillez sélectionner une date');
+          }
+          return { date };
+        }
+        return {};
+      }
     }).then((result) => {
       if (result.isConfirmed) {
-        this.maintenanceService.changeStatus(this.record.uuid, status).subscribe({
-          next: () => {
-            this.record.status = status;
+        const date = result.value?.date;
+        this.maintenanceService.changeStatus(this.record.uuid, status, date).subscribe({
+          next: (res: any) => {
+            this.record = res.data ?? res;
             Swal.fire('Succès', 'Le statut a été mis à jour.', 'success');
           },
           error: () => Swal.fire('Erreur', 'Impossible de changer le statut', 'error')
@@ -175,6 +198,7 @@ export class MaintenanceDetailsComponent implements OnInit {
         const payload = {
           clientId: this.record.vehicle.client.uuid,
           vehicleId: this.record.vehicle.uuid,
+          contractId: this.record.contract?.uuid,
           amount: result.value.amount,
           reason: result.value.reason,
           status: 'Non payé',

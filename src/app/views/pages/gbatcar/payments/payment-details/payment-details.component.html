@@ -27,7 +27,8 @@
         </button>
 
         <!-- Actions for Pending Payments -->
-        <ng-container *ngIf="payment.status === 'En attente' || payment.status === 'PENDING'">
+        <ng-container
+            *ngIf="payment.status === 'En attente' || payment.status === 'PENDING' || payment.status === 'ATTENTE'">
             <button (click)="validatePayment()" class="btn btn-success btn-icon-text me-2 mb-2 mb-md-0">
                 <i data-feather="check-circle" appFeatherIcon class="btn-icon-prepend"></i> Valider
             </button>
@@ -57,7 +58,7 @@
                             class="tx-16 text-muted">FCFA</span></h2>
                     <span class="badge" [ngClass]="{
                         'bg-success fs-6 text-white': payment.status === 'Validé' || payment.status === 'VALIDATED' || payment.status === 'VALIDÉ',
-                        'bg-warning text-dark fs-6': payment.status === 'En attente' || payment.status === 'PENDING',
+                        'bg-warning text-dark fs-6': payment.status === 'En attente' || payment.status === 'PENDING' || payment.status === 'ATTENTE',
                         'bg-danger fs-6 text-white': payment.status === 'Rejeté'
                     }">{{ translateStatus(payment.status) }}</span>
                 </div>
@@ -105,10 +106,9 @@
                         <p class="mb-0">{{ payment.date | date:'longDate' }}</p>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Enregistré par</label>
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Crée par</label>
                         <p class="mb-0 text-muted">
-                            {{ payment.createBy ? (payment.createBy.lastName + ' ' + payment.createBy.firstName) :
-                            'Administrateur Système' }}
+                            {{ payment.create}}
                         </p>
                     </div>
                 </div>

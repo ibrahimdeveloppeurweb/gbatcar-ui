@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, throwError, of } from 'rxjs';
+import { Observable, throwError, of, BehaviorSubject } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 
@@ -45,11 +45,16 @@ export interface ChangePasswordPayload {
 export class AuthService {
 
     private apiUrl = environment.serverUrl;
+    private permissionsSubject = new BehaviorSubject<string[]>(this.getPermissions());
 
     constructor(
         private http: HttpClient,
         private router: Router
     ) { }
+
+    getPermissionsObservable(): Observable<string[]> {
+        return this.permissionsSubject.asObservable();
+    }
 
     // ── Authentification ───────────────────────────────────────────────────────
 
@@ -125,6 +130,7 @@ export class AuthService {
     saveDataToken(data: UserSession): void {
         localStorage.setItem(TOKEN_KEY, JSON.stringify(data));
         localStorage.setItem(PERMS_KEY, JSON.stringify(data.permissions ?? []));
+        this.permissionsSubject.next(data.permissions ?? []);
     }
 
     getDataToken(): UserSession | null {
@@ -164,6 +170,7 @@ export class AuthService {
     clearSession(): void {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(PERMS_KEY);
+        this.permissionsSubject.next([]);
         this.router.navigate(['/auth/login']);
     }
 }

@@ -9,6 +9,7 @@ import { ThemeCssVariableService } from '../../../../../core/services/theme-css-
 import { NgSelectModule } from '@ng-select/ng-select';
 import { FormsModule } from '@angular/forms';
 import { PaymentService } from '../../../../../core/services/payment/payment.service';
+import { ContractDurationService } from '../../../../../core/services/contract/contract-duration.service';
 
 @Component({
     selector: 'app-payment-dashboard',
@@ -21,10 +22,33 @@ export class PaymentDashboardComponent implements OnInit {
 
     themeCssVariables = inject(ThemeCssVariableService).getThemeCssVariables();
     private paymentService = inject(PaymentService);
+    private durationService = inject(ContractDurationService);
 
-    selectedMonth = 6;
-    monthsList: number[] = Array.from({ length: 36 }, (_, i) => i + 1);
     loading = false;
+    loadingDurations = false;
+    selectedMonth = 6;
+    monthsList: any[] = [];
+
+    addDurationTag = (name: string) => {
+        return new Promise((resolve) => {
+            // Append " mois" if not present
+            const formattedName = name.toLowerCase().includes('mois') ? name : `${name} mois`;
+
+            this.loadingDurations = true;
+            this.durationService.create(formattedName).subscribe({
+                next: (res: any) => {
+                    const newDuration = res.data || res;
+                    this.monthsList = [...this.monthsList, newDuration];
+                    this.loadingDurations = false;
+                    resolve(newDuration);
+                },
+                error: () => {
+                    this.loadingDurations = false;
+                    resolve(null);
+                }
+            });
+        });
+    };
 
     // ===================== KPI DATA =====================
     stats = {
@@ -51,7 +75,16 @@ export class PaymentDashboardComponent implements OnInit {
     public paymentMethodChartOptions: ApexOptions | any;
 
     ngOnInit(): void {
+        this.loadDurations();
         this.loadDashboardData();
+    }
+
+    loadDurations() {
+        this.durationService.getAll().subscribe({
+            next: (data) => {
+                this.monthsList = data;
+            }
+        });
     }
 
     loadDashboardData() {
@@ -76,7 +109,12 @@ export class PaymentDashboardComponent implements OnInit {
         });
     }
 
-    onMonthChange() {
+    onMonthChange(item: any) {
+        if (item && typeof item === 'object') {
+            this.selectedMonth = item.monthsCount;
+        } else if (typeof item === 'number') {
+            this.selectedMonth = item;
+        }
         this.loadDashboardData();
     }
 
@@ -87,28 +125,49 @@ export class PaymentDashboardComponent implements OnInit {
 
     buildCashflowChart() {
         const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-        const categories = [];
-        const expectedData = new Array(this.selectedMonth).fill(0);
-        const paidData = new Array(this.selectedMonth).fill(0);
+        const categories: string[] = [];
+        let expectedData: number[] = [];
+        let paidData: number[] = [];
 
-        for (let i = this.selectedMonth - 1; i >= 0; i--) {
-            const d = new Date();
-            d.setMonth(d.getMonth() - i);
+        const groupByYear = this.selectedMonth > 36;
 
-            let catName = monthNames[d.getMonth()];
-            if (this.selectedMonth > 12) {
-                catName += ' ' + d.getFullYear().toString().substring(2);
+        if (groupByYear) {
+            // Logic for yearly grouping
+            const startYear = new Date().getFullYear() - Math.ceil(this.selectedMonth / 12) + 1;
+            const endYear = new Date().getFullYear();
+
+            for (let year = startYear; year <= endYear; year++) {
+                categories.push(year.toString());
+                const key = year.toString();
+                const item = this.trends.cashflow?.find((x: any) => x.month === key);
+
+                expectedData.push(item ? parseFloat(item.expected) : 0);
+                paidData.push(item ? parseFloat(item.paid) : 0);
             }
-            categories.push(catName);
+        } else {
+            // Existing monthly logic
+            expectedData = new Array(this.selectedMonth).fill(0);
+            paidData = new Array(this.selectedMonth).fill(0);
 
-            const yearStr = d.getFullYear();
-            const monthStr = (d.getMonth() + 1).toString().padStart(2, '0');
-            const key = `${yearStr}-${monthStr}`;
+            for (let i = this.selectedMonth - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setMonth(d.getMonth() - i);
 
-            const item = this.trends.cashflow?.find((x: any) => x.month === key);
-            if (item) {
-                expectedData[(this.selectedMonth - 1) - i] = parseFloat(item.expected);
-                paidData[(this.selectedMonth - 1) - i] = parseFloat(item.paid);
+                let catName = monthNames[d.getMonth()];
+                if (this.selectedMonth > 12) {
+                    catName += ' ' + d.getFullYear().toString().substring(2);
+                }
+                categories.push(catName);
+
+                const yearStr = d.getFullYear();
+                const monthStr = (d.getMonth() + 1).toString().padStart(2, '0');
+                const key = `${yearStr}-${monthStr}`;
+
+                const item = this.trends.cashflow?.find((x: any) => x.month === key);
+                if (item) {
+                    expectedData[(this.selectedMonth - 1) - i] = parseFloat(item.expected);
+                    paidData[(this.selectedMonth - 1) - i] = parseFloat(item.paid);
+                }
             }
         }
 

@@ -1,5 +1,5 @@
-import { DOCUMENT, NgClass, NgIf } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, Inject, OnInit, Renderer2, ViewChild } from '@angular/core';
+import { DOCUMENT, NgClass, NgIf, NgFor } from '@angular/common';
+import { AfterViewInit, Component, ElementRef, Inject, OnInit, Renderer2, ViewChild, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { NgScrollbar } from 'ngx-scrollbar';
@@ -12,6 +12,7 @@ import { FeatherIconDirective } from '../../../core/feather-icon/feather-icon.di
 import { ThemeModeService } from '../../../core/services/theme-mode.service';
 import { PathService } from '../../../core/services/path/path.service';
 import { AuthService } from '../../../core/services/auth/auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-sidebar',
@@ -22,12 +23,13 @@ import { AuthService } from '../../../core/services/auth/auth.service';
     NgScrollbar,
     NgClass,
     NgIf,
+    NgFor,
     FeatherIconDirective,
   ],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })
-export class SidebarComponent implements OnInit, AfterViewInit {
+export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('sidebarToggler') sidebarToggler: ElementRef;
 
@@ -35,104 +37,170 @@ export class SidebarComponent implements OnInit, AfterViewInit {
   @ViewChild('sidebarMenu') sidebarMenu: ElementRef;
 
   currentTheme: string;
+  private metisMenuInstance: any;
+  private permissionsSubscription: Subscription;
 
   constructor(
     @Inject(DOCUMENT) private document: Document,
     private renderer: Renderer2,
-    router: Router,
+    private router: Router,
     private themeModeService: ThemeModeService,
     private pathService: PathService,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {
     this.themeModeService.currentTheme.subscribe((theme) => {
       this.currentTheme = theme;
     });
 
-    router.events.forEach((event) => {
+    this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
-
-        /**
-         * Activating the current active item dropdown
-         */
-        this._activateMenuDropdown();
-
-        /**
-         * closing the sidebar
-         */
         if (window.matchMedia('(max-width: 991px)').matches) {
           this.document.body.classList.remove('sidebar-open');
         }
-
+        this._activateMenuDropdown();
       }
     });
   }
 
   ngOnInit(): void {
-    // Par défaut, on peut charger le menu complet, puis on le filtrera
-    const permissions = this.authService.getPermissions();
-    let filteredMenu = this.filterMenu(MENU, permissions);
+    this.permissionsSubscription = this.authService.getPermissionsObservable().subscribe(permissions => {
+      const menuClone = JSON.parse(JSON.stringify(MENU));
+      this.menuItems = this.cleanupEmptyTitles(this.filterMenu(menuClone, permissions));
+      this.cdr.detectChanges();
 
-    // Supprimer les titres qui sont vides (sans menu en dessous)
-    filteredMenu = filteredMenu.filter((item, index, array) => {
-      if (item.isTitle) {
-        // Vérifier s'il y a un élément non-titre après ce titre, avant le titre suivant
-        for (let i = index + 1; i < array.length; i++) {
-          if (array[i].isTitle) {
-            return false; // On a rencontré un autre titre sans voir de menu normal -> vide
-          } else {
-            return true; // On a trouvé un menu normal sous ce titre -> valide
-          }
-        }
-        return false; // Fin du tableau sans trouver de menu -> vide
-      }
-      return true;
+      // Delai pour laisser Angular injecter les éléments dans le DOM
+      setTimeout(() => {
+        this.initMetisMenu();
+      }, 200);
     });
 
-    this.menuItems = filteredMenu;
-
-    /**
-     * Sidebar-folded on desktop (min-width:992px and max-width: 1199px)
-     */
     const desktopMedium = window.matchMedia('(min-width:992px) and (max-width: 1199px)');
     desktopMedium.addEventListener('change', () => {
-      this.iconSidebar;
+      this.iconSidebar(desktopMedium);
     });
     this.iconSidebar(desktopMedium);
   }
 
+  ngOnDestroy(): void {
+    if (this.permissionsSubscription) {
+      this.permissionsSubscription.unsubscribe();
+    }
+    if (this.metisMenuInstance) {
+      // Tenter de nettoyer l'instance si supporté
+      this.metisMenuInstance = null;
+    }
+  }
+
   filterMenu(items: MenuItem[], permissions: string[]): MenuItem[] {
     return items.filter(item => {
-      if (item.isTitle) return true; // Les titres sont toujours gardés (ou filtrés plus tard si viides)
-
-      let hasAccess = false;
-      if (item.nom && permissions.includes(item.nom)) {
-        hasAccess = true;
-      }
-
-      // Si c'est un parent avec des enfants, vérifier les enfants
+      if (item.isTitle) return true;
+      let hasAccess = item.nom ? permissions.includes(item.nom) : false;
       if (item.subItems && item.subItems.length > 0) {
-        // We filter out subItems according to permissions
         item.subItems = this.filterMenu(item.subItems, permissions);
-        if (item.subItems.length > 0) {
-          hasAccess = true; // Si au moins un enfant est autorisé, le parent l'est aussi
-        }
+        if (item.subItems.length > 0) hasAccess = true;
       }
-
       return hasAccess;
     });
   }
 
+  cleanupEmptyTitles(menu: MenuItem[]): MenuItem[] {
+    return menu.filter((item, index, array) => {
+      if (item.isTitle) {
+        for (let i = index + 1; i < array.length; i++) {
+          if (array[i].isTitle) break;
+          return true;
+        }
+        return false;
+      }
+      return true;
+    });
+  }
+
   ngAfterViewInit() {
-    // activate menu items
-    if (this.menuItems.length > 0) {
-      new MetisMenu(this.sidebarMenu.nativeElement);
+    this.initMetisMenu();
+  }
+
+  private initMetisMenu() {
+    if (this.sidebarMenu && this.sidebarMenu.nativeElement) {
+      // On NE RE-INITIALISE PAS MetisMenu si l'instance existe déjà, 
+      // car cela casse les écouteurs d'événements (click).
+      // On laisse MetisMenu gérer le DOM existant.
+      if (!this.metisMenuInstance) {
+        this.metisMenuInstance = new MetisMenu(this.sidebarMenu.nativeElement);
+      }
+
       this._activateMenuDropdown();
     }
   }
 
-  /**
-   * Toggle the sidebar when the hamburger button is clicked
-   */
+  _activateMenuDropdown() {
+    // On utilise un petit timeout pour s'assurer que le marquage des classes se fait sur un DOM stable
+    setTimeout(() => {
+      this.resetMenuItems();
+      this.activateMenuItems();
+      this.cdr.detectChanges();
+    }, 50);
+  }
+
+  resetMenuItems() {
+    const links = document.querySelectorAll('.nav-link-ref, .nav-link');
+    links.forEach(el => {
+      el.classList.remove('mm-active');
+      el.setAttribute('aria-expanded', 'false');
+    });
+    const subMenus = document.querySelectorAll('.sub-menu');
+    subMenus.forEach(el => {
+      el.classList.remove('mm-show');
+      el.setAttribute('aria-expanded', 'false');
+      // Ne pas toucher au display style pour laisser MetisMenu gérer
+    });
+    const items = document.querySelectorAll('.nav-item');
+    items.forEach(el => el.classList.remove('mm-active'));
+  }
+
+  activateMenuItems() {
+    const links: any = document.querySelectorAll('.nav-link-ref');
+    let menuItemEl = null;
+    const currentPath = this.router.url.split('?')[0];
+
+    for (let i = 0; i < links.length; i++) {
+      const path = links[i]['pathname'];
+      if (currentPath === path || (path !== '/gbatcar/dashboard' && currentPath.startsWith(path))) {
+        menuItemEl = links[i];
+        break;
+      }
+    }
+
+    if (menuItemEl) {
+      menuItemEl.classList.add('mm-active');
+      let parentEl = menuItemEl.parentElement;
+
+      while (parentEl) {
+        if (parentEl.tagName === 'LI') {
+          parentEl.classList.add('mm-active');
+          const anchor = parentEl.querySelector(':scope > a');
+          if (anchor) {
+            anchor.classList.add('mm-active');
+            anchor.setAttribute('aria-expanded', 'true');
+          }
+        } else if (parentEl.tagName === 'UL') {
+          parentEl.classList.add('mm-show');
+          parentEl.setAttribute('aria-expanded', 'true');
+
+          const toggle = parentEl.previousElementSibling;
+          if (toggle && toggle.tagName === 'A') {
+            toggle.classList.add('mm-active');
+            toggle.setAttribute('aria-expanded', 'true');
+          }
+        }
+
+        if (parentEl.id === 'sidebar-menu') break;
+        parentEl = parentEl.parentElement;
+      }
+    }
+  }
+
   toggleSidebar(e: Event) {
     this.sidebarToggler.nativeElement.classList.toggle('active');
     if (window.matchMedia('(min-width: 992px)').matches) {
@@ -144,29 +212,18 @@ export class SidebarComponent implements OnInit, AfterViewInit {
     }
   }
 
-
-  /**
-   * Open the sidebar on hover when it is in a folded state
-   */
   operSidebarFolded() {
     if (this.document.body.classList.contains('sidebar-folded')) {
       this.document.body.classList.add("open-sidebar-folded");
     }
   }
 
-
-  /**
-   * Fold sidebar after mouse leave (in folded state)
-   */
   closeSidebarFolded() {
     if (this.document.body.classList.contains('sidebar-folded')) {
       this.document.body.classList.remove("open-sidebar-folded");
     }
   }
 
-  /**
-   * Sidebar folded on desktop screens with a width between 992px and 1199px
-   */
   iconSidebar(mq: MediaQueryList) {
     if (mq.matches) {
       this.document.body.classList.add('sidebar-folded');
@@ -175,128 +232,11 @@ export class SidebarComponent implements OnInit, AfterViewInit {
     }
   }
 
-
-  /**
-   * Returns true or false depending on whether the given menu item has a child
-   * @param item menuItem
-   */
   hasItems(item: MenuItem) {
-    return item.subItems !== undefined ? item.subItems.length > 0 : false;
+    return (item.subItems !== undefined && item.subItems.length > 0);
   }
 
-
-  /**
-   * Reset the menus, then highlight the currently active menu item
-   */
-  _activateMenuDropdown() {
-    this.resetMenuItems();
-    this.activateMenuItems();
+  SidebarHide() {
+    document.body.classList.remove('vertical-sidebar-enable');
   }
-
-
-  /**
-   * Resets the menus
-   */
-  resetMenuItems() {
-
-    const links = document.getElementsByClassName('nav-link-ref');
-
-    for (let i = 0; i < links.length; i++) {
-      const menuItemEl = links[i];
-      menuItemEl.classList.remove('mm-active');
-      const parentEl = menuItemEl.parentElement;
-
-      if (parentEl) {
-        parentEl.classList.remove('mm-active');
-        const parent2El = parentEl.parentElement;
-
-        if (parent2El) {
-          parent2El.classList.remove('mm-show');
-        }
-
-        const parent3El = parent2El?.parentElement;
-        if (parent3El) {
-          parent3El.classList.remove('mm-active');
-
-          if (parent3El.classList.contains('side-nav-item')) {
-            const firstAnchor = parent3El.querySelector('.side-nav-link-a-ref');
-
-            if (firstAnchor) {
-              firstAnchor.classList.remove('mm-active');
-            }
-          }
-
-          const parent4El = parent3El.parentElement;
-          if (parent4El) {
-            parent4El.classList.remove('mm-show');
-
-            const parent5El = parent4El.parentElement;
-            if (parent5El) {
-              parent5El.classList.remove('mm-active');
-            }
-          }
-        }
-      }
-    }
-  };
-
-
-  /**
-   * Toggles the state of the menu items
-   */
-  activateMenuItems() {
-
-    const links: any = document.getElementsByClassName('nav-link-ref');
-
-    let menuItemEl = null;
-
-    for (let i = 0; i < links.length; i++) {
-      // tslint:disable-next-line: no-string-literal
-      if (window.location.pathname === links[i]['pathname']) {
-
-        menuItemEl = links[i];
-
-        break;
-      }
-    }
-
-    if (menuItemEl) {
-      menuItemEl.classList.add('mm-active');
-      const parentEl = menuItemEl.parentElement;
-
-      if (parentEl) {
-        parentEl.classList.add('mm-active');
-
-        const parent2El = parentEl.parentElement;
-        if (parent2El) {
-          parent2El.classList.add('mm-show');
-        }
-
-        const parent3El = parent2El.parentElement;
-        if (parent3El) {
-          parent3El.classList.add('mm-active');
-
-          if (parent3El.classList.contains('side-nav-item')) {
-            const firstAnchor = parent3El.querySelector('.side-nav-link-a-ref');
-
-            if (firstAnchor) {
-              firstAnchor.classList.add('mm-active');
-            }
-          }
-
-          const parent4El = parent3El.parentElement;
-          if (parent4El) {
-            parent4El.classList.add('mm-show');
-
-            const parent5El = parent4El.parentElement;
-            if (parent5El) {
-              parent5El.classList.add('mm-active');
-            }
-          }
-        }
-      }
-    }
-  };
-
-
 }

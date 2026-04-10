@@ -1,331 +1,370 @@
-<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
-    <div>
-        <h4 class="mb-3 mb-md-0">Tous les Contrats [DYNAMISÉ]</h4>
-        <p class="text-secondary">Annuaire global des contrats de location-vente GbatCar.</p>
+<ng-container *ngxPermissionsOnly="['CONTRACT:LIST']">
+    <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+        <div>
+            <h4 class="mb-3 mb-md-0">Tous les Contrats</h4>
+            <p class="text-secondary">Annuaire global des contrats de location-vente GbatCar.</p>
+        </div>
+        <div class="d-flex align-items-center flex-wrap text-nowrap">
+            <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0 me-2"
+                (click)="toggleAdvancedFilters()">
+                <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
+                {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
+            </button>
+            <ng-container *ngxPermissionsOnly="'CONTRACT:NEW'">
+                <button [routerLink]="['/gbatcar/contracts/new']" type="button"
+                    class="btn btn-primary btn-icon-text mb-2 mb-md-0">
+                    <i data-feather="file-plus" appFeatherIcon class="btn-icon-prepend"></i>
+                    Nouveau Contrat
+                </button>
+            </ng-container>
+        </div>
     </div>
-    <div class="d-flex align-items-center flex-wrap text-nowrap">
-        <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0 me-2"
-            (click)="toggleAdvancedFilters()">
-            <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
-            {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
-        </button>
-        <button [routerLink]="['/gbatcar/contracts/new']" type="button"
-            class="btn btn-primary btn-icon-text mb-2 mb-md-0">
-            <i data-feather="file-plus" appFeatherIcon class="btn-icon-prepend"></i>
-            Nouveau Contrat
-        </button>
-    </div>
-</div>
 
-<!-- KPI Summary Cards -->
-<div class="row mb-4">
-    <div class="col-md-2 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #6c757d;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Total Contrats</p>
-                        <h4 class="fw-bold mb-0">{{ contracts.length }}</h4>
+    <!-- KPI Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2 col-6 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #6c757d;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Total Contrats</p>
+                            <h4 class="fw-bold mb-0">{{ contracts.length }}</h4>
+                        </div>
+                        <i data-feather="file-text" appFeatherIcon class="icon-lg text-secondary"></i>
                     </div>
-                    <i data-feather="file-text" appFeatherIcon class="icon-lg text-secondary"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #2ecc71;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Actifs</p>
+                            <h4 class="fw-bold mb-0 text-success">{{ activeContractsCount }}</h4>
+                        </div>
+                        <i data-feather="check-circle" appFeatherIcon class="icon-lg text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #e74c3c;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">En Retard</p>
+                            <h4 class="fw-bold mb-0 text-danger">{{ lateContractsCount }}</h4>
+                        </div>
+                        <i data-feather="alert-triangle" appFeatherIcon class="icon-lg text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card h-100" style="border-left: 4px solid #f39c12;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Maturité &lt; 30j</p>
+                            <h4 class="fw-bold mb-0 text-warning">{{ maturingSoonCount }}</h4>
+                        </div>
+                        <i data-feather="clock" appFeatherIcon class="icon-lg text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-12">
+            <div class="card h-100" style="border-left: 4px solid #343a40;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Dossiers Incomplets</p>
+                            <h4 class="fw-bold mb-0 text-dark">{{ incompleteDossiersCount }}</h4>
+                        </div>
+                        <i data-feather="folder" appFeatherIcon class="icon-lg text-dark"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-2 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #2ecc71;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Actifs</p>
-                        <h4 class="fw-bold mb-0 text-success">{{ activeContractsCount }}</h4>
-                    </div>
-                    <i data-feather="check-circle" appFeatherIcon class="icon-lg text-success"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #e74c3c;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">En Retard</p>
-                        <h4 class="fw-bold mb-0 text-danger">{{ lateContractsCount }}</h4>
-                    </div>
-                    <i data-feather="alert-triangle" appFeatherIcon class="icon-lg text-danger"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="card h-100" style="border-left: 4px solid #f39c12;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Maturité &lt; 30j</p>
-                        <h4 class="fw-bold mb-0 text-warning">{{ maturingSoonCount }}</h4>
-                    </div>
-                    <i data-feather="clock" appFeatherIcon class="icon-lg text-warning"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 col-12">
-        <div class="card h-100" style="border-left: 4px solid #343a40;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Dossiers Incomplets</p>
-                        <h4 class="fw-bold mb-0 text-dark">{{ incompleteDossiersCount }}</h4>
-                    </div>
-                    <i data-feather="folder" appFeatherIcon class="icon-lg text-dark"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 
-<!-- Filtres Avancés -->
-<div class="row mb-3" *ngIf="showAdvancedFilters">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title mb-3">Filtres de recherche</h6>
-                <div class="row g-3">
-                    <!-- Text & Selectors -->
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
-                        <input type="text" class="form-control form-control-sm" placeholder="ID, Client, Véhicule..."
-                            [(ngModel)]="advSearchTerm">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Statut Légale</label>
-                        <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
-                            <option value="">Tous</option>
-                            <option value="VALIDÉ">En cours</option>
-                            <option value="NEW">En Attente</option>
-                            <option value="SOLDÉ">Soldé</option>
-                            <option value="RÉSILIÉ">Résilié</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">État des Paiements</label>
-                        <select class="form-select form-select-sm" [(ngModel)]="advPaymentStatusFilter">
-                            <option value="">Tous</option>
-                            <option value="À jour">À jour</option>
-                            <option value="En retard">En retard</option>
-                            <option value="Impayé définitif">Impayé définitif</option>
-                            <option value="En attente">En attente (Nouveau)</option>
-                        </select>
-                    </div>
+    <!-- Filtres Avancés -->
+    <div class="row mb-3" *ngIf="showAdvancedFilters">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Filtres de recherche</h6>
+                    <div class="row g-3">
+                        <!-- Text & Selectors -->
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
+                            <input type="text" class="form-control form-control-sm"
+                                placeholder="ID, Client, Véhicule..." [(ngModel)]="advSearchTerm">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Statut Légale</label>
+                            <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
+                                <option value="">Tous</option>
+                                <option value="VALIDÉ">En cours</option>
+                                <option value="NEW">En Attente</option>
+                                <option value="SOLDÉ">Soldé</option>
+                                <option value="RÉSILIÉ">Résilié</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">État des Paiements</label>
+                            <select class="form-select form-select-sm" [(ngModel)]="advPaymentStatusFilter">
+                                <option value="">Tous</option>
+                                <option value="À jour">À jour</option>
+                                <option value="En retard">En retard</option>
+                                <option value="Impayé définitif">Impayé définitif</option>
+                                <option value="En attente">En attente (Nouveau)</option>
+                            </select>
+                        </div>
 
-                    <!-- Date Range -->
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Date Signature (Début/Fin)</label>
-                        <div class="d-flex align-items-center">
-                            <input type="date" class="form-control form-control-sm me-1" [(ngModel)]="advStartDateMin">
-                            <span class="text-secondary">-</span>
-                            <input type="date" class="form-control form-control-sm ms-1" [(ngModel)]="advStartDateMax">
+                        <!-- Date Range -->
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Date Signature (Début/Fin)</label>
+                            <div class="d-flex align-items-center">
+                                <input type="date" class="form-control form-control-sm me-1"
+                                    [(ngModel)]="advStartDateMin">
+                                <span class="text-secondary">-</span>
+                                <input type="date" class="form-control form-control-sm ms-1"
+                                    [(ngModel)]="advStartDateMax">
+                            </div>
+                        </div>
+
+                        <!-- Progress Range -->
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Avancement Financier (%)</label>
+                            <div class="d-flex align-items-center">
+                                <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
+                                    [(ngModel)]="advProgressMin">
+                                <span class="text-secondary">-</span>
+                                <input type="number" class="form-control form-control-sm ms-1" placeholder="Max"
+                                    [(ngModel)]="advProgressMax">
+                            </div>
+                        </div>
+
+                        <!-- Count Limiter -->
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Résultats à afficher</label>
+                            <select class="form-select form-select-sm" [(ngModel)]="advCountFilter">
+                                <option [value]="5">5</option>
+                                <option [value]="10">10</option>
+                                <option [value]="20">20</option>
+                                <option [value]="50">50</option>
+                                <option [value]="1000">Tous</option>
+                            </select>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="col-md-6 d-flex align-items-end justify-content-end">
+                            <button class="btn btn-sm btn-primary me-2" style="width: 120px;"
+                                (click)="applyAdvancedFilters()">
+                                <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Filtrer
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" style="width: 120px;"
+                                (click)="resetFilters()">
+                                <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
+                            </button>
                         </div>
                     </div>
-
-                    <!-- Progress Range -->
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Avancement Financier (%)</label>
-                        <div class="d-flex align-items-center">
-                            <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
-                                [(ngModel)]="advProgressMin">
-                            <span class="text-secondary">-</span>
-                            <input type="number" class="form-control form-control-sm ms-1" placeholder="Max"
-                                [(ngModel)]="advProgressMax">
-                        </div>
-                    </div>
-
-                    <!-- Count Limiter -->
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Résultats à afficher</label>
-                        <select class="form-select form-select-sm" [(ngModel)]="advCountFilter">
-                            <option [value]="5">5</option>
-                            <option [value]="10">10</option>
-                            <option [value]="20">20</option>
-                            <option [value]="50">50</option>
-                            <option [value]="1000">Tous</option>
-                        </select>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="col-md-6 d-flex align-items-end justify-content-end">
-                        <button class="btn btn-sm btn-primary me-2" style="width: 120px;"
-                            (click)="applyAdvancedFilters()">
-                            <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Filtrer
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary" style="width: 120px;" (click)="resetFilters()">
-                            <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Overlay chargement -->
-<div class="d-flex justify-content-center align-items-center position-fixed w-100 h-100 bg-white"
-    style="z-index: 9999; left:0; top:0; opacity: 0.8;" *ngIf="loading">
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Chargement...</span>
+    <!-- Overlay chargement -->
+    <div class="d-flex justify-content-center align-items-center position-fixed w-100 h-100 bg-white"
+        style="z-index: 9999; left:0; top:0; opacity: 0.8;" *ngIf="loading">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Chargement...</span>
+        </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-md-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="card-title mb-0 fw-bold text-uppercase">RÉPERTOIRE DES CONTRATS ({{
-                        filteredContracts.length }})</h6>
-                    <div class="d-flex align-items-center">
-                        <input type="text" class="form-control form-control-sm me-2 border-light shadow-none"
-                            placeholder="Recherche par ID, client..." style="width: 280px; background-color: #f9fafb;"
-                            [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
-                        <select class="form-select form-select-sm border-light shadow-none"
-                            style="width: 180px; background-color: #f9fafb;" [(ngModel)]="quickStatusFilter"
-                            (change)="applyQuickFilters()">
-                            <option value="">Tous les statuts</option>
-                            <option value="VALIDÉ">En cours</option>
-                            <option value="NEW">En Attente</option>
-                            <option value="SOLDÉ">Soldé</option>
-                            <option value="RÉSILIÉ">Résilié</option>
-                        </select>
+    <div class="row">
+        <div class="col-md-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="card-title mb-0 fw-bold text-uppercase">RÉPERTOIRE DES CONTRATS ({{
+                            filteredContracts.length }})</h6>
+                        <div class="d-flex align-items-center">
+                            <input type="text" class="form-control form-control-sm me-2 border-light shadow-none"
+                                placeholder="Recherche par ID, client..."
+                                style="width: 280px; background-color: #f9fafb;" [(ngModel)]="quickSearchTerm"
+                                (input)="applyQuickFilters()">
+                            <select class="form-select form-select-sm border-light shadow-none"
+                                style="width: 180px; background-color: #f9fafb;" [(ngModel)]="quickStatusFilter"
+                                (change)="applyQuickFilters()">
+                                <option value="">Tous les statuts</option>
+                                <option value="VALIDÉ">En cours</option>
+                                <option value="NEW">En Attente</option>
+                                <option value="SOLDÉ">Soldé</option>
+                                <option value="RÉSILIÉ">Résilié</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="bg-light-subtle">
-                            <tr>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">N° Contrat</th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Client</th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Usage</th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Véhicule</th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Fin de Contrat</th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Total Exigible</th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Avancement</th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Risque</th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">Statut</th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0 text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let contract of filteredContracts">
-                                <td>
-                                    <span class="fw-bold text-danger d-block">#{{ contract.reference || (contract.uuid ?
-                                        (contract.uuid | slice:0:8 | uppercase) : 'TEMP') }}</span>
-                                    <span class="text-muted fs-10px d-block">{{ contract.createdAt | date:'dd/MM/yyyy'
-                                        }}</span>
-                                    <span class="text-muted fs-10px d-block" *ngIf="contract.create">par {{
-                                        contract.create }}</span>
-                                </td>
-                                <td>
-                                    <a [routerLink]="['/gbatcar/clients/details', contract.client?.uuid]"
-                                        class="text-dark fw-bold d-block">{{ contract.client?.lastName }} {{
-                                        contract.client?.firstName }}</a>
-                                    <span class="text-muted fs-11px">CLI-{{ (contract.client?.uuid ?
-                                        (contract.client?.uuid | slice:0:3 | uppercase) : '...') }}</span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-light text-dark border">{{ contract.usageType || 'VTC'
-                                        }}</span>
-                                </td>
-                                <td>
-                                    <span class="d-block fs-13px fw-bold">{{ contract.vehicle?.marque }} {{
-                                        contract.vehicle?.modele }}</span>
-                                    <span class="text-muted fs-11px">{{ contract.vehicle?.immatriculation }}</span>
-                                </td>
-                                <td>
-                                    <div class="fs-13px fw-bold text-dark">{{ contract.endDate | date:'dd/MM/yyyy' }}
-                                    </div>
-                                    <div class="fs-11px"
-                                        [ngClass]="getDaysUntilDeadline(contract.endDate) < 30 ? 'text-danger fw-bold' : 'text-muted'">
-                                        J{{ getDaysUntilDeadline(contract.endDate) >= 0 ? '-' : '+' }}{{
-                                        MathAbs(getDaysUntilDeadline(contract.endDate)) }}
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="d-block fw-bold" style="color: #c0392b; font-size: 13px;">{{
-                                        contract.totalAmount | number }} <span
-                                            class="text-muted fw-normal fs-10px">FCFA</span></span>
-                                    <span class="text-muted fs-10px">{{ translateFrequency(contract.paymentFrequency)
-                                        }}</span>
-                                </td>
-                                <td>
-                                    <div class="d-flex justify-content-between fs-11px mb-1 text-dark fw-medium">
-                                        <span>{{ getEffectiveProgress(contract) | number:'1.1-1' }}%</span>
-                                    </div>
-                                    <div class="progress" style="height: 6px; width: 80px; background-color: #f1f5f9;">
-                                        <div class="progress-bar" [ngClass]="{
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="bg-light-subtle">
+                                <tr>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">N° Contrat</th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">Client</th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">Usage</th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">Véhicule</th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">Fin de Contrat</th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">Total Exigible</th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">Avancement</th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">Risque</th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">Statut</th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0 text-center">Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let contract of filteredContracts">
+                                    <td>
+                                        <span class="fw-bold text-danger d-block">#{{ contract.reference ||
+                                            (contract.uuid ?
+                                            (contract.uuid | slice:0:8 | uppercase) : 'TEMP') }}</span>
+                                        <span class="text-muted fs-10px d-block">{{ contract.createdAt |
+                                            date:'dd/MM/yyyy'
+                                            }}</span>
+                                        <span class="text-muted fs-10px d-block" *ngIf="contract.create">par {{
+                                            contract.create }}</span>
+                                    </td>
+                                    <td>
+                                        <a [routerLink]="['/gbatcar/clients/details', contract.client?.uuid]"
+                                            class="text-dark fw-bold d-block">{{ contract.client?.lastName }} {{
+                                            contract.client?.firstName }}</a>
+                                        <span class="text-muted fs-11px">CLI-{{ (contract.client?.uuid ?
+                                            (contract.client?.uuid | slice:0:3 | uppercase) : '...') }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">{{ contract.usageType || 'VTC'
+                                            }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="d-block fs-13px fw-bold">{{ contract.vehicle?.marque }} {{
+                                            contract.vehicle?.modele }}</span>
+                                        <span class="text-muted fs-11px">{{ contract.vehicle?.immatriculation }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="fs-13px fw-bold text-dark">{{ contract.endDate | date:'dd/MM/yyyy'
+                                            }}
+                                        </div>
+                                        <div class="fs-11px"
+                                            [ngClass]="getDaysUntilDeadline(contract.endDate) < 30 ? 'text-danger fw-bold' : 'text-muted'">
+                                            J{{ getDaysUntilDeadline(contract.endDate) >= 0 ? '-' : '+' }}{{
+                                            MathAbs(getDaysUntilDeadline(contract.endDate)) }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="d-block fw-bold" style="color: #c0392b; font-size: 13px;">{{
+                                            contract.totalAmount | number }} <span
+                                                class="text-muted fw-normal fs-10px">FCFA</span></span>
+                                        <span class="text-muted fs-10px">{{
+                                            translateFrequency(contract.paymentFrequency)
+                                            }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex justify-content-between fs-11px mb-1 text-dark fw-medium">
+                                            <span>{{ getEffectiveProgress(contract) | number:'1.1-1' }}%</span>
+                                        </div>
+                                        <div class="progress"
+                                            style="height: 6px; width: 80px; background-color: #f1f5f9;">
+                                            <div class="progress-bar" [ngClass]="{
                                             'bg-success': contract.status === 'Soldé' || contract.paymentStatus === 'À jour',
                                             'bg-warning': contract.paymentStatus === 'En retard',
                                             'bg-danger': contract.status === 'Résilié' || contract.paymentStatus === 'Impayé définitif',
                                             'bg-primary': !contract.paymentStatus || contract.paymentStatus === 'À jour'
                                         }" role="progressbar" [style.width.%]="getEffectiveProgress(contract)">
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="fs-10px text-muted mt-1 fw-medium" style="width: 80px;">
-                                        {{ (contract.paidAmount ?? 0) | number }} FCFA
-                                    </div>
-                                </td>
-                                <td [title]="getRiskLevel(contract).reason || ''">
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded-circle me-2"
-                                            [ngClass]="'bg-' + getRiskLevel(contract).class.split('-')[1]"
-                                            style="width: 8px; height: 8px;"></div>
-                                        <div class="d-flex flex-column">
-                                            <span class="fs-12px fw-medium" [ngClass]="getRiskLevel(contract).class">{{
-                                                getRiskLevel(contract).label }}</span>
-                                            <span class="fs-10px text-muted" *ngIf="getRiskLevel(contract).reason">{{
-                                                getRiskLevel(contract).reason }}</span>
+                                        <div class="fs-10px text-muted mt-1 fw-medium" style="width: 80px;">
+                                            {{ (contract.paidAmount ?? 0) | number }} FCFA
                                         </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge rounded-pill px-2"
-                                        [ngClass]="getContractStatusClass(contract.status)">
-                                        {{ translateStatus(contract.status) }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <button [routerLink]="['details', contract.uuid]"
-                                            class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
-                                            title="Détails">
-                                            <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
-                                        </button>
-                                        <button [routerLink]="['edit', contract.uuid]"
-                                            *ngIf="contract.status !== 'VALIDÉ'"
-                                            class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
-                                            title="Modifier">
-                                            <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
-                                        </button>
-                                        <button class="btn btn-xs btn-icon btn-outline-danger border-1 shadow-none"
-                                            *ngIf="contract.status !== 'VALIDÉ'"
-                                            (click)="deleteContract(contract.uuid!)" title="Supprimer">
-                                            <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr *ngIf="filteredContracts.length === 0 && !loading">
-                                <td colspan="10" class="text-center py-5 text-muted bg-white">
-                                    <i data-feather="search" appFeatherIcon class="icon-xxl mb-3 text-light"></i>
-                                    <p class="fs-14px">Aucun contrat trouvé avec ces critères.</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                    </td>
+                                    <td [title]="getRiskLevel(contract).reason || ''">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle me-2"
+                                                [ngClass]="'bg-' + getRiskLevel(contract).class.split('-')[1]"
+                                                style="width: 8px; height: 8px;"></div>
+                                            <div class="d-flex flex-column">
+                                                <span class="fs-12px fw-medium"
+                                                    [ngClass]="getRiskLevel(contract).class">{{
+                                                    getRiskLevel(contract).label }}</span>
+                                                <span class="fs-10px text-muted"
+                                                    *ngIf="getRiskLevel(contract).reason">{{
+                                                    getRiskLevel(contract).reason }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge rounded-pill px-2"
+                                            [ngClass]="getContractStatusClass(contract.status)">
+                                            {{ translateStatus(contract.status) }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <ng-container *ngxPermissionsOnly="'CONTRACT:SHOW'">
+                                                <button [routerLink]="['details', contract.uuid]"
+                                                    class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
+                                                    title="Détails">
+                                                    <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                                </button>
+                                            </ng-container>
+                                            <ng-container *ngxPermissionsOnly="'CONTRACT:EDIT'">
+                                                <button [routerLink]="['edit', contract.uuid]"
+                                                    *ngIf="contract.status !== 'VALIDÉ'"
+                                                    class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
+                                                    title="Modifier">
+                                                    <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
+                                                </button>
+                                            </ng-container>
+                                            <ng-container *ngxPermissionsOnly="'CONTRACT:DELETE'">
+                                                <button
+                                                    class="btn btn-xs btn-icon btn-outline-danger border-1 shadow-none"
+                                                    *ngIf="contract.status !== 'VALIDÉ'"
+                                                    (click)="deleteContract(contract.uuid!)" title="Supprimer">
+                                                    <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
+                                                </button>
+                                            </ng-container>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="filteredContracts.length === 0 && !loading">
+                                    <td colspan="10" class="text-center py-5 text-muted bg-white">
+                                        <i data-feather="search" appFeatherIcon class="icon-xxl mb-3 text-light"></i>
+                                        <p class="fs-14px">Aucun contrat trouvé avec ces critères.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</ng-container>
+
+<!-- FALLBACK FOR UNAUTHORIZED ACCESS -->
+<ng-container *ngxPermissionsExcept="['CONTRACT:LIST']">
+    <div class="row mt-5">
+        <div class="col-md-12 text-center">
+            <div class="card p-5 border-0 shadow-sm">
+                <i data-feather="lock" appFeatherIcon class="text-danger mb-4 mx-auto"
+                    style="width: 60px; height: 60px;"></i>
+                <h4 class="text-dark fw-bold mb-3">Accès Refusé</h4>
+                <p class="text-secondary fs-14px">
+                    Vous n'avez pas les permissions nécessaires pour consulter la liste des contrats.
+                </p>
+            </div>
+        </div>
+    </div>
+</ng-container>

@@ -1,16 +1,19 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { NgApexchartsModule, ApexOptions } from 'ng-apexcharts';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { ThemeCssVariableService } from '../../../../../core/services/theme-css-variable.service';
 import { VehicleService } from '../../../../../core/services/vehicle/vehicle.service';
+import { ContractDurationService } from '../../../../../core/services/contract/contract-duration.service';
 import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-vehicle-dashboard',
     standalone: true,
-    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, FeatherIconDirective],
+    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, FeatherIconDirective, FormsModule, NgSelectModule],
     templateUrl: './vehicle-dashboard.component.html',
     styleUrl: './vehicle-dashboard.component.scss'
 })
@@ -18,8 +21,32 @@ export class VehicleDashboardComponent implements OnInit {
 
     themeCssVariables = inject(ThemeCssVariableService).getThemeCssVariables();
     private vehicleService = inject(VehicleService);
+    private durationService = inject(ContractDurationService);
     private router = inject(Router);
     loading = false;
+    loadingDurations = false;
+
+    selectedMonth: number = 6;
+    monthsList: any[] = [];
+
+    addDurationTag = (name: string) => {
+        return new Promise((resolve) => {
+            const formattedName = name.toLowerCase().includes('mois') ? name : `${name} mois`;
+            this.loadingDurations = true;
+            this.durationService.create(formattedName).subscribe({
+                next: (res: any) => {
+                    const newDuration = res.data || res;
+                    this.monthsList = [...this.monthsList, newDuration];
+                    this.loadingDurations = false;
+                    resolve(newDuration);
+                },
+                error: () => {
+                    this.loadingDurations = false;
+                    resolve(null);
+                }
+            });
+        });
+    };
 
     // ===================== KPI DATA =====================
     stats: any = {
@@ -35,6 +62,8 @@ export class VehicleDashboardComponent implements OnInit {
         maintenanceRateTarget: 10,
         co2Compliance: 0,
         insuranceCoverage: 0,
+        validDocs: 0,
+        totalExpectedDocs: 0
     };
 
     distribution: any = {};
@@ -51,12 +80,21 @@ export class VehicleDashboardComponent implements OnInit {
     public maintenanceCostChartOptions: ApexOptions | any;
 
     ngOnInit(): void {
+        this.loadDurations();
         this.loadDashboardData();
+    }
+
+    loadDurations() {
+        this.durationService.getAll().subscribe({
+            next: (data) => {
+                this.monthsList = data;
+            }
+        });
     }
 
     loadDashboardData() {
         this.loading = true;
-        this.vehicleService.getDashboardData().subscribe({
+        this.vehicleService.getDashboardData({ months: this.selectedMonth }).subscribe({
             next: (data: any) => {
                 const kpis = data.kpis || {};
                 this.stats.totalVehicles = kpis.total_fleet || 0;
@@ -66,18 +104,21 @@ export class VehicleDashboardComponent implements OnInit {
                 this.stats.utilizationRate = this.stats.totalVehicles ?
                     ((this.stats.activeVehicles / this.stats.totalVehicles) * 100).toFixed(1) : 0;
                 this.stats.insuranceCoverage = data.complianceRate || 0;
+                this.stats.validDocs = data.validDocs || 0;
+                this.stats.totalExpectedDocs = data.totalExpectedDocs || 0;
 
-                this.distribution = data.distribution || {};
+                this.distribution = {};
+                if (Array.isArray(data.distribution)) {
+                    data.distribution.forEach((item: any) => {
+                        this.distribution[item.statut] = item.count;
+                    });
+                }
+
                 this.trends = data.trends || { maintenance: [], budget: [] };
                 this.criticalAlerts = data.alerts || [];
 
-                // Calculate current month's maintenance cost
-                const currentMonth = new Date().getMonth() + 1;
-                const currentYear = new Date().getFullYear();
-                const currentMain = this.trends.maintenance?.find(
-                    (x: any) => parseInt(x.month) === currentMonth && parseInt(x.year) === currentYear
-                );
-                this.stats.monthlyMaintenanceCost = currentMain ? parseInt(currentMain.cost) : 0;
+                this.stats.monthlyMaintenanceCost = kpis.active_maintenance_cost || 0;
+                this.stats.budgetMonthly = kpis.budgetMonthly || 200000;
 
                 this.refreshCharts();
                 this.loading = false;
@@ -128,7 +169,7 @@ export class VehicleDashboardComponent implements OnInit {
                                 label: 'Véhicules',
                                 color: this.themeCssVariables.secondary,
                                 fontSize: '13px',
-                                formatter: (w: any) => w.globals.seriesTotals.reduce((a: any, b: any) => a + b, 0)
+                                formatter: (w: any) => this.stats.totalVehicles
                             }
                         }
                     }
@@ -139,24 +180,28 @@ export class VehicleDashboardComponent implements OnInit {
 
     buildMaintenanceCostChart() {
         const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-        const categories = [];
-        const maintenanceData = [0, 0, 0, 0, 0, 0];
-        const budgetData = [0, 0, 0, 0, 0, 0]; // Strictly from backend, no mocks
+        const categories: string[] = [];
+        const maintenanceData: number[] = [];
+        const budgetData: number[] = [];
 
-        // Generate the last 6 months globally
-        for (let i = 5; i >= 0; i--) {
-            const d = new Date();
-            d.setMonth(d.getMonth() - i);
-            categories.push(monthNames[d.getMonth()]);
+        const trendsValues = this.trends.maintenance || [];
+        const budgetValues = this.trends.budget || [];
+        const isYearly = this.selectedMonth > 36;
 
-            // match maintenance from trends DB
-            const main = this.trends.maintenance?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
-            if (main) maintenanceData[5 - i] = parseInt(main.cost);
+        trendsValues.forEach((item: any, index: number) => {
+            if (isYearly) {
+                categories.push(item.year.toString());
+            } else {
+                const monthIdx = parseInt(item.month) - 1;
+                const shortYear = item.year.toString().slice(-2);
+                categories.push(`${monthNames[monthIdx]} ${shortYear}`);
+            }
+            maintenanceData.push(item.cost || 0);
 
-            // match budget from trends DB
-            const bud = this.trends.budget?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
-            if (bud) budgetData[5 - i] = parseInt(bud.amount);
-        }
+            // Match budget if exists
+            const bud = budgetValues[index];
+            budgetData.push(bud ? (bud.amount || 0) : 0);
+        });
 
         return {
             series: [
@@ -190,6 +235,15 @@ export class VehicleDashboardComponent implements OnInit {
 
     formatCurrency(amount: number): string {
         return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+    }
+
+    onMonthChange(item: any) {
+        if (item && typeof item === 'object') {
+            this.selectedMonth = item.monthsCount;
+        } else if (typeof item === 'number') {
+            this.selectedMonth = item;
+        }
+        this.loadDashboardData();
     }
 
     getSeverityLabel(severity: string): string {

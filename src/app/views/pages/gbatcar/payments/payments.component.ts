@@ -28,10 +28,10 @@ export class PaymentsComponent implements OnInit {
     return this.payments.filter(p => p.status === 'Validé' || p.status === 'VALIDÉ' || p.status === 'VALIDATED').reduce((sum, p) => sum + (p.amount || 0), 0);
   }
   get pendingPaymentsTotal(): number {
-    return this.payments.filter(p => p.status === 'En attente' || p.status === 'PENDING').reduce((sum, p) => sum + (p.amount || 0), 0);
+    return this.payments.filter(p => p.status === 'En attente' || p.status === 'PENDING' || p.status === 'ATTENTE').reduce((sum, p) => sum + (p.amount || 0), 0);
   }
   get pendingPaymentsCount(): number {
-    return this.payments.filter(p => p.status === 'En attente' || p.status === 'PENDING').length;
+    return this.payments.filter(p => p.status === 'En attente' || p.status === 'PENDING' || p.status === 'ATTENTE').length;
   }
   get dominantMethod(): string {
     if (this.payments.length === 0) return 'N/A';
@@ -78,7 +78,7 @@ export class PaymentsComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       const vehicleParam = params['vehicle'];
       const vehicleIdParam = params['vehicleId'];
-      
+
       if (vehicleIdParam) {
         this.loadPayments({ vehicleId: vehicleIdParam });
       } else if (vehicleParam) {
@@ -222,7 +222,7 @@ export class PaymentsComponent implements OnInit {
   translateStatus(status?: string | undefined): string {
     if (!status) return 'Inconnu';
     const normalized = status.toString().toUpperCase();
-    if (normalized === 'NEW' || normalized === 'PENDING' || normalized === 'EN ATTENTE') return 'EN ATTENTE';
+    if (normalized === 'NEW' || normalized === 'PENDING' || normalized === 'EN ATTENTE' || normalized === 'ATTENTE') return 'EN ATTENTE';
     if (normalized === 'VALIDATED' || normalized === 'VALIDÉ') return 'VALIDÉ';
     if (normalized === 'REJECTED' || normalized === 'REJETÉ') return 'REJETÉ';
     return status.toString();

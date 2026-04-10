@@ -1,68 +1,155 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { NgApexchartsModule, ApexOptions } from 'ng-apexcharts';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDropdownModule, NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { RouterLink } from '@angular/router';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { ThemeCssVariableService } from '../../../../../core/services/theme-css-variable.service';
+import { MaintenanceService } from '../../../../../core/services/maintenance/maintenance.service';
+import { ContractDurationService } from '../../../../../core/services/contract/contract-duration.service';
 
 @Component({
     selector: 'app-maintenance-dashboard',
     standalone: true,
-    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, RouterLink, FeatherIconDirective],
+    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, NgbModalModule, RouterLink, FeatherIconDirective, FormsModule, NgSelectModule],
     templateUrl: './maintenance-dashboard.component.html',
     styleUrl: './maintenance-dashboard.component.scss'
 })
 export class MaintenanceDashboardComponent implements OnInit {
 
     themeCssVariables = inject(ThemeCssVariableService).getThemeCssVariables();
+    private maintenanceService = inject(MaintenanceService);
+    private durationService = inject(ContractDurationService);
+    private cdr = inject(ChangeDetectorRef);
+    private modalService = inject(NgbModal);
+
+    loading = false;
+    isSavingBudget = false;
+    budgetForm = {
+        period: new Date().toISOString().substring(0, 7), // "YYYY-MM"
+        amount: 200000
+    };
+    selectedMonth: number = 6;
+    monthsList: any[] = [];
+    loadingDurations = false;
+
+    addDurationTag = (name: string) => {
+        return new Promise((resolve) => {
+            const formattedName = name.toLowerCase().includes('mois') ? name : `${name} mois`;
+            this.loadingDurations = true;
+            this.durationService.create(formattedName).subscribe({
+                next: (res: any) => {
+                    const newDuration = res.data || res;
+                    this.monthsList = [...this.monthsList, newDuration];
+                    this.loadingDurations = false;
+                    resolve(newDuration);
+                },
+                error: () => {
+                    this.loadingDurations = false;
+                    resolve(null);
+                }
+            });
+        });
+    };
 
     // ===================== KPI DATA =====================
-    stats = {
-        totalInterventions: 27,
-        interventionsThisMonth: 8,
-        pendingInterventions: 4,
-        completedInterventions: 23,
-        avgRepairDays: 3.2,
-        totalCostYTD: 18_750_000,    // FCFA – Coût total YTD
-        monthlyCost: 4_800_000,      // FCFA – Ce mois
-        budgetMonthly: 5_000_000,    // FCFA – Budget alloué
-        activeAlerts: 5,             // Alertes sinistres actives
-        criticalAlerts: 2,           // Alertes critiques
-        avgCostPerIntervention: 694_444, // FCFA
-        vehiclesInShop: 5,
+    stats: any = {
+        totalInterventions: 0,
+        interventionsThisMonth: 0,
+        pendingInterventions: 0,
+        completedInterventions: 0,
+        avgRepairDays: 0,
+        totalCostYTD: 0,
+        monthlyCost: 0,
+        budgetMonthly: 0,
+        activeAlerts: 0,
+        criticalAlerts: 0,
+        avgCostPerIntervention: 0,
+        vehiclesInShop: 0,
     };
 
     // ===================== INTERVENTIONS RÉCENTES =====================
-    recentInterventions = [
-        { id: 'INT-2024-027', vehicle: 'Toyota Yaris - 1234 AB 01', client: 'Jean Dubois', type: 'Vidange + Filtres', technician: 'Koné Moussa', cost: 45000, status: 'Terminé', days: 1 },
-        { id: 'INT-2024-026', vehicle: 'Suzuki Swift - 9012 EF 01', client: 'Fatou Sylla', type: 'Révision pneumatiques', technician: 'Diallo Seydou', cost: 120000, status: 'En cours', days: 2 },
-        { id: 'INT-2024-025', vehicle: 'Toyota Corolla - 7890 IJ 01', client: 'Amadou Coulibaly', type: 'Contrôle technique', technician: 'Traoré Adama', cost: 75000, status: 'En cours', days: 3 },
-        { id: 'INT-2024-024', vehicle: 'Kia Rio - 3456 GH 01', client: 'Marie Koné', type: 'Freins + Disques', technician: 'Koné Moussa', cost: 190000, status: 'Terminé', days: 2 },
-        { id: 'INT-2024-023', vehicle: 'Hyundai Accent - 5678 CD 01', client: 'Paul Yao', type: "Remplacement batterie", technician: 'Diallo Seydou', cost: 85000, status: 'En attente', days: 0 },
-    ];
+    recentInterventions: any[] = [];
 
     // ===================== ALERTS =====================
-    accidents = [
-        { id: 'SIN-2024-005', vehicle: '9012 EF 01 – Suzuki Swift', date: '2024-03-02', type: 'Accrochage léger', severity: 'warning', status: 'En traitement', repairCost: 180000 },
-        { id: 'SIN-2024-004', vehicle: '7890 IJ 01 – Toyota Corolla', date: '2024-02-18', type: 'Bris de glace', severity: 'secondary', status: 'Clôturé', repairCost: 65000 },
-        { id: 'SIN-2024-003', vehicle: '1234 AB 01 – Toyota Yaris', date: '2024-02-05', type: 'Collision frontale', severity: 'danger', status: 'En traitement', repairCost: 850000 },
-    ];
+    accidents: any[] = [];
 
     // ===================== CHARTS =====================
     public interventionTypeChartOptions: ApexOptions | any;
     public costTrendChartOptions: ApexOptions | any;
 
     ngOnInit(): void {
-        this.interventionTypeChartOptions = this.buildInterventionTypeChart();
-        this.costTrendChartOptions = this.buildCostTrendChart();
+        this.loadDurations();
+        this.loadDashboardData();
     }
 
-    buildInterventionTypeChart() {
+    loadDurations() {
+        this.durationService.getAll().subscribe({
+            next: (data) => {
+                this.monthsList = data;
+            }
+        });
+    }
+
+    onMonthChange(item: any) {
+        if (item && typeof item === 'object') {
+            this.selectedMonth = item.monthsCount;
+        } else if (typeof item === 'number') {
+            this.selectedMonth = item;
+        }
+        this.loadDashboardData();
+    }
+
+    loadDashboardData() {
+        this.loading = true;
+        this.maintenanceService.getDashboardData({ months: this.selectedMonth }).subscribe({
+            next: (data: any) => {
+                this.stats = data.stats;
+                this.recentInterventions = data.recentInterventions || [];
+                this.accidents = data.accidents || [];
+                this.interventionTypeChartOptions = this.buildInterventionTypeChart(data.distribution || []);
+                this.costTrendChartOptions = this.buildCostTrendChart(data.trends || []);
+                this.loading = false;
+                this.cdr.detectChanges();
+            },
+            error: (err) => {
+                console.error('Error fetching dashboard metrics', err);
+                this.loading = false;
+                this.cdr.detectChanges();
+            }
+        });
+    }
+
+    openBudgetModal(content: any) {
+        this.modalService.open(content, { centered: true, size: 'sm' });
+    }
+
+    saveBudget(modal: any) {
+        if (!this.budgetForm.period || !this.budgetForm.amount) return;
+
+        this.isSavingBudget = true;
+        this.maintenanceService.saveBudget(this.budgetForm).subscribe({
+            next: () => {
+                this.isSavingBudget = false;
+                modal.close();
+                this.loadDashboardData(); // Refresh metrics
+            },
+            error: (err: any) => {
+                this.isSavingBudget = false;
+            }
+        });
+    }
+
+    buildInterventionTypeChart(distribution: any[]) {
+        const labels = distribution.length > 0 ? distribution.map(d => d.label) : ['Aucun'];
+        const series = distribution.length > 0 ? distribution.map(d => d.value) : [0];
+
         return {
-            series: [9, 6, 5, 4, 3],
+            series: series,
             chart: { type: 'donut', height: 270 },
-            labels: ['Vidange/Filtres', 'Pneumatiques', 'Freinage', 'Électrique', 'Carrosserie'],
+            labels: labels,
             colors: [this.themeCssVariables.primary, '#2ecc71', '#f39c12', '#3498db', '#e74c3c'],
             stroke: { colors: ['#fff'] },
             legend: { show: true, position: 'bottom', fontFamily: this.themeCssVariables.fontFamily },
@@ -87,26 +174,48 @@ export class MaintenanceDashboardComponent implements OnInit {
         };
     }
 
-    buildCostTrendChart() {
+    buildCostTrendChart(trends: any[]) {
+        const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+        const categories: string[] = [];
+        const isYearly = this.selectedMonth > 36;
+
+        const expectedData = trends.map(t => parseFloat(t.expected));
+        const paidData = trends.map(t => parseFloat(t.paid));
+
+        trends.forEach(t => {
+            if (isYearly) {
+                categories.push(t.month); // "YYYY" from backend
+            } else {
+                // "YYYY-MM" from backend
+                const [year, month] = t.month.split('-');
+                let label = monthNames[parseInt(month) - 1];
+                if (this.selectedMonth > 12) {
+                    label += ' ' + year.substring(2);
+                }
+                categories.push(label);
+            }
+        });
+
         return {
             series: [
-                { name: 'Coût Réel (FCFA)', data: [3200000, 4100000, 3800000, 5200000, 3500000, 4800000] },
-                { name: 'Budget (FCFA)', data: [5000000, 5000000, 5000000, 5000000, 5000000, 5000000] },
+                { name: 'Coût Réel (FCFA)', data: paidData },
+                { name: 'Budget (FCFA)', data: expectedData },
             ],
-            chart: { type: 'line', height: 270, toolbar: { show: false } },
-            colors: [this.themeCssVariables.warning, this.themeCssVariables.secondary],
+            chart: { type: 'line', height: 260, toolbar: { show: false } },
+            colors: ['#f39c12', '#6c757d'], // Orange pour réel, Gris pour budget
             stroke: { curve: 'smooth', width: [3, 2], dashArray: [0, 5] },
             xaxis: {
-                categories: ['Oct', 'Nov', 'Déc', 'Jan', 'Fév', 'Mar'],
+                categories: categories,
                 axisBorder: { color: this.themeCssVariables.gridBorder },
             },
             yaxis: {
-                labels: { formatter: (val: number) => (val / 1_000_000).toFixed(1) + 'M' }
+                labels: {
+                    formatter: (val: number) => (val >= 1_000_000) ? (val / 1_000_000).toFixed(1) + 'M' : (val / 1_000).toFixed(0) + 'k'
+                }
             },
             grid: { borderColor: this.themeCssVariables.gridBorder },
             legend: { show: true, position: 'top', fontFamily: this.themeCssVariables.fontFamily },
             dataLabels: { enabled: false },
-            markers: { size: 4 },
             tooltip: {
                 y: { formatter: (val: number) => new Intl.NumberFormat('fr-FR').format(val) + ' FCFA' }
             }
@@ -126,5 +235,30 @@ export class MaintenanceDashboardComponent implements OnInit {
             'Clôturé': 'bg-secondary',
         };
         return map[status] || 'bg-secondary';
+    }
+
+    getSeverityClass(severity: string): string {
+        if (!severity) return 'bg-secondary';
+        const s = severity.toLowerCase();
+        if (s.includes('critique') || s.includes('urgent') || s.includes('danger') || s.includes('haute')) return 'bg-danger';
+        if (s.includes('moyenne') || s.includes('attention') || s.includes('warning')) return 'bg-warning text-dark';
+        if (s.includes('basse') || s.includes('succès') || s.includes('success')) return 'bg-success';
+        return 'bg-secondary';
+    }
+
+    formatDelay(days: number): string {
+        if (!days || days <= 0) return '0j 0h 0min';
+
+        const totalMinutes = Math.round(days * 24 * 60);
+        const d = Math.floor(totalMinutes / (24 * 60));
+        const h = Math.floor((totalMinutes % (24 * 60)) / 60);
+        const m = totalMinutes % 60;
+
+        let result = '';
+        if (d > 0) result += `${d}j `;
+        if (h > 0 || d > 0) result += `${h}h `;
+        result += `${m}min`;
+
+        return result.trim();
     }
 }

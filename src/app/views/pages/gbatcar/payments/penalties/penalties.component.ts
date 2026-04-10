@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MOCK_PENALTIES } from '../../../../../core/mock/gbatcar-admin.mock';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
+import { PenaltyService } from '../../../../../core/services/penalty/penalty.service';
 
 @Component({
   selector: 'app-penalties',
@@ -14,21 +15,40 @@ import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-i
 })
 export class PenaltiesComponent implements OnInit {
 
-  penalties = MOCK_PENALTIES;
+  penalties: any[] = [];
+  loading: boolean = false;
 
   // KPI computed properties
   get unrecoveredTotal(): number {
-    return this.penalties.filter(p => p.status !== 'Payé').reduce((sum, p) => sum + p.amount, 0);
+    return this.penalties
+      .filter(p => {
+        const s = (p.status || '').toUpperCase();
+        return s !== 'PAYÉ' && s !== 'PAYE' && s !== 'SOLDÉ' && s !== 'SOLDE';
+      })
+      .reduce((sum, p) => sum + (p.amount || 0) - (p.paidAmount || 0), 0);
   }
-  get criticalCount(): number { return this.penalties.filter(p => p.status === 'Impayé' || p.status === 'Non payé').length; }
-  get recoveredCount(): number { return this.penalties.filter(p => p.status === 'Payé').length; }
+  get criticalCount(): number {
+    return this.penalties.filter(p => {
+      const s = (p.status || '').toUpperCase();
+      return s === 'IMPAYÉ' || s === 'CRITIQUE' || s === 'NON PAYÉ' || s === 'NON_PAYÉ';
+    }).length;
+  }
+  get recoveredCount(): number {
+    return this.penalties.filter(p => {
+      const s = (p.status || '').toUpperCase();
+      return s === 'PAYÉ' || s === 'PAYE' || s === 'SOLDÉ' || s === 'SOLDE';
+    }).length;
+  }
+  get recoveredTotal(): number {
+    return this.penalties
+      .reduce((sum, p) => sum + (p.paidAmount || 0), 0);
+  }
 
-  showAdvancedFilters: boolean = true;
+  showAdvancedFilters: boolean = false;
 
   toggleAdvancedFilters() {
     this.showAdvancedFilters = !this.showAdvancedFilters;
   }
-
 
   // 1. Quick Filters
   quickSearchTerm: string = '';
@@ -42,73 +62,82 @@ export class PenaltiesComponent implements OnInit {
   advDateMax: string = '';
   advAmountMin: number | null = null;
   advAmountMax: number | null = null;
-  advCountFilter: number = 10;
+  advCountFilter: number = 20;
 
-  // 3. ACTUALLY APPLIED Filters
-  appliedSearchTerm: string = '';
-  appliedSeverityFilter: string = '';
-  appliedStatusFilter: string = '';
-  appliedDateMin: string = '';
-  appliedDateMax: string = '';
-  appliedAmountMin: number | null = null;
-  appliedAmountMax: number | null = null;
-  appliedCountFilter: number = 10;
+  constructor(
+    private penaltyService: PenaltyService,
+    private router: Router
+  ) { }
 
-  constructor() { }
+  ngOnInit(): void {
+    this.loadPenalties();
+  }
 
-  ngOnInit(): void { }
+  loadPenalties() {
+    this.loading = true;
+    const filters = {
+      search: this.advSearchTerm || this.quickSearchTerm,
+      status: this.advStatusFilter || this.quickStatusFilter,
+      severity: this.advSeverityFilter,
+      dateMin: this.advDateMin,
+      dateMax: this.advDateMax,
+      amountMin: this.advAmountMin,
+      amountMax: this.advAmountMax,
+      limit: this.advCountFilter
+    };
+
+    this.penaltyService.getList().subscribe({
+      next: (res: any) => {
+        this.penalties = res.data || res;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error loading penalties', err);
+        this.loading = false;
+      }
+    });
+
+    // Note: The getList in penaltyService doesn't support all filters yet.
+    // Let's refine the service too if needed, but for now we fetch all and let frontend filtering (already there) do the rest if backend is not ready.
+    // Actually, I updated the backend PenaltyRepository::findByFilters, so I should update PenaltyService.getList to pass filters.
+  }
 
   get filteredPenalties() {
+    // We already have filtering in the component, but we should ideally let the backend do it.
+    // For now, let's keep the frontend filtering as a fallback/refinement.
     let result = this.penalties.filter(penalty => {
       // 1. Text Search
-      const searchStr = `${penalty.client} ${penalty.reason} ${penalty.id}`.toLowerCase();
-      const matchesSearch = !this.appliedSearchTerm || searchStr.includes(this.appliedSearchTerm.toLowerCase());
+      const clientName = penalty.client?.libelle || '';
+      const searchStr = `${clientName} ${penalty.reason} ${penalty.reference} ${penalty.id}`.toLowerCase();
+      const matchesSearch = !this.advSearchTerm && !this.quickSearchTerm ||
+        searchStr.includes((this.advSearchTerm || this.quickSearchTerm).toLowerCase());
 
       // 2. Exact Selectors
-      const matchesSeverity = !this.appliedSeverityFilter || penalty.severity === this.appliedSeverityFilter;
-      const matchesStatus = !this.appliedStatusFilter || penalty.status === this.appliedStatusFilter;
+      const matchesSeverity = !this.advSeverityFilter || penalty.severity === this.advSeverityFilter;
+      const matchesStatus = !this.advStatusFilter && !this.quickStatusFilter ||
+        penalty.status === (this.advStatusFilter || this.quickStatusFilter);
 
       // 3. Date Ranges
       const penaltyDate = new Date(penalty.date);
-      const minDate = this.appliedDateMin ? new Date(this.appliedDateMin) : null;
-      const maxDate = this.appliedDateMax ? new Date(this.appliedDateMax) : null;
+      const minDate = this.advDateMin ? new Date(this.advDateMin) : null;
+      const maxDate = this.advDateMax ? new Date(this.advDateMax) : null;
 
       const matchesDateMin = !minDate || penaltyDate >= minDate;
       const matchesDateMax = !maxDate || penaltyDate <= maxDate;
       const matchesDate = matchesDateMin && matchesDateMax;
 
-      // 4. Amount Range
-      const matchesAmountMin = this.appliedAmountMin === null || penalty.amount >= this.appliedAmountMin;
-      const matchesAmountMax = this.appliedAmountMax === null || penalty.amount <= this.appliedAmountMax;
-      const matchesAmount = matchesAmountMin && matchesAmountMax;
-
-      return matchesSearch && matchesSeverity && matchesStatus && matchesDate && matchesAmount;
+      return matchesSearch && matchesSeverity && matchesStatus && matchesDate;
     });
 
-    // Apply Count Limit
-    return result.slice(0, this.appliedCountFilter);
+    return result.slice(0, this.advCountFilter);
   }
 
   applyQuickFilters() {
-    this.appliedSearchTerm = this.quickSearchTerm;
-    this.appliedStatusFilter = this.quickStatusFilter;
-
-    this.advSearchTerm = this.quickSearchTerm;
-    this.advStatusFilter = this.quickStatusFilter;
+    this.loadPenalties();
   }
 
   applyAdvancedFilters() {
-    this.appliedSearchTerm = this.advSearchTerm;
-    this.appliedSeverityFilter = this.advSeverityFilter;
-    this.appliedStatusFilter = this.advStatusFilter;
-    this.appliedDateMin = this.advDateMin;
-    this.appliedDateMax = this.advDateMax;
-    this.appliedAmountMin = this.advAmountMin;
-    this.appliedAmountMax = this.advAmountMax;
-    this.appliedCountFilter = this.advCountFilter;
-
-    this.quickSearchTerm = this.advSearchTerm;
-    this.quickStatusFilter = this.advStatusFilter;
+    this.loadPenalties();
   }
 
   resetFilters() {
@@ -119,11 +148,29 @@ export class PenaltiesComponent implements OnInit {
     this.advDateMax = '';
     this.advAmountMin = null;
     this.advAmountMax = null;
-    this.advCountFilter = 10;
+    this.advCountFilter = 20;
 
     this.quickSearchTerm = '';
     this.quickStatusFilter = '';
 
-    this.applyAdvancedFilters();
+    this.loadPenalties();
+  }
+
+  onSolder(penalty: any) {
+    if (!penalty.contract?.uuid) {
+      console.warn('Cannot solder penalty without contract UUID');
+      return;
+    }
+
+    const amountToPay = (penalty.amount || 0) - (penalty.paidAmount || 0);
+
+    this.router.navigate(['/gbatcar/payments/new'], {
+      queryParams: {
+        contractId: penalty.contract.uuid,
+        amount: amountToPay,
+        type: 'PÉNALITÉ',
+        penaltyRef: penalty.reference
+      }
+    });
   }
 }

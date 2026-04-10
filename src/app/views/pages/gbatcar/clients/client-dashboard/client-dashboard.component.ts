@@ -8,11 +8,14 @@ import { ThemeCssVariableService } from '../../../../../core/services/theme-css-
 import { ClientService } from '../../../../../core/services/client/client.service';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { FormsModule } from '@angular/forms';
+import { ContractDurationService } from '../../../../../core/services/contract/contract-duration.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
     selector: 'app-client-dashboard',
     standalone: true,
-    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, RouterLink, FeatherIconDirective, NgSelectModule, FormsModule],
+    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, RouterLink, FeatherIconDirective, NgSelectModule, FormsModule, NgxPermissionsModule],
     templateUrl: './client-dashboard.component.html',
     styleUrl: './client-dashboard.component.scss'
 })
@@ -20,8 +23,12 @@ export class ClientDashboardComponent implements OnInit {
 
     themeCssVariables = inject(ThemeCssVariableService).getThemeCssVariables();
     private clientService = inject(ClientService);
+    private durationService = inject(ContractDurationService);
+    private permissionsService = inject(NgxPermissionsService);
+    private authService = inject(AuthService);
 
     loading = false;
+    loadingDurations = false;
 
     // ===================== KPI DATA =====================
     stats: any = {
@@ -45,11 +52,44 @@ export class ClientDashboardComponent implements OnInit {
     public clientStatusChartOptions: ApexOptions | any;
     public clientGrowthChartOptions: ApexOptions | any;
 
-    monthsList: number[] = Array.from({ length: 36 }, (_, i) => i + 1);
+    monthsList: any[] = [];
     selectedMonth: number = 6;
 
+    addDurationTag = (name: string) => {
+        return new Promise((resolve) => {
+            // Append " mois" if not present
+            const formattedName = name.toLowerCase().includes('mois') ? name : `${name} mois`;
+
+            this.loadingDurations = true;
+            this.durationService.create(formattedName).subscribe({
+                next: (res: any) => {
+                    const newDuration = res.data || res;
+                    this.monthsList = [...this.monthsList, newDuration];
+                    this.loadingDurations = false;
+                    resolve(newDuration);
+                },
+                error: () => {
+                    this.loadingDurations = false;
+                    resolve(null);
+                }
+            });
+        });
+    };
+
     ngOnInit(): void {
+        const permission = this.authService.getPermissions();
+        this.permissionsService.loadPermissions(permission);
+
+        this.loadDurations();
         this.loadDashboardData();
+    }
+
+    loadDurations() {
+        this.durationService.getAll().subscribe({
+            next: (data) => {
+                this.monthsList = data;
+            }
+        });
     }
 
     loadDashboardData() {
@@ -73,7 +113,12 @@ export class ClientDashboardComponent implements OnInit {
         });
     }
 
-    onMonthChange() {
+    onMonthChange(item: any) {
+        if (item && typeof item === 'object') {
+            this.selectedMonth = item.monthsCount;
+        } else if (typeof item === 'number') {
+            this.selectedMonth = item;
+        }
         this.loadDashboardData();
     }
 
@@ -121,33 +166,68 @@ export class ClientDashboardComponent implements OnInit {
 
     buildClientGrowthChart() {
         const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-        const categories = [];
-        const vertData = new Array(this.selectedMonth).fill(0);
-        const grisData = new Array(this.selectedMonth).fill(0);
-        const rougeData = new Array(this.selectedMonth).fill(0);
+        const categories: string[] = [];
+        let vertData: number[] = [];
+        let grisData: number[] = [];
+        let rougeData: number[] = [];
 
-        // Generate the last X months globally
-        for (let i = this.selectedMonth - 1; i >= 0; i--) {
-            const d = new Date();
-            d.setMonth(d.getMonth() - i);
+        const groupByYear = this.selectedMonth > 36;
 
-            let catName = monthNames[d.getMonth()];
-            if (this.selectedMonth > 12) {
-                catName += ' ' + d.getFullYear().toString().substring(2); // ex: Jan 24
+        if (groupByYear) {
+            // Logic for yearly grouping
+            const startYear = new Date().getFullYear() - Math.ceil(this.selectedMonth / 12) + 1;
+            const endYear = new Date().getFullYear();
+
+            for (let year = startYear; year <= endYear; year++) {
+                categories.push(year.toString());
+
+                // Aggregate monthly data into yearly totals
+                let yVert = 0;
+                let yGris = 0;
+                let yRouge = 0;
+
+                for (let month = 1; month <= 12; month++) {
+                    const vM = this.trends.vert?.find((x: any) => parseInt(x.month) === month && parseInt(x.year) === year);
+                    if (vM) yVert += parseInt(vM.count);
+
+                    const gM = this.trends.gris?.find((x: any) => parseInt(x.month) === month && parseInt(x.year) === year);
+                    if (gM) yGris += parseInt(gM.count);
+
+                    const rM = this.trends.rouge?.find((x: any) => parseInt(x.month) === month && parseInt(x.year) === year);
+                    if (rM) yRouge += parseInt(rM.count);
+                }
+
+                vertData.push(yVert);
+                grisData.push(yGris);
+                rougeData.push(yRouge);
             }
-            categories.push(catName);
+        } else {
+            // Existing monthly logic
+            vertData = new Array(this.selectedMonth).fill(0);
+            grisData = new Array(this.selectedMonth).fill(0);
+            rougeData = new Array(this.selectedMonth).fill(0);
 
-            const arrIndex = (this.selectedMonth - 1) - i;
+            for (let i = this.selectedMonth - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setMonth(d.getMonth() - i);
 
-            // match vert, gris, rouge from trends DB
-            const vM = this.trends.vert?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
-            if (vM) vertData[arrIndex] = parseInt(vM.count);
+                let catName = monthNames[d.getMonth()];
+                if (this.selectedMonth > 12) {
+                    catName += ' ' + d.getFullYear().toString().substring(2);
+                }
+                categories.push(catName);
 
-            const gM = this.trends.gris?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
-            if (gM) grisData[arrIndex] = parseInt(gM.count);
+                const arrIndex = (this.selectedMonth - 1) - i;
 
-            const rM = this.trends.rouge?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
-            if (rM) rougeData[arrIndex] = parseInt(rM.count);
+                const vM = this.trends.vert?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
+                if (vM) vertData[arrIndex] = parseInt(vM.count);
+
+                const gM = this.trends.gris?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
+                if (gM) grisData[arrIndex] = parseInt(gM.count);
+
+                const rM = this.trends.rouge?.find((x: any) => parseInt(x.month) === d.getMonth() + 1 && parseInt(x.year) === d.getFullYear());
+                if (rM) rougeData[arrIndex] = parseInt(rM.count);
+            }
         }
 
         return {

@@ -14,9 +14,11 @@
             <i data-feather="x" appFeatherIcon class="btn-icon-prepend"></i>
             Annuler
         </button>
-        <button class="btn btn-danger btn-icon-text mb-2 mb-md-0">
-            <i data-feather="save" appFeatherIcon class="btn-icon-prepend"></i>
-            Valider la Pénalité
+        <button class="btn btn-danger btn-icon-text mb-2 mb-md-0" (click)="onConfirme()" [disabled]="submitting">
+            <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1" role="status"
+                aria-hidden="true"></span>
+            <i *ngIf="!submitting" data-feather="save" appFeatherIcon class="btn-icon-prepend"></i>
+            {{ submitting ? 'Enregistrement...' : 'Valider la Pénalité' }}
         </button>
     </div>
 </div>
@@ -28,24 +30,40 @@
                 <h6 class="card-title text-danger">Détails de l'infraction ou du manquement</h6>
                 <form [formGroup]="penaltyForm">
                     <div class="row">
-                        <div class="col-sm-6 mb-3">
+                        <div class="col-sm-4 mb-3">
                             <label class="form-label text-dark fw-medium">Contrat cible <span
                                     class="text-danger">*</span></label>
-                            <select class="form-select border-danger-subtle" formControlName="contractId"
-                                [ngClass]="{'is-invalid': penaltyForm.get('contractId')?.invalid && penaltyForm.get('contractId')?.touched}">
-                                <option value="">Sélectionnez le contrat lié (Locataire)...</option>
-                                <option value="CTR-2024-001">CTR-2024-001 - Jean Dubois (Toyota Yaris)</option>
-                                <option value="CTR-2024-002">CTR-2024-002 - Fatou Sylla (Suzuki Swift)</option>
-                            </select>
-                            <small class="text-muted">La pénalité sera ajoutée à la dette "Abonnement Location-Vente" du
-                                locataire.</small>
+                            <ng-select [items]="contracts" bindLabel="reference" bindValue="uuid"
+                                formControlName="contractId" [loading]="loadingContracts" [searchFn]="contractSearchFn"
+                                placeholder="Sélectionnez le contrat lié (Locataire)..."
+                                [ngClass]="{'is-invalid': penaltyForm.get('contractId')?.invalid && (penaltyForm.get('contractId')?.touched || submitting)}">
+                                <ng-template ng-label-tmp let-item="item">
+                                    <span class="fw-bold text-primary">{{ item.reference }}</span> - {{
+                                    item.client?.libelle || item.client?.name || (item.client?.lastName + ' ' +
+                                    item.client?.firstName) }}
+                                </ng-template>
+                                <ng-template ng-option-tmp let-item="item">
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold">{{ item.reference }} - {{ item.client?.libelle ||
+                                            item.client?.name || (item.client?.lastName + ' ' + item.client?.firstName)
+                                            }}</span>
+                                        <small class="text-muted">{{ item.vehicleSummary || 'Aucun véhicule' }}</small>
+                                    </div>
+                                </ng-template>
+                            </ng-select>
                         </div>
-                        <div class="col-sm-6 mb-3">
+                        <div class="col-sm-4 mb-3">
+                            <label class="form-label text-dark fw-medium">Date d'émission <span
+                                    class="text-danger">*</span></label>
+                            <input type="date" class="form-control" formControlName="date"
+                                [ngClass]="{'is-invalid': penaltyForm.get('date')?.invalid && (penaltyForm.get('date')?.touched || submitting)}">
+                        </div>
+                        <div class="col-sm-4 mb-3">
                             <label class="form-label text-dark fw-medium">Motif & Justification <span
                                     class="text-danger">*</span></label>
                             <input class="form-control" formControlName="reason"
                                 placeholder="Ex: Retard paiement mensuel, Excès de vitesse..."
-                                [ngClass]="{'is-invalid': penaltyForm.get('reason')?.invalid && penaltyForm.get('reason')?.touched}">
+                                [ngClass]="{'is-invalid': penaltyForm.get('reason')?.invalid && (penaltyForm.get('reason')?.touched || submitting)}">
                         </div>
                     </div>
 
@@ -63,23 +81,28 @@
                                     class="text-danger">*</span></label>
                             <input type="number" class="form-control font-weight-bold text-danger"
                                 formControlName="amount"
-                                [ngClass]="{'is-invalid': penaltyForm.get('amount')?.invalid && penaltyForm.get('amount')?.touched}"
+                                [ngClass]="{'is-invalid': penaltyForm.get('amount')?.invalid && (penaltyForm.get('amount')?.touched || submitting)}"
                                 placeholder="Ex: 5000">
                         </div>
                         <div class="col-sm-4 mb-3">
                             <label class="form-label text-dark fw-medium">Échéance de régularisation <span
                                     class="text-danger">*</span></label>
                             <input type="date" class="form-control" formControlName="dueDate"
-                                [ngClass]="{'is-invalid': penaltyForm.get('dueDate')?.invalid && penaltyForm.get('dueDate')?.touched}">
-                            <small class="text-muted">Date limite de paiement du recouvrement.</small>
+                                [ngClass]="{'is-invalid': penaltyForm.get('dueDate')?.invalid && (penaltyForm.get('dueDate')?.touched || submitting)}">
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-sm-12 mb-3">
+                        <div class="col-sm-8 mb-3">
                             <label class="form-label text-dark fw-medium">Rapport circonstancié / Commentaire</label>
-                            <textarea class="form-control" formControlName="notes" rows="3"
+                            <textarea class="form-control" formControlName="observation" rows="3"
                                 placeholder="Informations complémentaires, lien du constat de police..."></textarea>
+                        </div>
+                        <div class="col-sm-4 mb-3">
+                            <label class="form-label text-dark fw-medium">Preuve justificative (PDF/Image)</label>
+                            <input type="file" class="form-control" (change)="onFileSelected($event)"
+                                accept="image/*,application/pdf">
+                            <small class="text-muted">Procès-verbal, photo de l'infraction, etc.</small>
                         </div>
                     </div>
                 </form>

@@ -17,6 +17,7 @@ export interface Vehicle {
     // ===================== IDENTIFICATION =====================
     immatriculation?: string;
     licensePlate?: string;     // alias
+    libelle?: string;
     marque?: string;
     brand?: string;            // alias
     modele?: string;

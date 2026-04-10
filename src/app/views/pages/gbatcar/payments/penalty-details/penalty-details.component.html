@@ -1,12 +1,19 @@
-<div *ngIf="penalty" class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+<div *ngIf="isLoading" class="d-flex justify-content-center align-items-center py-5">
+    <div class="spinner-border text-danger" role="status">
+        <span class="visually-hidden">Chargement...</span>
+    </div>
+</div>
+
+<div *ngIf="penalty && !isLoading" class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
     <div>
         <nav class="page-breadcrumb mb-1">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a routerLink="/gbatcar/payments/penalties">Gestion des Pénalités</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ penalty.id }}</li>
+                <li class="breadcrumb-item active" aria-current="page">{{ penalty.reference }}</li>
             </ol>
         </nav>
-        <h4 class="mb-3 mb-md-0 text-danger">Détails de la Pénalité <span class="text-dark">{{ penalty.id }}</span></h4>
+        <h4 class="mb-3 mb-md-0 text-danger">Détails de la Pénalité <span class="text-dark">{{ penalty.reference
+                }}</span></h4>
     </div>
     <div class="d-flex align-items-center flex-wrap text-nowrap">
         <button [routerLink]="['/gbatcar/payments/penalties']"
@@ -14,50 +21,69 @@
             <i data-feather="arrow-left" appFeatherIcon class="btn-icon-prepend"></i> Retour
         </button>
         <button class="btn btn-outline-danger btn-icon-text mb-2 mb-md-0 me-2" title="Relancer le locataire"
-            *ngIf="penalty.status !== 'Payé'">
+            *ngIf="!isPaid()">
             <i data-feather="bell" appFeatherIcon class="btn-icon-prepend"></i> Envoyer relance
         </button>
-        <button class="btn btn-danger btn-icon-text mb-2 mb-md-0" title="Marquer comme payée"
-            *ngIf="penalty.status !== 'Payé'">
-            <i data-feather="check-circle" appFeatherIcon class="btn-icon-prepend"></i> Solder l'amende
+        <button class="btn btn-danger btn-icon-text mb-2 mb-md-0" title="Solder l'amende (Paiement)" *ngIf="!isPaid()"
+            (click)="onSolder()">
+            <i data-feather="credit-card" appFeatherIcon class="btn-icon-prepend"></i> Solder l'amende
         </button>
     </div>
 </div>
 
-<div *ngIf="penalty" class="row">
+<div *ngIf="penalty && !isLoading" class="row">
     <div class="col-md-9 mx-auto grid-margin stretch-card">
-        <div class="card">
+        <div class="card shadow-sm border-0">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                     <div>
                         <h2 class="text-danger mb-1">{{ penalty.amount | number }} <span
                                 class="tx-16 text-muted">FCFA</span></h2>
                         <span class="badge mt-2" [ngClass]="{
-                            'bg-danger fs-6': penalty.status === 'Impayé',
-                            'bg-warning text-dark fs-6': penalty.status === 'Non payé',
-                            'bg-info fs-6': penalty.status === 'En attente',
-                            'bg-success fs-6': penalty.status === 'Payé'
+                            'bg-danger fs-6': penalty.status === 'Impayé' || penalty.status === 'Non payé' || penalty.status === 'IMPAYÉ' || penalty.status === 'NON_PAYÉ',
+                            'bg-info fs-6': penalty.status === 'EN ATTENTE' || penalty.status === 'En attente' || penalty.status === 'PARTIEL' || penalty.status === 'PARTIAL',
+                            'bg-success fs-6': penalty.status === 'Payé' || penalty.status === 'PAYÉ' || penalty.status === 'PAYE' || penalty.status === 'SOLDÉ' || penalty.status === 'SOLDE'
                         }">{{ penalty.status }}</span>
                     </div>
                     <div class="text-end">
                         <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Niveau de Gravité</label>
                         <span class="badge" [ngClass]="{
                             'bg-info': penalty.severity === 'Faible',
-                            'bg-warning text-dark': penalty.severity === 'Moyenne',
+                            'bg-warning text-dark': penalty.severity === 'Moyenne' || !penalty.severity,
                             'bg-danger': penalty.severity === 'Élevée'
-                        }">{{ penalty.severity }}</span>
+                        }">{{ penalty.severity || 'Moyenne' }}</span>
                     </div>
                 </div>
 
                 <div class="row mt-4">
                     <div class="col-md-6 mb-4">
                         <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Locataire Fautif</label>
-                        <p class="mb-0 fw-medium fs-5"><a href="javascript:void(0)" class="text-primary">{{
-                                penalty.client }}</a></p>
+                        <p class="mb-0 fw-medium fs-5" *ngIf="penalty.client">
+                            <a [routerLink]="['/gbatcar/clients/details', penalty.client.uuid]" class="text-primary">
+                                {{ penalty.client.libelle || penalty.client.name || (penalty.client.firstName + ' ' +
+                                penalty.client.lastName) }}
+                            </a>
+                        </p>
+                        <p class="mb-0 text-muted" *ngIf="!penalty.client">Non assigné</p>
                     </div>
                     <div class="col-md-6 mb-4">
                         <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Date d'Émission</label>
                         <p class="mb-0 fs-5">{{ penalty.date | date:'longDate':'':'fr-FR' }}</p>
+                    </div>
+
+                    <div class="col-md-6 mb-4" *ngIf="penalty.contract">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Contrat Associé</label>
+                        <p class="mb-0 fw-medium fs-5">
+                            <a [routerLink]="['/gbatcar/contracts/details', penalty.contract.uuid]"
+                                class="text-secondary">
+                                {{ penalty.contract.reference }}
+                            </a>
+                        </p>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Montant Déjà Payé</label>
+                        <p class="mb-0 fs-5 text-success">{{ (penalty['paidAmount'] || 0) | number }} FCFA</p>
                     </div>
 
                     <div class="col-md-12 mb-4">
@@ -71,8 +97,20 @@
                         <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Commentaire Administratif /
                             Notes</label>
                         <p class="mb-0 text-secondary">
-                            Aucun rapport circonstancié ou commentaire n'a été ajouté pour cette infraction.
+                            {{ penalty.observation || "Aucun rapport circonstancié ou commentaire n'a été ajouté pour
+                            cette infraction." }}
                         </p>
+                    </div>
+
+                    <div class="col-md-12 mb-4" *ngIf="penalty['proofUrl']">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Justificatif / Preuve</label>
+                        <div class="mt-2">
+                            <a [href]="getFullUrl(penalty['proofUrl'])" target="_blank"
+                                class="btn btn-outline-primary btn-sm">
+                                <i data-feather="external-link" appFeatherIcon class="btn-icon-prepend"></i>
+                                Visualiser le document
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -80,7 +118,7 @@
     </div>
 </div>
 
-<div *ngIf="!penalty" class="row">
+<div *ngIf="!penalty && !isLoading" class="row">
     <div class="col-md-12 text-center py-5">
         <h4 class="text-muted">Pénalité introuvable.</h4>
         <button [routerLink]="['/gbatcar/payments/penalties']" class="btn btn-primary mt-3">Retour à la liste</button>

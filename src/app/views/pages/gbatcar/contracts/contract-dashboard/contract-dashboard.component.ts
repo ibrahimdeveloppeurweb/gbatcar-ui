@@ -8,11 +8,14 @@ import { ContractService } from '../../../../../core/services/contract/contract.
 
 import { NgSelectModule } from '@ng-select/ng-select';
 import { FormsModule } from '@angular/forms';
+import { ContractDurationService } from '../../../../../core/services/contract/contract-duration.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-contract-dashboard',
   standalone: true,
-  imports: [CommonModule, NgbDropdownModule, NgApexchartsModule, FeatherIconDirective, NgSelectModule, FormsModule],
+  imports: [CommonModule, NgbDropdownModule, NgApexchartsModule, FeatherIconDirective, NgSelectModule, FormsModule, NgxPermissionsModule],
   templateUrl: './contract-dashboard.component.html',
   styleUrl: './contract-dashboard.component.scss'
 })
@@ -20,10 +23,35 @@ export class ContractDashboardComponent implements OnInit {
 
   private contractService = inject(ContractService);
   private themeCssVariables = inject(ThemeCssVariableService).getThemeCssVariables();
+  private durationService = inject(ContractDurationService);
+  private permissionsService = inject(NgxPermissionsService);
+  private authService = inject(AuthService);
 
-  selectedMonth = 6;
-  monthsList: number[] = Array.from({ length: 36 }, (_, i) => i + 1);
   loading = false;
+  loadingDurations = false;
+  selectedMonth = 6;
+  monthsList: any[] = [];
+
+  addDurationTag = (name: string) => {
+    return new Promise((resolve) => {
+      // Append " mois" if not present
+      const formattedName = name.toLowerCase().includes('mois') ? name : `${name} mois`;
+
+      this.loadingDurations = true;
+      this.durationService.create(formattedName).subscribe({
+        next: (res: any) => {
+          const newDuration = res.data || res;
+          this.monthsList = [...this.monthsList, newDuration];
+          this.loadingDurations = false;
+          resolve(newDuration);
+        },
+        error: () => {
+          this.loadingDurations = false;
+          resolve(null);
+        }
+      });
+    });
+  };
 
   // KPIs
   stats = {
@@ -37,12 +65,7 @@ export class ContractDashboardComponent implements OnInit {
   };
 
   // Liste des risques imminents
-  imminentRisks = [
-    { id: 'C-2024-089', client: 'TransportExpress CI', issue: 'Retard de paiement > 30j', severity: 'danger', value: 450000 },
-    { id: 'C-2023-112', client: 'Soro Jean', issue: 'Assurance expirée', severity: 'warning', value: 0 },
-    { id: 'C-2024-001', client: 'Koffi Marie', issue: 'GPS Déconnecté', severity: 'danger', value: 0 },
-    { id: 'C-2024-156', client: 'VTC Pro SARL', issue: 'Restitution prévue dans 5j', severity: 'info', value: 0 },
-  ];
+  imminentRisks: any[] = [];
 
   // Chart Options
   cashflowChartOptions: ApexOptions | any = {};
@@ -51,7 +74,19 @@ export class ContractDashboardComponent implements OnInit {
   trends: any = { cashflow: [] };
 
   ngOnInit(): void {
+    const permission = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permission);
+
+    this.loadDurations();
     this.loadDashboardData();
+  }
+
+  loadDurations() {
+    this.durationService.getAll().subscribe({
+      next: (data) => {
+        this.monthsList = data;
+      }
+    });
   }
 
   loadDashboardData() {
@@ -72,31 +107,57 @@ export class ContractDashboardComponent implements OnInit {
     });
   }
 
-  onMonthChange() {
+  onMonthChange(item: any) {
+    if (item && typeof item === 'object') {
+      this.selectedMonth = item.monthsCount;
+    } else if (typeof item === 'number') {
+      this.selectedMonth = item;
+    }
     this.loadDashboardData();
   }
 
   initCharts() {
     const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-    const categories = [];
-    const expectedData = new Array(this.selectedMonth).fill(0);
-    const paidData = new Array(this.selectedMonth).fill(0);
+    const categories: string[] = [];
+    let expectedData: number[] = [];
+    let paidData: number[] = [];
 
-    for (let i = this.selectedMonth - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
-      let name = monthNames[d.getMonth()];
-      if (this.selectedMonth > 12) name += ' ' + d.getFullYear().toString().substring(2);
-      categories.push(name);
+    const groupByYear = this.selectedMonth > 36;
 
-      const yearStr = d.getFullYear();
-      const monthStr = (d.getMonth() + 1).toString().padStart(2, '0');
-      const key = `${yearStr}-${monthStr}`;
+    if (groupByYear) {
+      // Logic for yearly grouping
+      const startYear = new Date().getFullYear() - Math.ceil(this.selectedMonth / 12) + 1;
+      const endYear = new Date().getFullYear();
 
-      const item = this.trends.cashflow?.find((x: any) => x.month === key);
-      if (item) {
-        expectedData[(this.selectedMonth - 1) - i] = parseFloat(item.expected);
-        paidData[(this.selectedMonth - 1) - i] = parseFloat(item.paid);
+      for (let year = startYear; year <= endYear; year++) {
+        categories.push(year.toString());
+        const key = year.toString();
+        const item = this.trends.cashflow?.find((x: any) => x.month === key); //Backend uses 'month' key for both monthly and yearly context
+
+        expectedData.push(item ? parseFloat(item.expected) : 0);
+        paidData.push(item ? parseFloat(item.paid) : 0);
+      }
+    } else {
+      // Existing monthly logic
+      expectedData = new Array(this.selectedMonth).fill(0);
+      paidData = new Array(this.selectedMonth).fill(0);
+
+      for (let i = this.selectedMonth - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        let name = monthNames[d.getMonth()];
+        if (this.selectedMonth > 12) name += ' ' + d.getFullYear().toString().substring(2);
+        categories.push(name);
+
+        const yearStr = d.getFullYear();
+        const monthStr = (d.getMonth() + 1).toString().padStart(2, '0');
+        const key = `${yearStr}-${monthStr}`;
+
+        const item = this.trends.cashflow?.find((x: any) => x.month === key);
+        if (item) {
+          expectedData[(this.selectedMonth - 1) - i] = parseFloat(item.expected);
+          paidData[(this.selectedMonth - 1) - i] = parseFloat(item.paid);
+        }
       }
     }
 

@@ -5,6 +5,8 @@ import { NgbNavModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { ClientService } from '../../../../../core/services/client/client.service';
 import { ContractService } from '../../../../../core/services/contract/contract.service';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
 import Swal from 'sweetalert2';
 
 import { environment } from '../../../../../../environments/environment';
@@ -12,7 +14,7 @@ import { environment } from '../../../../../../environments/environment';
 @Component({
   selector: 'app-client-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, NgbNavModule, FeatherIconDirective],
+  imports: [CommonModule, RouterModule, NgbNavModule, FeatherIconDirective, NgxPermissionsModule],
   templateUrl: './client-details.component.html',
   styleUrl: './client-details.component.scss'
 })
@@ -22,6 +24,8 @@ export class ClientDetailsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private modalService = inject(NgbModal);
+  private authService = inject(AuthService);
+  private permissionsService = inject(NgxPermissionsService);
 
   baseUrl = environment.serverUrl.replace('/api', '');
   client: any = null;
@@ -33,6 +37,9 @@ export class ClientDetailsComponent implements OnInit {
   allPayments: any[] = [];
 
   ngOnInit(): void {
+    const permission = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permission);
+
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadClientData(id);

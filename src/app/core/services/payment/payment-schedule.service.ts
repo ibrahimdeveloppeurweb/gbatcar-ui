@@ -1,32 +1,79 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
+import { Injectable } from '@angular/core';
+import { catchError, map, Observable, throwError } from 'rxjs';
+import { ApiService } from '../../../utils/api.service';
+import { NoInternetHelper } from '../../../utils/no-internet-helper';
 
 @Injectable({
     providedIn: 'root'
 })
 export class PaymentScheduleService {
-    private http = inject(HttpClient);
-    private apiUrl = `${environment.serverUrl}/private/payment-schedule`;
+    private url = 'private/payment-schedule';
+
+    constructor(private api: ApiService) { }
 
     generateSchedule(data: { contractUuid: string, totalAmount: number, installments: number, startDate: string }): Observable<any> {
-        return this.http.post(`${this.apiUrl}/generate`, data);
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._post(`${this.url}/generate`, data).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
     }
 
     getList(contractUuid: string): Observable<any> {
-        return this.http.get(`${this.apiUrl}/list/${contractUuid}`);
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._get(`${this.url}/list/${contractUuid}`).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
     }
 
     markOverdue(contractUuid: string): Observable<any> {
-        return this.http.post(`${this.apiUrl}/mark-overdue`, { contractUuid });
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._post(`${this.url}/mark-overdue`, { contractUuid }).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
     }
 
     prolong(data: { contractUuid: string, days: number }): Observable<any> {
-        return this.http.post(`${this.apiUrl}/prolong`, data);
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._post(`${this.url}/prolong`, data).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
     }
 
     suspend(data: { contractUuid: string, suspend: boolean }): Observable<any> {
-        return this.http.post(`${this.apiUrl}/suspend`, data);
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._post(`${this.url}/suspend`, data).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    calculatePenalties(contractUuid: string): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._post(`${this.url}/calculate-penalties`, { contractUuid }).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
     }
 }

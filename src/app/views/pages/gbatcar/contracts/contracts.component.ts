@@ -5,18 +5,22 @@ import { RouterModule } from '@angular/router';
 import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon.directive';
 import { ContractService } from '../../../../core/services/contract/contract.service';
 import { Contract } from '../../../../core/models/contract.model';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../core/services/auth/auth.service';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-contracts',
   standalone: true,
-  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule],
+  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule, NgxPermissionsModule],
   templateUrl: './contracts.component.html',
   styleUrl: './contracts.component.scss'
 })
 export class ContractsComponent implements OnInit {
   MathAbs = Math.abs;
   private contractService = inject(ContractService);
+  private permissionsService = inject(NgxPermissionsService);
+  private authService = inject(AuthService);
 
   contracts: Contract[] = [];
   loading: boolean = false;
@@ -101,6 +105,9 @@ export class ContractsComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    const permission = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permission);
+
     this.loadContracts();
   }
 

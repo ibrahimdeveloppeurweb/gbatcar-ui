@@ -50,8 +50,12 @@ export class MaintenanceService {
         );
     }
 
-    changeStatus(uuid: string, status: string): Observable<any> {
-        return this.api._put(`${this.url}/${uuid}/status`, { status }).pipe(
+    changeStatus(uuid: string, status: string, date?: string): Observable<any> {
+        const payload: any = { status };
+        if (date) {
+            payload.date = date;
+        }
+        return this.api._put(`${this.url}/${uuid}/status`, payload).pipe(
             map((response: any) => response),
             catchError((error: any) => throwError(error))
         );
@@ -140,5 +144,12 @@ export class MaintenanceService {
 
     downloadDocument(maintenanceUuid: string, docUuid: string): Observable<Blob> {
         return this.api._download(this.getDownloadUrl(maintenanceUuid, docUuid));
+    }
+
+    saveBudget(data: { period: string, amount: number }): Observable<any> {
+        return this.api._post(`${this.url}/budgets/save`, data).pipe(
+            map((res: any) => res),
+            catchError((err: any) => throwError(() => err))
+        );
     }
 }

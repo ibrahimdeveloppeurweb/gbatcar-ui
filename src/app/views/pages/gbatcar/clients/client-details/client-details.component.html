@@ -1,67 +1,74 @@
-<div *ngIf="client && !loading" class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
-    <div>
-        <nav class="page-breadcrumb mb-1">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a routerLink="/gbatcar/clients">Clients</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ client.lastName }} {{ client.firstName }}</li>
-            </ol>
-        </nav>
-        <div class="d-flex align-items-center mb-3 mb-md-0">
-            <button (click)="goBack()" class="btn btn-primary btn-icon btn-xs me-3" title="Retour à la liste">
-                <i data-feather="arrow-left" appFeatherIcon></i>
+<div *ngxPermissionsOnly="['CLIENT:SHOW']">
+    <div *ngIf="client && !loading" class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+        <div>
+            <nav class="page-breadcrumb mb-1">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a routerLink="/gbatcar/clients">Clients</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ client.lastName }} {{ client.firstName }}
+                    </li>
+                </ol>
+            </nav>
+            <div class="d-flex align-items-center mb-3 mb-md-0">
+                <button (click)="goBack()" class="btn btn-primary btn-icon btn-xs me-3" title="Retour à la liste">
+                    <i data-feather="arrow-left" appFeatherIcon></i>
+                </button>
+                <h4 class="mb-0">Dossier : {{ client.lastName }} {{ client.firstName }}</h4>
+            </div>
+        </div>
+        <div class="d-flex align-items-center flex-wrap text-nowrap">
+            <ng-container *ngxPermissionsOnly="['CLIENT:EDIT', 'CLIENT:VALIDATE']">
+                <button type="button" class="btn btn-outline-success btn-icon-text me-2 mb-2 mb-md-0"
+                    *ngIf="client.status === 'En attente de Validation' || client.status === 'Prospect'"
+                    (click)="validateClient()">
+                    <i data-feather="check-square" appFeatherIcon class="btn-icon-prepend"></i>
+                    Valider le Dossier
+                </button>
+            </ng-container>
+            <button type="button" class="btn btn-outline-primary btn-icon-text me-2 mb-2 mb-md-0"
+                *ngxPermissionsOnly="'CLIENT:EDIT'" [routerLink]="['/gbatcar/clients/edit', client.uuid]">
+                <i data-feather="edit" appFeatherIcon class="btn-icon-prepend"></i>
+                Modifier Infos
             </button>
-            <h4 class="mb-0">Dossier : {{ client.lastName }} {{ client.firstName }}</h4>
+            <ng-container *ngxPermissionsOnly="'CONTRACT:NEW'">
+                <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0"
+                    *ngIf="client.status === 'Dossier Validé' || client.status === 'Dossier Approuvé'"
+                    [routerLink]="['/gbatcar/contracts/new']" [queryParams]="{clientUuid: client.uuid}">
+                    <i data-feather="file-text" appFeatherIcon class="btn-icon-prepend"></i>
+                    Nouveau Contrat
+                </button>
+            </ng-container>
         </div>
     </div>
-    <div class="d-flex align-items-center flex-wrap text-nowrap">
-        <button type="button" class="btn btn-outline-success btn-icon-text me-2 mb-2 mb-md-0"
-            *ngIf="client.status === 'En attente de Validation' || client.status === 'Prospect'"
-            (click)="validateClient()">
-            <i data-feather="check-square" appFeatherIcon class="btn-icon-prepend"></i>
-            Valider le Dossier
-        </button>
-        <button type="button" class="btn btn-outline-primary btn-icon-text me-2 mb-2 mb-md-0"
-            [routerLink]="['/gbatcar/clients/edit', client.uuid]">
-            <i data-feather="edit" appFeatherIcon class="btn-icon-prepend"></i>
-            Modifier Infos
-        </button>
-        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0"
-            *ngIf="client.status === 'Dossier Validé' || client.status === 'Dossier Approuvé'"
-            [routerLink]="['/gbatcar/contracts/new']" [queryParams]="{clientUuid: client.uuid}">
-            <i data-feather="file-text" appFeatherIcon class="btn-icon-prepend"></i>
-            Nouveau Contrat
-        </button>
+
+    <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Chargement du dossier...</p>
     </div>
-</div>
 
-<div *ngIf="loading" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status"></div>
-    <p class="mt-2 text-muted">Chargement du dossier...</p>
-</div>
-
-<div class="row" *ngIf="client && !loading">
-    <!-- Colonne Gauche : Profil & Infos Básiques -->
-    <div class="col-md-4 grid-margin stretch-card">
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-baseline mb-4">
-                    <h6 class="card-title mb-0">PROFIL GLOBAL</h6>
-                </div>
-
-                <div class="d-flex flex-column align-items-center border-bottom pb-4 mb-4">
-                    <div class="rounded-circle overflow-hidden mb-3 bg-light d-flex justify-content-center align-items-center shadow-sm border border-2 border-white"
-                        style="width: 120px; height: 120px; flex-shrink: 0; cursor: pointer;"
-                        (click)="client.photo ? openImage(imageModal) : null" title="Cliquez pour l'afficher en grand">
-                        <img *ngIf="client.photo" [src]="baseUrl + client.photo" alt="Photo"
-                            class="img-fluid w-100 h-100 object-fit-cover">
-                        <i data-feather="user" appFeatherIcon class="text-secondary wd-40 ht-40"
-                            *ngIf="!client.photo"></i>
+    <div class="row" *ngIf="client && !loading">
+        <!-- Colonne Gauche : Profil & Infos Básiques -->
+        <div class="col-md-4 grid-margin stretch-card">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-baseline mb-4">
+                        <h6 class="card-title mb-0">PROFIL GLOBAL</h6>
                     </div>
-                    <div class="text-center">
-                        <p class="tx-18 fw-bolder mb-1">{{ client.lastName }} {{ client.firstName }}</p>
-                        <p class="tx-12 fw-bold text-danger">CLI-{{ client.uuid ? $any(client.uuid).substring(0,
-                            5).toUpperCase() : '' }}</p>
-                        <span class="badge mt-2" [ngClass]="{
+
+                    <div class="d-flex flex-column align-items-center border-bottom pb-4 mb-4">
+                        <div class="rounded-circle overflow-hidden mb-3 bg-light d-flex justify-content-center align-items-center shadow-sm border border-2 border-white"
+                            style="width: 120px; height: 120px; flex-shrink: 0; cursor: pointer;"
+                            (click)="client.photo ? openImage(imageModal) : null"
+                            title="Cliquez pour l'afficher en grand">
+                            <img *ngIf="client.photo" [src]="baseUrl + client.photo" alt="Photo"
+                                class="img-fluid w-100 h-100 object-fit-cover">
+                            <i data-feather="user" appFeatherIcon class="text-secondary wd-40 ht-40"
+                                *ngIf="!client.photo"></i>
+                        </div>
+                        <div class="text-center">
+                            <p class="tx-18 fw-bolder mb-1">{{ client.lastName }} {{ client.firstName }}</p>
+                            <p class="tx-12 fw-bold text-danger">CLI-{{ client.uuid ? $any(client.uuid).substring(0,
+                                5).toUpperCase() : '' }}</p>
+                            <span class="badge mt-2" [ngClass]="{
                             'bg-success': client.status === 'Dossier Approuvé' || client.status === 'En Cours de Contrat',
                             'bg-info text-white': client.status === 'Dossier Validé',
                             'bg-warning text-dark': client.status === 'En attente de Validation',
@@ -69,205 +76,214 @@
                             'bg-secondary': client.status === 'Inactif',
                             'bg-primary-subtle text-primary border border-primary-subtle': client.status === 'Prospect'
                         }">
-                            {{ client.status }}
-                        </span>
-                        <div *ngIf="client.validationDate" class="mt-2 tx-10 text-success fw-bold">
-                            Validé le {{ client.validationDate | date:'dd/MM/yyyy HH:mm' }}
+                                {{ client.status }}
+                            </span>
+                            <div *ngIf="client.validationDate" class="mt-2 tx-10 text-success fw-bold">
+                                Validé le {{ client.validationDate | date:'dd/MM/yyyy HH:mm' }}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="mb-4 bg-light p-3 rounded shadow-xs border">
-                    <div class="d-flex align-items-center mb-2">
-                        <i data-feather="calendar" appFeatherIcon class="icon-sm text-muted me-2"></i>
-                        <span class="tx-11 fw-bold text-uppercase text-muted">Traçabilité Dossier</span>
+                    <div class="mb-4 bg-light p-3 rounded shadow-xs border">
+                        <div class="d-flex align-items-center mb-2">
+                            <i data-feather="calendar" appFeatherIcon class="icon-sm text-muted me-2"></i>
+                            <span class="tx-11 fw-bold text-uppercase text-muted">Traçabilité Dossier</span>
+                        </div>
+                        <p class="mb-1 tx-12 text-dark">
+                            <strong>Créé le :</strong> {{ client.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                        </p>
+                        <p class="mb-0 tx-12 text-dark" *ngIf="client.create">
+                            <strong>Par :</strong> {{ client.create }}
+                        </p>
                     </div>
-                    <p class="mb-1 tx-12 text-dark">
-                        <strong>Créé le :</strong> {{ client.createdAt | date:'dd/MM/yyyy HH:mm' }}
-                    </p>
-                    <p class="mb-0 tx-12 text-dark" *ngIf="client.create">
-                        <strong>Par :</strong> {{ client.create }}
-                    </p>
-                </div>
 
-                <div class="mt-3">
-                    <label class="tx-11 fw-bolder mb-0 text-uppercase">Contact :</label>
-                    <p class="text-muted d-flex align-items-center mt-1">
-                        <i data-feather="phone" appFeatherIcon class="icon-sm me-2 text-primary"></i>
-                        {{ client.phone }}
-                    </p>
-                    <p class="text-muted d-flex align-items-center mt-1">
-                        <i data-feather="mail" appFeatherIcon class="icon-sm me-2 text-primary"></i>
-                        {{ client.email }}
-                    </p>
-                </div>
+                    <div class="mt-3">
+                        <label class="tx-11 fw-bolder mb-0 text-uppercase">Contact :</label>
+                        <p class="text-muted d-flex align-items-center mt-1">
+                            <i data-feather="phone" appFeatherIcon class="icon-sm me-2 text-primary"></i>
+                            {{ client.phone }}
+                        </p>
+                        <p class="text-muted d-flex align-items-center mt-1">
+                            <i data-feather="mail" appFeatherIcon class="icon-sm me-2 text-primary"></i>
+                            {{ client.email }}
+                        </p>
+                    </div>
 
-                <div class="mt-4">
-                    <label class="tx-11 fw-bolder mb-0 text-uppercase">Pièces d'identité (Vérifiées) :</label>
-                    <p class="text-muted mt-1"><i data-feather="check-circle" appFeatherIcon
-                            class="icon-sm text-success me-1"></i> CNI Validée</p>
-                    <p class="text-muted mt-1"><i data-feather="check-circle" appFeatherIcon
-                            class="icon-sm text-success me-1"></i> Permis de Conduire</p>
+                    <div class="mt-4">
+                        <label class="tx-11 fw-bolder mb-0 text-uppercase">Pièces d'identité (Vérifiées) :</label>
+                        <p class="text-muted mt-1"><i data-feather="check-circle" appFeatherIcon
+                                class="icon-sm text-success me-1"></i> CNI Validée</p>
+                        <p class="text-muted mt-1"><i data-feather="check-circle" appFeatherIcon
+                                class="icon-sm text-success me-1"></i> Permis de Conduire</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Colonne Droite : Véhicule & Finances -->
-    <div class="col-md-8">
-        <!-- Dashboard Rapide (2 Cards) -->
-        <!-- Dashboard Rapide (Loop over Active Contracts) -->
-        <ng-container *ngFor="let contract of activeContracts">
-            <div class="row mb-3">
-                <div class="col-md-6 grid-margin stretch-card">
-                    <div class="card shadow-sm border-0 border-top border-primary border-3">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-baseline">
-                                <h6 class="card-title mb-0">VÉHICULE ASSIGNÉ</h6>
-                            </div>
-                            <div class="row mt-4">
-                                <div class="col-12" *ngIf="contract.vehicle">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <h3 class="fw-bolder fs-5 text-danger mb-0">{{ contract.vehicle.marque }} {{
-                                            contract.vehicle.modele }}</h3>
-                                        <span class="badge" [ngClass]="{
+        <!-- Colonne Droite : Véhicule & Finances -->
+        <div class="col-md-8">
+            <!-- Dashboard Rapide (2 Cards) -->
+            <!-- Dashboard Rapide (Loop over Active Contracts) -->
+            <ng-container *ngFor="let contract of activeContracts">
+                <div class="row mb-3">
+                    <div class="col-md-6 grid-margin stretch-card">
+                        <div class="card shadow-sm border-0 border-top border-primary border-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-baseline">
+                                    <h6 class="card-title mb-0">VÉHICULE ASSIGNÉ</h6>
+                                </div>
+                                <div class="row mt-4">
+                                    <div class="col-12" *ngIf="contract.vehicle">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h3 class="fw-bolder fs-5 text-danger mb-0">{{ contract.vehicle.marque }} {{
+                                                contract.vehicle.modele }}</h3>
+                                            <span class="badge" [ngClass]="{
                                             'bg-success': translateVehicleStatus(contract.vehicle.statut) === 'En Location-Vente' || contract.vehicle.statut === 'Actif',
                                             'bg-warning text-dark': translateVehicleStatus(contract.vehicle.statut) === 'En Maintenance',
                                             'bg-info': translateVehicleStatus(contract.vehicle.statut) === 'Vendu',
                                             'bg-primary': translateVehicleStatus(contract.vehicle.statut) === 'Disponible' || !contract.vehicle.statut
                                         }">{{ translateVehicleStatus(contract.vehicle.statut) }}</span>
+                                        </div>
+                                        <p class="text-muted mt-1">Immatriculation : <span class="fw-bold text-dark">{{
+                                                contract.vehicle.immatriculation }}</span></p>
+                                        <div *ngIf="contract.vehicle.prochainEntretien !== null"
+                                            class="text-muted mt-1 fs-13px">
+                                            Prochaine vidange : <span class="text-warning fw-bold">Dans {{
+                                                (contract.vehicle.prochainEntretien - (contract.vehicle.kilometrage ||
+                                                0)) |
+                                                number:'1.0-0' }} km</span>
+                                        </div>
                                     </div>
-                                    <p class="text-muted mt-1">Immatriculation : <span class="fw-bold text-dark">{{
-                                            contract.vehicle.immatriculation }}</span></p>
-                                    <div *ngIf="contract.vehicle.prochainEntretien !== null"
-                                        class="text-muted mt-1 fs-13px">
-                                        Prochaine vidange : <span class="text-warning fw-bold">Dans {{
-                                            (contract.vehicle.prochainEntretien - (contract.vehicle.kilometrage || 0)) |
-                                            number:'1.0-0' }} km</span>
-                                    </div>
-                                </div>
-                                <div class="col-12" *ngIf="!contract.vehicle && contract.vehicleDemands?.length">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <i data-feather="truck" appFeatherIcon class="icon-sm me-2 text-primary"></i>
-                                        <h5 class="fw-bold mb-0 text-dark">Véhicules de la Flotte</h5>
-                                    </div>
-                                    <div class="mt-3">
-                                        <div *ngFor="let req of contract.vehicleDemands" class="mb-3">
-                                            <div class="tx-11 fw-bolder text-muted text-uppercase mb-2">
-                                                {{req.brand?.name}} {{req.vehicleModel?.name}} ({{req.quantity}}
-                                                demandés)</div>
-                                            <div class="list-group list-group-flush border rounded overflow-hidden">
-                                                <div *ngFor="let v of req.assignedVehicles"
-                                                    class="list-group-item d-flex align-items-center py-2 bg-white hover-bg-light"
-                                                    [routerLink]="['/gbatcar/vehicles/details', v.uuid || v.id]"
-                                                    style="cursor: pointer;">
-                                                    <div
-                                                        class="wd-40 ht-40 rounded overflow-hidden me-3 border flex-shrink-0 bg-light d-flex align-items-center justify-content-center">
-                                                        <img *ngIf="v.photo" [src]="baseUrl + v.photo"
-                                                            class="img-fluid w-100 h-100 object-fit-cover">
-                                                        <i *ngIf="!v.photo" data-feather="truck" appFeatherIcon
-                                                            class="icon-sm text-secondary"></i>
-                                                    </div>
-                                                    <div class="flex-grow-1">
-                                                        <div class="d-flex justify-content-between align-items-center">
-                                                            <h6 class="mb-0 fs-13px fw-bold text-dark">{{
-                                                                v.immatriculation || v.licensePlate }}</h6>
-                                                            <span class="badge tx-9 py-1" [ngClass]="{
+                                    <div class="col-12" *ngIf="!contract.vehicle && contract.vehicleDemands?.length">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i data-feather="truck" appFeatherIcon
+                                                class="icon-sm me-2 text-primary"></i>
+                                            <h5 class="fw-bold mb-0 text-dark">Véhicules de la Flotte</h5>
+                                        </div>
+                                        <div class="mt-3">
+                                            <div *ngFor="let req of contract.vehicleDemands" class="mb-3">
+                                                <div class="tx-11 fw-bolder text-muted text-uppercase mb-2">
+                                                    {{req.brand?.name}} {{req.vehicleModel?.name}} ({{req.quantity}}
+                                                    demandés)</div>
+                                                <div class="list-group list-group-flush border rounded overflow-hidden">
+                                                    <div *ngFor="let v of req.assignedVehicles"
+                                                        class="list-group-item d-flex align-items-center py-2 bg-white hover-bg-light"
+                                                        [routerLink]="['/gbatcar/vehicles/details', v.uuid || v.id]"
+                                                        style="cursor: pointer;">
+                                                        <div
+                                                            class="wd-40 ht-40 rounded overflow-hidden me-3 border flex-shrink-0 bg-light d-flex align-items-center justify-content-center">
+                                                            <img *ngIf="v.photo" [src]="baseUrl + v.photo"
+                                                                class="img-fluid w-100 h-100 object-fit-cover">
+                                                            <i *ngIf="!v.photo" data-feather="truck" appFeatherIcon
+                                                                class="icon-sm text-secondary"></i>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <div
+                                                                class="d-flex justify-content-between align-items-center">
+                                                                <h6 class="mb-0 fs-13px fw-bold text-dark">{{
+                                                                    v.immatriculation || v.licensePlate }}</h6>
+                                                                <span class="badge tx-9 py-1" [ngClass]="{
                                                                 'bg-success': translateVehicleStatus(v.statut) === 'En Location-Vente' || v.statut === 'Actif',
                                                                 'bg-warning text-dark': translateVehicleStatus(v.statut) === 'En Maintenance',
                                                                 'bg-info': translateVehicleStatus(v.statut) === 'Vendu',
                                                                 'bg-primary': translateVehicleStatus(v.statut) === 'Disponible' || !v.statut
                                                             }">{{ translateVehicleStatus(v.statut) }}</span>
+                                                            </div>
+                                                            <p class="mb-0 tx-11 text-muted">{{ v.marque }} {{ v.modele
+                                                                }}
+                                                            </p>
                                                         </div>
-                                                        <p class="mb-0 tx-11 text-muted">{{ v.marque }} {{ v.modele }}
-                                                        </p>
+                                                        <i data-feather="chevron-right" appFeatherIcon
+                                                            class="icon-xs text-muted"></i>
                                                     </div>
-                                                    <i data-feather="chevron-right" appFeatherIcon
-                                                        class="icon-xs text-muted"></i>
-                                                </div>
-                                                <div *ngIf="!req.assignedVehicles?.length"
-                                                    class="list-group-item py-2 text-muted italic tx-12">
-                                                    Aucun véhicule assigné spécifiquement.
+                                                    <div *ngIf="!req.assignedVehicles?.length"
+                                                        class="list-group-item py-2 text-muted italic tx-12">
+                                                        Aucun véhicule assigné spécifiquement.
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-12"
-                                    *ngIf="!contract.vehicle && (!contract.vehicleDemands || contract.vehicleDemands.length === 0)">
-                                    <p class="text-muted italic">Véhicule non défini pour ce contrat.</p>
+                                    <div class="col-12"
+                                        *ngIf="!contract.vehicle && (!contract.vehicleDemands || contract.vehicleDemands.length === 0)">
+                                        <p class="text-muted italic">Véhicule non défini pour ce contrat.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-6 grid-margin stretch-card">
-                    <div class="card shadow-sm border-0 border-top border-3" [ngClass]="{
+                    <div class="col-md-6 grid-margin stretch-card">
+                        <div class="card shadow-sm border-0 border-top border-3" [ngClass]="{
                         'border-success': contract.paymentStatus === 'À jour' || contract.paymentStatus === 'Soldé',
                         'border-warning': contract.paymentStatus === 'En retard',
                         'border-danger': contract.paymentStatus === 'Critique' || (contract.paymentStatus && contract.paymentStatus.includes('Impayé')),
                         'border-secondary': !contract.paymentStatus || contract.paymentStatus === '-'
                     }">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="card-title mb-0">SITUATION FINANCIÈRE ({{ contract.reference }})</h6>
-                                <span class="badge" [ngClass]="{
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="card-title mb-0">SITUATION FINANCIÈRE ({{ contract.reference }})</h6>
+                                    <span class="badge" [ngClass]="{
                                     'bg-success': translateContractStatus(contract.status) === 'En Cours',
                                     'bg-danger': translateContractStatus(contract.status) === 'Rompu' || contract.status === 'ANNULÉ',
                                     'bg-warning text-dark': translateContractStatus(contract.status) === 'En Attente',
                                     'bg-secondary': translateContractStatus(contract.status) === 'Terminé'
                                 }">{{ translateContractStatus(contract.status) }}</span>
-                            </div>
-                            <div class="row mt-4">
-                                <div class="col-12">
-                                    <h3 class="fw-bolder fs-4" [ngClass]="{
+                                </div>
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <h3 class="fw-bolder fs-4" [ngClass]="{
                                         'text-success': contract.paymentStatus === 'À jour' || contract.paymentStatus === 'Soldé',
                                         'text-warning': contract.paymentStatus === 'En retard',
                                         'text-danger': contract.paymentStatus === 'Critique' || (contract.paymentStatus && contract.paymentStatus.includes('Impayé')),
                                         'text-muted': !contract.paymentStatus
                                     }">{{ contract.paymentStatus || 'En attente' }}</h3>
 
-                                    <div *ngIf="contract.caution > 0" class="text-muted tx-13 mt-3">
-                                        Caution déposée : <span class="fw-bold text-dark">{{ contract.caution | number
-                                            }} FCFA</span>
-                                    </div>
-
-                                    <!-- Progress Bar Section -->
-                                    <div class="mt-4" *ngIf="contract.totalAmount > 0">
-                                        <div class="d-flex justify-content-between text-muted tx-12 mb-1 fw-medium">
-                                            <span>Montant Payé : <strong>{{ contract.totalPaidAmount | number }}
-                                                    F</strong></span>
-                                            <span>Total : <strong>{{ contract.totalAmount | number }} F</strong></span>
+                                        <div *ngIf="contract.caution > 0" class="text-muted tx-13 mt-3">
+                                            Caution déposée : <span class="fw-bold text-dark">{{ contract.caution |
+                                                number
+                                                }} FCFA</span>
                                         </div>
-                                        <div class="progress ht-8 rounded-pill">
-                                            <div class="progress-bar rounded-pill" [ngClass]="{
+
+                                        <!-- Progress Bar Section -->
+                                        <div class="mt-4" *ngIf="contract.totalAmount > 0">
+                                            <div class="d-flex justify-content-between text-muted tx-12 mb-1 fw-medium">
+                                                <span>Montant Payé : <strong>{{ contract.totalPaidAmount | number }}
+                                                        F</strong></span>
+                                                <span>Total : <strong>{{ contract.totalAmount | number }}
+                                                        F</strong></span>
+                                            </div>
+                                            <div class="progress ht-8 rounded-pill">
+                                                <div class="progress-bar rounded-pill" [ngClass]="{
                                                     'bg-success': contract.paymentStatus === 'À jour' || contract.paymentStatus === 'Soldé',
                                                     'bg-warning': contract.paymentStatus === 'En retard',
                                                     'bg-danger': contract.paymentStatus === 'Critique' || (contract.paymentStatus && contract.paymentStatus.includes('Impayé')),
                                                     'bg-primary': !contract.paymentStatus
                                                  }" role="progressbar" [style.width.%]="contract.progressPercentage"
-                                                [attr.aria-valuenow]="contract.progressPercentage" aria-valuemin="0"
-                                                aria-valuemax="100">
+                                                    [attr.aria-valuenow]="contract.progressPercentage" aria-valuemin="0"
+                                                    aria-valuemax="100">
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="d-flex justify-content-between align-items-center mt-1">
-                                            <p class="text-muted tx-12">{{ contract.progressPercentage | number:'1.1-1'
-                                                }}% payé</p>
-                                            <p class="tx-12 fw-bold"
-                                                [class.text-danger]="contract.totalAmount - contract.totalPaidAmount > 0">
-                                                Reste : {{ (contract.totalAmount - contract.totalPaidAmount > 0 ?
-                                                contract.totalAmount -
-                                                contract.totalPaidAmount : 0) | number }} FCFA
-                                            </p>
-                                        </div>
+                                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                                <p class="text-muted tx-12">{{ contract.progressPercentage |
+                                                    number:'1.1-1'
+                                                    }}% payé</p>
+                                                <p class="tx-12 fw-bold"
+                                                    [class.text-danger]="contract.totalAmount - contract.totalPaidAmount > 0">
+                                                    Reste : {{ (contract.totalAmount - contract.totalPaidAmount > 0 ?
+                                                    contract.totalAmount -
+                                                    contract.totalPaidAmount : 0) | number }} FCFA
+                                                </p>
+                                            </div>
 
-                                        <div class="mt-3 text-end" *ngIf="contract.vehicle">
-                                            <a class="btn btn-xs btn-outline-success px-3"
-                                                [routerLink]="['/gbatcar/payments']"
-                                                [queryParams]="{ vehicle: contract.vehicle.uuid }">
-                                                <i data-feather="dollar-sign" appFeatherIcon class="icon-xs me-1"></i>
-                                                Historique Paiements
-                                            </a>
+                                            <div class="mt-3 text-end" *ngIf="contract.vehicle">
+                                                <a class="btn btn-xs btn-outline-success px-3"
+                                                    [routerLink]="['/gbatcar/payments']"
+                                                    [queryParams]="{ vehicle: contract.vehicle.uuid }">
+                                                    <i data-feather="dollar-sign" appFeatherIcon
+                                                        class="icon-xs me-1"></i>
+                                                    Historique Paiements
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -275,327 +291,360 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </ng-container>
+            </ng-container>
 
-        <!-- Fallback if NO contracts -->
-        <div class="row" *ngIf="activeContracts.length === 0">
-            <div class="col-md-6 grid-margin stretch-card" *ngFor="let v of client.vehicles">
-                <div class="card shadow-sm border-0 border-top border-primary border-3"
-                    [routerLink]="['/gbatcar/vehicles/details', v.uuid]">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="card-title mb-0">VÉHICULE ASSIGNÉ (DIRECT)</h6>
-                            <span class="badge" [ngClass]="{
+            <!-- Fallback if NO contracts -->
+            <div class="row" *ngIf="activeContracts.length === 0">
+                <div class="col-md-6 grid-margin stretch-card" *ngFor="let v of client.vehicles">
+                    <div class="card shadow-sm border-0 border-top border-primary border-3"
+                        [routerLink]="['/gbatcar/vehicles/details', v.uuid]">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="card-title mb-0">VÉHICULE ASSIGNÉ (DIRECT)</h6>
+                                <span class="badge" [ngClass]="{
                                 'bg-success': translateVehicleStatus(v.statut) === 'En Location-Vente' || v.statut === 'Actif',
                                 'bg-warning text-dark': translateVehicleStatus(v.statut) === 'En Maintenance',
                                 'bg-info': translateVehicleStatus(v.statut) === 'Vendu',
                                 'bg-primary': translateVehicleStatus(v.statut) === 'Disponible' || !v.statut
                             }">{{ translateVehicleStatus(v.statut) }}</span>
+                            </div>
+                            <div class="d-flex align-items-center mt-3">
+                                <div
+                                    class="wd-50 ht-50 rounded bg-light d-flex align-items-center justify-content-center me-3 border">
+                                    <img *ngIf="v.photo" [src]="baseUrl + v.photo" class="img-fluid rounded">
+                                    <i *ngIf="!v.photo" data-feather="truck" appFeatherIcon
+                                        class="icon-sm text-muted"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bolder mb-0 text-dark">{{ v.marque }} {{ v.modele }}</h5>
+                                    <p class="text-muted tx-12 mb-0">{{ v.immatriculation }}</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="d-flex align-items-center mt-3">
-                            <div
-                                class="wd-50 ht-50 rounded bg-light d-flex align-items-center justify-content-center me-3 border">
-                                <img *ngIf="v.photo" [src]="baseUrl + v.photo" class="img-fluid rounded">
-                                <i *ngIf="!v.photo" data-feather="truck" appFeatherIcon class="icon-sm text-muted"></i>
-                            </div>
-                            <div>
-                                <h5 class="fw-bolder mb-0 text-dark">{{ v.marque }} {{ v.modele }}</h5>
-                                <p class="text-muted tx-12 mb-0">{{ v.immatriculation }}</p>
-                            </div>
+                    </div>
+                </div>
+
+                <div class="col-md-12 grid-margin stretch-card" *ngIf="!client.vehicles?.length">
+                    <div class="card shadow-sm border-0 border-top border-primary border-3">
+                        <div class="card-body text-center py-5">
+                            <i data-feather="alert-circle" appFeatherIcon class="text-muted mb-3 icon-lg"></i>
+                            <p class="text-muted italic">Aucun véhicule ou contrat n'est actuellement assigné à ce
+                                dossier.
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-12 grid-margin stretch-card" *ngIf="!client.vehicles?.length">
-                <div class="card shadow-sm border-0 border-top border-primary border-3">
-                    <div class="card-body text-center py-5">
-                        <i data-feather="alert-circle" appFeatherIcon class="text-muted mb-3 icon-lg"></i>
-                        <p class="text-muted italic">Aucun véhicule ou contrat n'est actuellement assigné à ce dossier.
-                        </p>
-                    </div>
-                </div>
+            <div class="mt-3 pt-3 border-top border-dark-subtle">
+                <p class="text-muted mb-1 d-flex justify-content-between" *ngIf="client.unpaidAmount > 0">
+                    <span>Traites Impayées :</span>
+                    <span class="fw-bold text-danger">{{ client.unpaidAmount | number }} FCFA</span>
+                </p>
+                <p class="text-muted mb-1 d-flex justify-content-between">
+                    <span>Solde Portefeuille :</span>
+                    <span class="fw-bold text-success">{{ client.walletBalance || 0 | number }} FCFA</span>
+                </p>
+                <p class="text-muted mb-1 d-flex justify-content-between" *ngIf="client.fines > 0">
+                    <span>Amendes cumulées :</span>
+                    <span class="fw-bold text-danger">{{ client.fines | number }} FCFA</span>
+                </p>
             </div>
-        </div>
-
-        <div class="mt-3 pt-3 border-top border-dark-subtle">
-            <p class="text-muted mb-1 d-flex justify-content-between" *ngIf="client.unpaidAmount > 0">
-                <span>Traites Impayées :</span>
-                <span class="fw-bold text-danger">{{ client.unpaidAmount | number }} FCFA</span>
-            </p>
-            <p class="text-muted mb-1 d-flex justify-content-between">
-                <span>Solde Portefeuille :</span>
-                <span class="fw-bold text-success">{{ client.walletBalance || 0 | number }} FCFA</span>
-            </p>
-            <p class="text-muted mb-1 d-flex justify-content-between" *ngIf="client.fines > 0">
-                <span>Amendes cumulées :</span>
-                <span class="fw-bold text-danger">{{ client.fines | number }} FCFA</span>
-            </p>
         </div>
     </div>
-</div>
 
-<!-- Section Historique et Contrat -->
-<div class="card grid-margin shadow-sm border-0" *ngIf="client && !loading">
-    <div class="card-body">
-        <h6 class="card-title mb-4">SUIVI DU CONTRAT ET PAIEMENTS</h6>
+    <!-- Section Historique et Contrat -->
+    <div class="card grid-margin shadow-sm border-0" *ngIf="client && !loading">
+        <div class="card-body">
+            <h6 class="card-title mb-4">SUIVI DU CONTRAT ET PAIEMENTS</h6>
 
-        <ul ngbNav #clientNav="ngbNav" class="nav-tabs nav-tabs-line">
-            <li [ngbNavItem]="1">
-                <a ngbNavLink>Profil Détaillé</a>
-                <ng-template ngbNavContent>
-                    <div class="row p-2">
-                        <div class="col-md-6 mb-4">
-                            <h6 class="mb-3 text-primary fs-13px text-uppercase">Informations Personnelles</h6>
-                            <p class="text-muted mb-2 fs-13px"><strong>Genre:</strong> <span class="text-dark">{{
-                                    client.gender || 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Date de naissance:</strong> <span
-                                    class="text-dark">{{ client.birthDate ? (client.birthDate | date:'dd/MM/yyyy') :
-                                    'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Lieu de naissance:</strong> <span
-                                    class="text-dark">{{ client.birthPlace || 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Nationalité:</strong> <span class="text-dark">{{
-                                    client.nationality || 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Statut matrimonial:</strong> <span
-                                    class="text-dark">{{
-                                    client.maritalStatus || 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Enfants à charge:</strong> <span
-                                    class="text-dark">{{
-                                    client.childrenCount || 0 }}</span></p>
+            <ul ngbNav #clientNav="ngbNav" class="nav-tabs nav-tabs-line">
+                <li [ngbNavItem]="1">
+                    <a ngbNavLink>Profil Détaillé</a>
+                    <ng-template ngbNavContent>
+                        <div class="row p-2">
+                            <div class="col-md-6 mb-4">
+                                <h6 class="mb-3 text-primary fs-13px text-uppercase">Informations Personnelles</h6>
+                                <p class="text-muted mb-2 fs-13px"><strong>Genre:</strong> <span class="text-dark">{{
+                                        client.gender || 'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Date de naissance:</strong> <span
+                                        class="text-dark">{{ client.birthDate ? (client.birthDate | date:'dd/MM/yyyy') :
+                                        'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Lieu de naissance:</strong> <span
+                                        class="text-dark">{{ client.birthPlace || 'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Nationalité:</strong> <span
+                                        class="text-dark">{{
+                                        client.nationality || 'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Statut matrimonial:</strong> <span
+                                        class="text-dark">{{
+                                        client.maritalStatus || 'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Enfants à charge:</strong> <span
+                                        class="text-dark">{{
+                                        client.childrenCount || 0 }}</span></p>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <h6 class="mb-3 text-primary fs-13px text-uppercase">Coordonnées & Adresse</h6>
+                                <p class="text-muted mb-2 fs-13px"><strong>Ville:</strong> <span class="text-dark">{{
+                                        client.city || 'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Quartier:</strong> <span class="text-dark">{{
+                                        client.neighborhood || 'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Adresse:</strong> <span class="text-dark">{{
+                                        client.address || 'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Type de Client:</strong> <span
+                                        class="text-dark">{{
+                                        client.type || 'Particulier' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Acquisition via:</strong> <span
+                                        class="text-dark">{{
+                                        client.discoveryChannel || 'N/A' }}</span></p>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <h6 class="mb-3 text-primary fs-13px text-uppercase">Situation Socio-Économique</h6>
+                                <p class="text-muted mb-2 fs-13px"><strong>Niveau d'étude:</strong> <span
+                                        class="text-dark">{{ client.educationLevel || 'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Profession:</strong> <span
+                                        class="text-dark">{{
+                                        client.profession || 'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Revenus:</strong> <span class="text-dark">{{
+                                        client.incomeBracket || 'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Logement:</strong> <span class="text-dark">{{
+                                        client.housingStatus || 'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Banque / Flux:</strong> <span
+                                        class="text-dark">{{
+                                        client.primaryBankAccount || 'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Exp. Crédit Précédente:</strong> <span
+                                        class="text-dark">{{
+                                        client.previousCreditExperience || 'N/A' }}</span></p>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <h6 class="mb-3 text-primary fs-13px text-uppercase">Identité & Conduite</h6>
+                                <p class="text-muted mb-2 fs-13px"><strong>N° CNI / Passeport:</strong> <span
+                                        class="text-dark fw-bold">{{
+                                        client.idNumber || 'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Délivrée le:</strong> <span
+                                        class="text-dark">{{
+                                        client.idIssueDate ? (client.idIssueDate | date:'dd/MM/yyyy') : 'N/A' }}</span>
+                                </p>
+                                <p class="text-muted mb-2 fs-13px"><strong>N° Permis:</strong> <span
+                                        class="text-dark fw-bold">{{
+                                        client.licenseNumber || 'N/A' }}</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Expérience Conduite:</strong> <span
+                                        class="text-dark">{{
+                                        client.drivingExperienceYears || 0 }} an(s)</span></p>
+                                <p class="text-muted mb-2 fs-13px"><strong>Source Remb.:</strong> <span
+                                        class="text-dark">{{
+                                        client.repaymentSource || 'N/A' }}</span></p>
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-4">
-                            <h6 class="mb-3 text-primary fs-13px text-uppercase">Coordonnées & Adresse</h6>
-                            <p class="text-muted mb-2 fs-13px"><strong>Ville:</strong> <span class="text-dark">{{
-                                    client.city || 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Quartier:</strong> <span class="text-dark">{{
-                                    client.neighborhood || 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Adresse:</strong> <span class="text-dark">{{
-                                    client.address || 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Type de Client:</strong> <span
-                                    class="text-dark">{{
-                                    client.type || 'Particulier' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Acquisition via:</strong> <span
-                                    class="text-dark">{{
-                                    client.discoveryChannel || 'N/A' }}</span></p>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <h6 class="mb-3 text-primary fs-13px text-uppercase">Situation Socio-Économique</h6>
-                            <p class="text-muted mb-2 fs-13px"><strong>Niveau d'étude:</strong> <span
-                                    class="text-dark">{{ client.educationLevel || 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Profession:</strong> <span class="text-dark">{{
-                                    client.profession || 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Revenus:</strong> <span class="text-dark">{{
-                                    client.incomeBracket || 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Logement:</strong> <span class="text-dark">{{
-                                    client.housingStatus || 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Banque / Flux:</strong> <span
-                                    class="text-dark">{{
-                                    client.primaryBankAccount || 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Exp. Crédit Précédente:</strong> <span
-                                    class="text-dark">{{
-                                    client.previousCreditExperience || 'N/A' }}</span></p>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <h6 class="mb-3 text-primary fs-13px text-uppercase">Identité & Conduite</h6>
-                            <p class="text-muted mb-2 fs-13px"><strong>N° CNI / Passeport:</strong> <span
-                                    class="text-dark fw-bold">{{
-                                    client.idNumber || 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Délivrée le:</strong> <span class="text-dark">{{
-                                    client.idIssueDate ? (client.idIssueDate | date:'dd/MM/yyyy') : 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>N° Permis:</strong> <span
-                                    class="text-dark fw-bold">{{
-                                    client.licenseNumber || 'N/A' }}</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Expérience Conduite:</strong> <span
-                                    class="text-dark">{{
-                                    client.drivingExperienceYears || 0 }} an(s)</span></p>
-                            <p class="text-muted mb-2 fs-13px"><strong>Source Remb.:</strong> <span class="text-dark">{{
-                                    client.repaymentSource || 'N/A' }}</span></p>
-                        </div>
-                    </div>
-                </ng-template>
-            </li>
-            <li [ngbNavItem]="2">
-                <a ngbNavLink>Historique des Recettes</a>
-                <ng-template ngbNavContent>
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Contrat</th>
-                                    <th>Montant</th>
-                                    <th>Moyen</th>
-                                    <th>Statut</th>
-                                    <th class="text-end">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr *ngFor="let p of allPayments">
-                                    <td class="text-muted tx-12">{{ p.date | date:'dd/MM/yyyy HH:mm' }}</td>
-                                    <td>
-                                        <a [routerLink]="['/gbatcar/contracts/details', p.contractUuid]"
-                                            class="text-primary fw-medium tx-12">
-                                            {{ p.contractRef }}
-                                        </a>
-                                    </td>
-                                    <td class="fw-bold">{{ p.amount | number }} <small>FCFA</small></td>
-                                    <td class="tx-12">{{ p.method }} <span class="text-muted d-block tx-10">{{ p.period
-                                            }}</span></td>
-                                    <td>
-                                        <span class="badge" [ngClass]="{
+                    </ng-template>
+                </li>
+                <li [ngbNavItem]="2">
+                    <a ngbNavLink>Historique des Recettes</a>
+                    <ng-template ngbNavContent>
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Contrat</th>
+                                        <th>Montant</th>
+                                        <th>Moyen</th>
+                                        <th>Statut</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let p of allPayments">
+                                        <td class="text-muted tx-12">{{ p.date | date:'dd/MM/yyyy HH:mm' }}</td>
+                                        <td>
+                                            <a [routerLink]="['/gbatcar/contracts/details', p.contractUuid]"
+                                                class="text-primary fw-medium tx-12">
+                                                {{ p.contractRef }}
+                                            </a>
+                                        </td>
+                                        <td class="fw-bold">{{ p.amount | number }} <small>FCFA</small></td>
+                                        <td class="tx-12">{{ p.method }} <span class="text-muted d-block tx-10">{{
+                                                p.period
+                                                }}</span></td>
+                                        <td>
+                                            <span class="badge" [ngClass]="{
                                             'bg-success': p.status === 'Validé' || p.status === 'VALIDATED' || p.status === 'VALIDÉ',
                                             'bg-warning text-dark': p.status === 'En attente' || p.status === 'PENDING'
                                         }">{{ translateContractStatus(p.status) }}</span>
-                                    </td>
-                                    <td class="text-end">
-                                        <button (click)="openReceipt(p.receiptUrl)"
-                                            class="btn btn-xs btn-outline-primary border-0 bg-white"
-                                            title="Visionner le reçu" [disabled]="!p.receiptUrl">
-                                            <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr *ngIf="!allPayments || allPayments.length === 0">
-                                    <td colspan="6" class="text-center text-muted py-5">
-                                        <i data-feather="database" appFeatherIcon class="icon-lg mb-2"></i>
-                                        <p>Aucun paiement trouvé pour ce client.</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </ng-template>
-            </li>
-            <li [ngbNavItem]="5">
-                <a ngbNavLink>Documents Scannés</a>
-                <ng-template ngbNavContent>
-                    <div class="row p-3">
-                        <div class="col-12">
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <h6 class="card-title mb-0">Documents Associés</h6>
-                                <button (click)="triggerFileUpload()" class="btn btn-danger btn-sm btn-icon-text">
-                                    <i data-feather="plus" appFeatherIcon class="btn-icon-prepend"></i> Ajouter
-                                </button>
-                                <input type="file" id="clientDocInput" style="display: none"
-                                    (change)="onFileSelected($event)">
-                            </div>
-
-                            <div class="row g-3">
-                                <!-- Documents officially linked to client or contracts -->
-                                <div class="col-md-6 mb-3" *ngFor="let doc of allDocuments">
-                                    <div class="bg-light p-3 rounded d-flex align-items-center border shadow-xxs h-100">
-                                        <div
-                                            class="wd-40 ht-40 rounded bg-white shadow-sm d-flex align-items-center justify-content-center me-3 border">
-                                            <i *ngIf="doc.isStatic" data-feather="file-text" appFeatherIcon
-                                                class="icon-sm text-primary"></i>
-                                            <i *ngIf="!doc.isStatic" data-feather="file" appFeatherIcon
-                                                class="icon-sm text-secondary"></i>
-                                        </div>
-                                        <div class="flex-grow-1 overflow-hidden text-start">
-                                            <p class="mb-0 tx-13 fw-bolder text-dark text-truncate"
-                                                [title]="doc.libelle || doc.originalName">
-                                                {{ doc.libelle || doc.originalName }}
-                                            </p>
-                                            <span class="tx-11 text-muted">
-                                                {{ doc.isStatic ? 'Document Officiel (Profil)' : 'Pièce jointe - ' +
-                                                doc.contractRef }}
-                                            </span>
-                                        </div>
-                                        <div class="ms-3 d-flex gap-1">
-                                            <button (click)="viewDocument(doc)"
+                                        </td>
+                                        <td class="text-end">
+                                            <button (click)="openReceipt(p.receiptUrl)"
                                                 class="btn btn-xs btn-outline-primary border-0 bg-white"
-                                                title="Visionner">
+                                                title="Visionner le reçu" [disabled]="!p.receiptUrl">
                                                 <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
                                             </button>
-                                            <button (click)="downloadDocument(doc)"
-                                                class="btn btn-xs btn-outline-secondary border-0 bg-white"
-                                                title="Télécharger">
-                                                <i data-feather="download" appFeatherIcon class="icon-sm"></i>
-                                            </button>
-                                            <button *ngIf="!doc.isStatic" (click)="deleteDocument(doc)"
-                                                class="btn btn-xs btn-outline-danger border-0 bg-white"
-                                                title="Supprimer">
-                                                <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
-                                            </button>
-                                        </div>
-                                    </div>
+                                        </td>
+                                    </tr>
+                                    <tr *ngIf="!allPayments || allPayments.length === 0">
+                                        <td colspan="6" class="text-center text-muted py-5">
+                                            <i data-feather="database" appFeatherIcon class="icon-lg mb-2"></i>
+                                            <p>Aucun paiement trouvé pour ce client.</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </ng-template>
+                </li>
+                <li [ngbNavItem]="5">
+                    <a ngbNavLink>Documents Scannés</a>
+                    <ng-template ngbNavContent>
+                        <div class="row p-3">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h6 class="card-title mb-0">Documents Associés</h6>
+                                    <button *ngxPermissionsOnly="'CONTRACT:DOCUMENT'" (click)="triggerFileUpload()"
+                                        class="btn btn-danger btn-sm btn-icon-text">
+                                        <i data-feather="plus" appFeatherIcon class="btn-icon-prepend"></i> Ajouter
+                                    </button>
+                                    <input type="file" id="clientDocInput" style="display: none"
+                                        (change)="onFileSelected($event)">
                                 </div>
 
-                                <!-- Empty State -->
-                                <div *ngIf="allDocuments.length === 0" class="col-12 text-center py-5 text-muted">
-                                    <div class="mb-3">
-                                        <i data-feather="file-text" appFeatherIcon class="icon-xxl text-light"></i>
+                                <div class="row g-3">
+                                    <!-- Documents officially linked to client or contracts -->
+                                    <div class="col-md-6 mb-3" *ngFor="let doc of allDocuments">
+                                        <div
+                                            class="bg-light p-3 rounded d-flex align-items-center border shadow-xxs h-100">
+                                            <div
+                                                class="wd-40 ht-40 rounded bg-white shadow-sm d-flex align-items-center justify-content-center me-3 border">
+                                                <i *ngIf="doc.isStatic" data-feather="file-text" appFeatherIcon
+                                                    class="icon-sm text-primary"></i>
+                                                <i *ngIf="!doc.isStatic" data-feather="file" appFeatherIcon
+                                                    class="icon-sm text-secondary"></i>
+                                            </div>
+                                            <div class="flex-grow-1 overflow-hidden text-start">
+                                                <p class="mb-0 tx-13 fw-bolder text-dark text-truncate"
+                                                    [title]="doc.libelle || doc.originalName">
+                                                    {{ doc.libelle || doc.originalName }}
+                                                </p>
+                                                <span class="tx-11 text-muted">
+                                                    {{ doc.isStatic ? 'Document Officiel (Profil)' : 'Pièce jointe - ' +
+                                                    doc.contractRef }}
+                                                </span>
+                                            </div>
+                                            <div class="ms-3 d-flex gap-1">
+                                                <button (click)="viewDocument(doc)"
+                                                    class="btn btn-xs btn-outline-primary border-0 bg-white"
+                                                    title="Visionner">
+                                                    <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                                </button>
+                                                <button (click)="downloadDocument(doc)"
+                                                    class="btn btn-xs btn-outline-secondary border-0 bg-white"
+                                                    title="Télécharger">
+                                                    <i data-feather="download" appFeatherIcon class="icon-sm"></i>
+                                                </button>
+                                                <ng-container *ngxPermissionsOnly="'CONTRACT:DOCUMENT'">
+                                                    <button *ngIf="!doc.isStatic" (click)="deleteDocument(doc)"
+                                                        class="btn btn-xs btn-outline-danger border-0 bg-white"
+                                                        title="Supprimer">
+                                                        <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
+                                                    </button>
+                                                </ng-container>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <p class="italic">Aucune pièce scannée disponible pour ce dossier.</p>
-                                    <p class="tx-12">Cliquez sur "Ajouter" pour joindre un nouveau document.</p>
+
+                                    <!-- Empty State -->
+                                    <div *ngIf="allDocuments.length === 0" class="col-12 text-center py-5 text-muted">
+                                        <div class="mb-3">
+                                            <i data-feather="file-text" appFeatherIcon class="icon-xxl text-light"></i>
+                                        </div>
+                                        <p class="italic">Aucune pièce scannée disponible pour ce dossier.</p>
+                                        <p class="tx-12">Cliquez sur "Ajouter" pour joindre un nouveau document.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </ng-template>
-            </li>
-        </ul>
-        <div [ngbNavOutlet]="clientNav" class="mt-3"></div>
+                    </ng-template>
+                </li>
+            </ul>
+            <div [ngbNavOutlet]="clientNav" class="mt-3"></div>
 
+        </div>
     </div>
+
+    <!-- Modal Placeholder (kept for future implementation) -->
+    <ng-template #scheduleModal let-modal>
+        <div class="modal-header">
+            <h5 class="modal-title">Générer un Échéancier</h5>
+            <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+        </div>
+        <div class="modal-body p-4 text-center">
+            <i data-feather="tool" appFeatherIcon class="icon-xxl mb-3 text-warning"></i>
+            <p>Cette fonctionnalité est en cours de développement.</p>
+        </div>
+    </ng-template>
+
+    <!-- Modal: Enregistrer une Amende -->
+    <ng-template #fineModal let-modal>
+        <div class="modal-header">
+            <h5 class="modal-title">Enregistrer une Amende</h5>
+            <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+        </div>
+        <div class="modal-body">
+            <form>
+                <div class="mb-3">
+                    <label class="form-label text-dark fw-medium">Motif de l'amende</label>
+                    <input type="text" class="form-control" placeholder="Ex: Excès de vitesse">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-dark fw-medium">Montant (FCFA)</label>
+                    <input type="number" class="form-control" placeholder="0">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-dark fw-medium">Date de l'infraction</label>
+                    <input type="date" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="checkPaid">
+                        <label class="form-check-label" for="checkPaid">Déjà payée</label>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="modal.close('Close click')">Annuler</button>
+            <button type="button" class="btn btn-danger" (click)="modal.close('Save click')">Enregistrer</button>
+        </div>
+    </ng-template>
+
+    <!-- Modal: Afficher la photo en grand -->
+    <ng-template #imageModal let-modal>
+        <div class="modal-header border-0 bg-dark text-white rounded-top d-flex justify-content-between">
+            <h5 class="modal-title mb-0">Photo du Profil</h5>
+            <button type="button" class="btn-close btn-close-white" aria-label="Close"
+                (click)="modal.dismiss('Cross')"></button>
+        </div>
+        <div class="modal-body text-center bg-dark rounded-bottom p-0">
+            <img *ngIf="client.photo" [src]="baseUrl + client.photo" class="img-fluid mb-3 shadow"
+                alt="Avatar grand format" style="max-height: 80vh;">
+        </div>
+    </ng-template>
 </div>
 
-<!-- Modal Placeholder (kept for future implementation) -->
-<ng-template #scheduleModal let-modal>
-    <div class="modal-header">
-        <h5 class="modal-title">Générer un Échéancier</h5>
-        <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
-    </div>
-    <div class="modal-body p-4 text-center">
-        <i data-feather="tool" appFeatherIcon class="icon-xxl mb-3 text-warning"></i>
-        <p>Cette fonctionnalité est en cours de développement.</p>
-    </div>
-</ng-template>
-
-<!-- Modal: Enregistrer une Amende -->
-<ng-template #fineModal let-modal>
-    <div class="modal-header">
-        <h5 class="modal-title">Enregistrer une Amende</h5>
-        <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
-    </div>
-    <div class="modal-body">
-        <form>
-            <div class="mb-3">
-                <label class="form-label text-dark fw-medium">Motif de l'amende</label>
-                <input type="text" class="form-control" placeholder="Ex: Excès de vitesse">
+<!-- FALLBACK FOR UNAUTHORIZED ACCESS -->
+<div *ngxPermissionsExcept="['CLIENT:SHOW']" class="row justify-content-center align-items-center"
+    style="min-height: 400px;">
+    <div class="col-md-6 text-center">
+        <div class="card shadow-sm border-0 py-5">
+            <div class="card-body">
+                <i data-feather="lock" appFeatherIcon class="text-danger mb-4" style="width: 60px; height: 60px;"></i>
+                <h3 class="fw-bold text-dark mb-3">Accès Refusé</h3>
+                <p class="text-muted mb-4 fs-14px">
+                    Vous ne disposez pas des droits nécessaires pour consulter les détails d'un client.
+                    Veuillez contacter votre administrateur si vous pensez qu'il s'agit d'une erreur.
+                </p>
+                <button (click)="goBack()" class="btn btn-primary d-inline-flex align-items-center">
+                    <i data-feather="arrow-left" appFeatherIcon class="icon-sm me-2"></i>
+                    Retour à la liste
+                </button>
             </div>
-            <div class="mb-3">
-                <label class="form-label text-dark fw-medium">Montant (FCFA)</label>
-                <input type="number" class="form-control" placeholder="0">
-            </div>
-            <div class="mb-3">
-                <label class="form-label text-dark fw-medium">Date de l'infraction</label>
-                <input type="date" class="form-control">
-            </div>
-            <div class="mb-3">
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="checkPaid">
-                    <label class="form-check-label" for="checkPaid">Déjà payée</label>
-                </div>
-            </div>
-        </form>
+        </div>
     </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="modal.close('Close click')">Annuler</button>
-        <button type="button" class="btn btn-danger" (click)="modal.close('Save click')">Enregistrer</button>
-    </div>
-</ng-template>
-
-<!-- Modal: Afficher la photo en grand -->
-<ng-template #imageModal let-modal>
-    <div class="modal-header border-0 bg-dark text-white rounded-top d-flex justify-content-between">
-        <h5 class="modal-title mb-0">Photo du Profil</h5>
-        <button type="button" class="btn-close btn-close-white" aria-label="Close"
-            (click)="modal.dismiss('Cross')"></button>
-    </div>
-    <div class="modal-body text-center bg-dark rounded-bottom p-0">
-        <img *ngIf="client.photo" [src]="baseUrl + client.photo" class="img-fluid mb-3 shadow" alt="Avatar grand format"
-            style="max-height: 80vh;">
-    </div>
-</ng-template>
+</div>

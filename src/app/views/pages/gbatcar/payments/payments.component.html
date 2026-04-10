@@ -123,7 +123,7 @@
                     <div>
                         <p class="text-secondary fs-12px mb-1">En Attente de Validation</p>
                         <h4 class="fw-bold mb-0 text-warning">{{ pendingPaymentsTotal | number }} FCFA</h4>
-                        <small class="text-muted">{{ pendingPaymentsCount }} virement(s) à valider</small>
+                        <small class="text-muted">{{ pendingPaymentsCount }} encaissement(s) à valider</small>
                     </div>
                     <i data-feather="clock" appFeatherIcon class="icon-lg text-warning"></i>
                 </div>
@@ -220,7 +220,7 @@
                                 <td>
                                     <span class="badge" [ngClass]="{
                                         'bg-success': payment.status === 'Validé' || payment.status === 'VALIDÉ' || payment.status === 'VALIDATED',
-                                        'bg-warning text-dark': payment.status === 'En attente' || payment.status === 'PENDING',
+                                        'bg-warning text-dark': payment.status === 'En attente' || payment.status === 'PENDING' || payment.status === 'ATTENTE',
                                         'bg-danger': payment.status === 'Rejeté'
                                     }">
                                         {{ translateStatus(payment.status) }}
@@ -232,20 +232,22 @@
                                         class="btn btn-sm btn-icon btn-outline-secondary me-1" title="Voir les détails">
                                         <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
                                     </button>
-                                    <button *ngIf="payment.status === 'En attente' || payment.status === 'PENDING'"
+                                    <button
+                                        *ngIf="payment.status === 'En attente' || payment.status === 'PENDING' || payment.status === 'ATTENTE'"
                                         [routerLink]="['/gbatcar/payments/edit', payment.uuid]"
                                         class="btn btn-sm btn-icon btn-outline-warning me-1"
                                         title="Modifier le paiement">
                                         <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
                                     </button>
-                                    <button *ngIf="payment.status === 'En attente' || payment.status === 'PENDING'"
+                                    <button
+                                        *ngIf="payment.status === 'En attente' || payment.status === 'PENDING' || payment.status === 'ATTENTE'"
                                         (click)="validatePayment(payment.uuid || '')"
                                         class="btn btn-sm btn-icon btn-outline-success me-1"
                                         title="Valider le paiement">
                                         <i data-feather="check-circle" appFeatherIcon class="icon-sm"></i>
                                     </button>
-
-                                    <button *ngIf="payment.status === 'En attente' || payment.status === 'PENDING'"
+                                    <button
+                                        *ngIf="payment.status === 'En attente' || payment.status === 'PENDING' || payment.status === 'ATTENTE'"
                                         (click)="deletePayment(payment.uuid || '')"
                                         class="btn btn-sm btn-icon btn-outline-danger me-1"
                                         title="Supprimer le paiement">

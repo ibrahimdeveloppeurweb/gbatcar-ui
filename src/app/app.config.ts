@@ -24,6 +24,7 @@ registerLocaleData(localeFr);
 import { SweetAlert2Module } from '@sweetalert2/ngx-sweetalert2';
 import { provideHighlightOptions } from 'ngx-highlightjs';
 import { NgxSpinnerModule } from 'ngx-spinner';
+import { NgxPermissionsModule } from 'ngx-permissions';
 
 import { loaderInterceptor } from './core/interceptors/loader.interceptor';
 import { httpCoreInterceptor } from './core/interceptors/http-core.interceptor';
@@ -59,7 +60,7 @@ export const appConfig: ApplicationConfig = {
 
     // ── UI ───────────────────────────────────────────────────────────────────
     provideAnimationsAsync(),
-    importProvidersFrom([SweetAlert2Module.forRoot(), NgxSpinnerModule.forRoot({ type: 'ball-clip-rotate' })]),
+    importProvidersFrom([SweetAlert2Module.forRoot(), NgxSpinnerModule.forRoot({ type: 'ball-clip-rotate' }), NgxPermissionsModule.forRoot()]),
 
     // ── Syntax Highlighting ───────────────────────────────────────────────────
     provideHighlightOptions(highlightOptions),

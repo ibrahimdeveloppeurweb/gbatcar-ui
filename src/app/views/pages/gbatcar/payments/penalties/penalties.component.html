@@ -62,7 +62,8 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <p class="text-secondary fs-12px mb-1">Pénalités Récupérées</p>
-                        <h4 class="fw-bold mb-0 text-success">{{ recoveredCount }}</h4>
+                        <h4 class="fw-bold mb-0 text-success">{{ recoveredTotal | number }} FCFA</h4>
+                        <small class="text-muted fs-10px">Nombre: {{ recoveredCount }}</small>
                     </div>
                     <i data-feather="check-circle" appFeatherIcon class="icon-lg text-success"></i>
                 </div>
@@ -175,61 +176,91 @@
                         </select>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                <div class="table-responsive" [ngClass]="{'opacity-50': loading}">
+                    <div *ngIf="loading" class="d-flex justify-content-center my-4">
+                        <div class="spinner-border text-danger" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                    </div>
+                    <table class="table table-hover mb-0" *ngIf="!loading">
                         <thead>
                             <tr>
                                 <th>Date d'émission</th>
-                                <th>Chauffeur Fautif</th>
+                                <th>Référence</th>
+                                <th>Chauffeur / Client</th>
                                 <th>Motif de la Pénalité</th>
                                 <th>Gravité</th>
                                 <th>Montant (FCFA)</th>
-                                <th>Statut Recouvrement</th>
+                                <th>Statut</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr *ngFor="let penalty of filteredPenalties">
                                 <td class="text-muted">{{ penalty.date | date:'dd/MM/yyyy' }}</td>
-                                <td><a href="javascript:void(0)" class="text-primary fw-medium">{{ penalty.client }}</a>
+                                <td class="fw-medium">{{ penalty.reference }}</td>
+                                <td>
+                                    <div *ngIf="penalty.client">
+                                        <a [routerLink]="['/gbatcar/clients/details', penalty.client.uuid]"
+                                            class="text-primary fw-medium">
+                                            {{ penalty.client.libelle || penalty.client.name ||
+                                            (penalty.client.firstName + ' ' + penalty.client.lastName) }}
+                                        </a>
+                                        <br>
+                                        <small class="text-muted" *ngIf="penalty.contract">
+                                            Contrat: {{ penalty.contract.reference }}
+                                        </small>
+                                    </div>
+                                    <div *ngIf="!penalty.client && penalty.contract">
+                                        <span class="text-muted">Contrat: {{ penalty.contract.reference }}</span>
+                                    </div>
+                                    <span class="text-muted" *ngIf="!penalty.client && !penalty.contract">N/A</span>
                                 </td>
                                 <td>{{ penalty.reason }}</td>
                                 <td>
                                     <span class="badge" [ngClass]="{
                                         'bg-info': penalty.severity === 'Faible',
-                                        'bg-warning text-dark': penalty.severity === 'Moyenne',
+                                        'bg-warning text-dark': penalty.severity === 'Moyenne' || !penalty.severity,
                                         'bg-danger': penalty.severity === 'Élevée'
                                     }">
-                                        {{ penalty.severity }}
+                                        {{ penalty.severity || 'Moyenne' }}
                                     </span>
                                 </td>
-                                <td class="fw-bolder fs-6">{{ penalty.amount | number }}</td>
+                                <td class="fw-bolder fs-6">
+                                    {{ penalty.amount | number }}
+                                    <div class="fs-10px text-success" *ngIf="penalty.paidAmount > 0">
+                                        Payé: {{ penalty.paidAmount | number }}
+                                    </div>
+                                </td>
                                 <td>
                                     <span class="badge" [ngClass]="{
-                                        'bg-danger': penalty.status === 'Impayé',
-                                        'bg-warning text-dark': penalty.status === 'Non payé',
-                                        'bg-info': penalty.status === 'En attente',
-                                        'bg-success': penalty.status === 'Payé'
+                                        'bg-danger': penalty.status === 'Impayé' || penalty.status === 'CRITIQUE' || penalty.status === 'IMPAYÉ',
+                                        'bg-warning text-dark': penalty.status === 'Non payé' || penalty.status === 'NON_PAYÉ',
+                                        'bg-info': penalty.status === 'En attente' || penalty.status === 'EN ATTENTE' || penalty.status === 'PARTIEL' || penalty.status === 'PARTIAL',
+                                        'bg-success': penalty.status === 'Payé' || penalty.status === 'SOLDÉ' || penalty.status === 'PAYÉ' || penalty.status === 'PAYE' || penalty.status === 'SOLDE'
                                     }">
                                         {{ penalty.status }}
                                     </span>
                                 </td>
                                 <td>
-                                    <button [routerLink]="['/gbatcar/payments/penalties/details', penalty.id]"
-                                        class="btn btn-sm btn-outline-secondary me-1" title="Voir les détails">
-                                        <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-warning me-1" title="Relancer">
-                                        <i data-feather="bell" appFeatherIcon class="icon-sm"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-success" *ngIf="penalty.status !== 'Payé'"
-                                        title="Marquer comme payé">
-                                        <i data-feather="check" appFeatherIcon class="icon-sm"></i>
-                                    </button>
+                                    <div class="d-flex">
+                                        <button [routerLink]="['/gbatcar/payments/penalties/details', penalty.uuid]"
+                                            class="btn btn-xs btn-outline-secondary me-1" title="Voir les détails">
+                                            <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                        </button>
+                                        <button class="btn btn-xs btn-outline-warning me-1" title="Relancer">
+                                            <i data-feather="bell" appFeatherIcon class="icon-sm"></i>
+                                        </button>
+                                        <button class="btn btn-xs btn-outline-success"
+                                            *ngIf="penalty.status !== 'Payé' && penalty.status !== 'SOLDÉ' && (penalty.amount - (penalty.paidAmount || 0)) > 0"
+                                            (click)="onSolder(penalty)" title="Solder l'amende (Paiement)">
+                                            <i data-feather="credit-card" appFeatherIcon class="icon-sm"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             <tr *ngIf="filteredPenalties.length === 0">
-                                <td colspan="7" class="text-center py-4 text-muted">Aucune pénalité correspondante.</td>
+                                <td colspan="8" class="text-center py-4 text-muted">Aucune pénalité correspondante.</td>
                             </tr>
                         </tbody>
                     </table>

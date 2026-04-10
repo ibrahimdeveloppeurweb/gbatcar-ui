@@ -25,6 +25,7 @@ export interface Client {
     name?: string;
     firstName?: string;
     lastName?: string;
+    libelle?: string;
     civilite?: string;
     gender?: string;
     birthDate?: string;

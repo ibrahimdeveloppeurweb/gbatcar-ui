@@ -76,19 +76,20 @@
                                 formControlName="kilometrage" min="0">
                         </div>
 
-                        <!-- Type d'intervention -->
+                        <!-- Type d'Intervention -->
                         <div class="col-md-6">
                             <label class="form-label fw-medium">Type d'Intervention <span
                                     class="text-danger">*</span></label>
-                            <select class="form-select" formControlName="type" [class.is-invalid]="isInvalid('type')">
-                                <option value="">-- Sélectionner le type --</option>
-                                <option *ngFor="let t of interventionTypes" [value]="t">{{ t }}</option>
-                            </select>
-                            <div class="invalid-feedback">Le type est requis.</div>
+                            <ng-select [items]="maintenanceTypes" bindLabel="name" bindValue="name"
+                                [addTag]="addTypeTag" addTagText="Ajouter ce type"
+                                placeholder="Sélectionnez ou ajoutez..." formControlName="type" [loading]="loadingTypes"
+                                [ngClass]="{'is-invalid': isInvalid('type')}">
+                            </ng-select>
+                            <div class="invalid-feedback d-block" *ngIf="isInvalid('type')">Le type est requis.</div>
                         </div>
 
-                        <!-- Type personnalisé si "Autre" -->
-                        <div class="col-md-6" *ngIf="isTypeAutre">
+                        <!-- Type personnalisé si détecté comme nouveau ou "Autre" -->
+                        <div class="col-md-6" *ngIf="isTypeAutre || form.get('type')?.value?.isNew">
                             <label class="form-label fw-medium">Préciser le type <span
                                     class="text-danger">*</span></label>
                             <input type="text" class="form-control" placeholder="Décrivez le type d'intervention..."

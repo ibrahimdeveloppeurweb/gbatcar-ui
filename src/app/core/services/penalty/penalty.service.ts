@@ -14,6 +14,12 @@ export class PenaltyService {
 
     constructor(private api: ApiService) { }
 
+    getAttachmentUrl(path: string): string {
+        if (!path) return '';
+        if (path.startsWith('http')) return path;
+        return `${this.api.url.replace(/\/api$/, '')}${path}`;
+    }
+
     setPenalty(penalty: Penalty) {
         this.penalty = penalty;
     }
@@ -50,14 +56,14 @@ export class PenaltyService {
         );
     }
 
-    getList(statut?: string, contractUuid?: string): Observable<Penalty[]> {
+    getList(filters?: any): Observable<Penalty[]> {
         if (!navigator.onLine) {
             NoInternetHelper.internet();
             return new Observable(obs => { obs.next(); obs.complete(); });
         }
 
-        return this.api._get(`${this.url}/`, { statut, contractUuid }).pipe(
-            map((response: any) => response),
+        return this.api._get(`${this.url}/`, filters).pipe(
+            map((response: any) => response.data || response),
             catchError((error: any) => throwError(error))
         );
     }

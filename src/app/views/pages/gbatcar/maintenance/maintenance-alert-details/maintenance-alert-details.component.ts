@@ -192,7 +192,6 @@ export class MaintenanceAlertDetailsComponent implements OnInit {
       case 'En traitement': return 'bg-warning text-dark';
       case 'Immobilisé': return 'bg-danger';
       case 'Résolu': return 'bg-success';
-      case 'Facturé': return 'bg-info';
       case 'Annulé': return 'bg-light text-dark border';
       default: return 'bg-light text-dark';
     }
@@ -212,14 +211,14 @@ export class MaintenanceAlertDetailsComponent implements OnInit {
     if (!this.record?.uuid) return;
     const alertId = this.record.uuid.substring(0, 8).toUpperCase();
     const humanRef = this.record.reference;
-    
+
     // 1. Try new human reference format: INV-ALT-YYYY-XXX
     const mainSearch = humanRef ? ('INV-' + humanRef) : ('INV-' + alertId);
 
     this.paymentService.getList({ search: mainSearch }).subscribe({
       next: (res: any) => {
         this.payments = res?.data || res || [];
-        
+
         // 2. Fallback: If no payments found and we have a humanRef, 
         // it might be an older record or search mismatch, try UUID prefix
         if (this.payments.length === 0 && humanRef) {

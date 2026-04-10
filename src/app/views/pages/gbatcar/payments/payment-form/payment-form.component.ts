@@ -86,10 +86,24 @@ export class PaymentFormComponent implements OnInit {
       this.isEditMode = true;
       this.loadPaymentDetails(this.paymentUuid);
     } else {
-      // Pre-select contract if UUID is passed in query parameters
-      const queryContractUuid = this.route.snapshot.queryParamMap.get('contractUuid');
-      if (queryContractUuid) {
-        this.paymentForm.get('contractId')?.setValue(queryContractUuid);
+      // Pre-select fields if passed in query parameters (e.g. from Penalty Solder action)
+      const q = this.route.snapshot.queryParamMap;
+      const contractId = q.get('contractId') || q.get('contractUuid');
+      const amount = q.get('amount');
+      const type = q.get('type');
+      const penaltyRef = q.get('penaltyRef');
+
+      if (contractId) {
+        this.paymentForm.get('contractId')?.setValue(contractId);
+      }
+      if (amount) {
+        this.paymentForm.get('amount')?.setValue(Number(amount));
+      }
+      if (type) {
+        this.paymentForm.get('type')?.setValue(type);
+      }
+      if (penaltyRef) {
+        this.paymentForm.get('notes')?.setValue(`Règlement amende ${penaltyRef}`);
       }
     }
   }

@@ -8,6 +8,7 @@ import { ClientService } from '../../../../../core/services/client/client.servic
 import { VehicleService } from '../../../../../core/services/vehicle/vehicle.service';
 import { GeneralSettingService } from '../../../../../core/services/setting/setting.service';
 import { NgSelectModule } from '@ng-select/ng-select';
+import { ContractDurationService } from '../../../../../core/services/contract/contract-duration.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -26,6 +27,7 @@ export class ContractFormComponent implements OnInit {
   private clientService = inject(ClientService);
   private vehicleService = inject(VehicleService);
   private settingService = inject(GeneralSettingService);
+  private durationService = inject(ContractDurationService);
 
   contractForm: FormGroup;
   isEditMode: boolean = false;
@@ -38,12 +40,14 @@ export class ContractFormComponent implements OnInit {
   selectedVehiclesByDemand: { [index: number]: string[] } = {};
 
   loading: boolean = false;
+  loadingDurations: boolean = false;
   submit: boolean = false;
   submitting: boolean = false;
   loadingClients: boolean = false;
   loadingVehicles: boolean = false;
   pageTitle: string = 'Nouveau Contrat';
   settings: any = null;
+  durations: any[] = [];
   canEditCaution: boolean = false;
   private isLoadingData: boolean = false; // Guard flag to prevent recalculating during data load
 
@@ -71,7 +75,7 @@ export class ContractFormComponent implements OnInit {
       vehicleDemands: this.fb.array([]), // FormArray pour les lignes de commande
       usageType: ['VTC', Validators.required],
       startDate: [new Date().toISOString().substring(0, 10), Validators.required],
-      duration: [{ value: 36, disabled: true }, [Validators.required, Validators.min(1)]],
+      duration: [36, [Validators.required, Validators.min(1)]],
       paymentFrequency: ['Monthly', Validators.required],
       dailyRate: [0, [Validators.required, Validators.min(0)]],
       cautionAmount: [{ value: 0, disabled: true }, [Validators.required, Validators.min(0)]],
@@ -156,6 +160,7 @@ export class ContractFormComponent implements OnInit {
     this.loadVehicles();
     this.loadBrands();
     this.loadSettings();
+    this.loadDurations();
 
     if (this.isEditMode && this.contractId) {
       this.loadContract(this.contractId);
@@ -266,6 +271,38 @@ export class ContractFormComponent implements OnInit {
     demand.get('quantity')?.setValue(1, { emitEvent: false });
     this.calculateFleetTotals();
   }
+
+  loadDurations() {
+    this.loadingDurations = true;
+    this.durationService.getAll().subscribe({
+      next: (data) => {
+        this.durations = data;
+        this.loadingDurations = false;
+      },
+      error: () => this.loadingDurations = false
+    });
+  }
+
+  addDurationTag = (name: string) => {
+    return new Promise((resolve) => {
+      // Append " mois" if not present
+      const formattedName = name.toLowerCase().includes('mois') ? name : `${name} mois`;
+
+      this.loadingDurations = true;
+      this.durationService.create(formattedName).subscribe({
+        next: (res: any) => {
+          const newDuration = res.data || res;
+          this.durations = [...this.durations, newDuration];
+          this.loadingDurations = false;
+          resolve(newDuration);
+        },
+        error: () => {
+          this.loadingDurations = false;
+          resolve(null);
+        }
+      });
+    });
+  };
 
   loadBrands() {
     this.vehicleService.getBrands().subscribe({

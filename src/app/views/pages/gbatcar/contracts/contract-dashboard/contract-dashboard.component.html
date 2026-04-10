@@ -1,173 +1,200 @@
-<div class="row mb-4 align-items-center">
-    <div class="col-md-8">
-        <h4 class="mb-1 text-dark fw-bold">Tableau de Bord : Contrats & Dossiers</h4>
-        <p class="text-muted fs-13px mb-0">Vue globale sur la santé financière et contractuelle du portefeuille
-            Rent-to-Own.</p>
-    </div>
-    <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end gap-2 align-items-center">
-        <div class="me-2" style="width: 130px;">
-            <ng-select [items]="monthsList" [(ngModel)]="selectedMonth" [clearable]="false" [searchable]="false"
-                (change)="onMonthChange()" class="custom-select-sm">
-                <ng-template ng-label-tmp let-item="item">
-                    <span class="fw-bold text-dark">{{ item }} mois</span>
-                </ng-template>
-                <ng-template ng-option-tmp let-item="item">
-                    {{ item }} mois
-                </ng-template>
-            </ng-select>
+<ng-container *ngxPermissionsOnly="['CONTRACT:LIST']">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h4 class="mb-1 text-dark fw-bold">Tableau de Bord : Contrats & Dossiers</h4>
+            <p class="text-muted fs-13px mb-0">Vue globale sur la santé financière et contractuelle du portefeuille
+                Rent-to-Own.</p>
         </div>
-        <button class="btn btn-primary btn-sm d-flex align-items-center shadow-sm py-2">
-            <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Nouveau Contrat
-        </button>
-        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center bg-white shadow-sm py-2">
-            <i data-feather="download" appFeatherIcon class="icon-sm me-1"></i> Exporter
-        </button>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end gap-2 align-items-center">
+            <div class="me-2" style="width: 150px;">
+                <ng-select [items]="monthsList" [(ngModel)]="selectedMonth" [clearable]="false" bindLabel="name"
+                    [addTag]="addDurationTag" (change)="onMonthChange($event)" class="custom-select-sm"
+                    placeholder="Une durée">
+                    <ng-template ng-label-tmp let-item="item">
+                        <span class="fw-bold text-dark">{{ item.name || item + ' mois' }}</span>
+                    </ng-template>
+                    <ng-template ng-option-tmp let-item="item">
+                        {{ item.name }}
+                    </ng-template>
+                </ng-select>
+            </div>
+            <ng-container *ngxPermissionsOnly="'CONTRACT:NEW'">
+                <button class="btn btn-primary btn-sm d-flex align-items-center shadow-sm py-2">
+                    <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Nouveau Contrat
+                </button>
+            </ng-container>
+            <button class="btn btn-outline-secondary btn-sm d-flex align-items-center bg-white shadow-sm py-2">
+                <i data-feather="download" appFeatherIcon class="icon-sm me-1"></i> Exporter
+            </button>
+        </div>
     </div>
-</div>
-<!-- ================= KPIs ================= -->
-<div class="row">
-    <div class="col-12 stretch-card">
-        <div class="row flex-grow-1">
-            <!-- Card 1: Volume de Contrats -->
-            <div class="col-md-4 grid-margin stretch-card">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <h6 class="card-title mb-2 text-uppercase fs-11px fw-bold text-muted">Contrats Actifs</h6>
-                        <div class="row align-items-center mt-2">
-                            <div class="col-12">
-                                <h3 class="mb-2 fw-bolder text-dark">{{ stats.activeContracts }} <span
-                                        class="fs-14px text-muted fw-normal">/ {{ stats.totalContracts }} total</span>
-                                </h3>
-                                <div class="d-flex align-items-center">
-                                    <span
-                                        class="badge bg-success-subtle text-success fw-bold px-2 py-1 me-2 rounded-pill">
-                                        <i data-feather="trending-up" appFeatherIcon class="icon-sm me-1"></i>+{{
-                                        stats.totalContractsGrowth }}% (Année)
-                                    </span>
+    <!-- ================= KPIs ================= -->
+    <div class="row">
+        <div class="col-12 stretch-card">
+            <div class="row flex-grow-1">
+                <!-- Card 1: Volume de Contrats -->
+                <div class="col-md-4 grid-margin stretch-card">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="card-title mb-2 text-uppercase fs-11px fw-bold text-muted">Contrats Actifs</h6>
+                            <div class="row align-items-center mt-2">
+                                <div class="col-12">
+                                    <h3 class="mb-2 fw-bolder text-dark">{{ stats.activeContracts }} <span
+                                            class="fs-14px text-muted fw-normal">/ {{ stats.totalContracts }}
+                                            total</span>
+                                    </h3>
+                                    <div class="d-flex align-items-center">
+                                        <span
+                                            class="badge bg-success-subtle text-success fw-bold px-2 py-1 me-2 rounded-pill">
+                                            <i data-feather="trending-up" appFeatherIcon class="icon-sm me-1"></i>+{{
+                                            stats.totalContractsGrowth }}% (Année)
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Progress Bar pour proportion -->
+                            <div class="progress mt-3" style="height: 4px;">
+                                <div class="progress-bar bg-primary" role="progressbar"
+                                    [style.width]="(stats.activeContracts / stats.totalContracts * 100) + '%'"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card 2: Revenu Mensuel Récurrent (MRR) -->
+                <div class="col-md-4 grid-margin stretch-card">
+                    <div class="card border-0 shadow-sm border-start border-primary border-3">
+                        <div class="card-body">
+                            <h6 class="card-title mb-2 text-uppercase fs-11px fw-bold text-muted">MRR Attendu (Contrats)
+                            </h6>
+                            <div class="row align-items-center mt-2">
+                                <div class="col-12">
+                                    <h3 class="mb-2 fw-bolder text-primary">{{ formatCurrency(stats.mrr) }}</h3>
+                                    <div class="d-flex align-items-center">
+                                        <span
+                                            class="badge bg-primary-subtle text-primary fw-bold px-2 py-1 me-2 rounded-pill">
+                                            <i data-feather="trending-up" appFeatherIcon class="icon-sm me-1"></i>+{{
+                                            stats.mrrGrowth }}%
+                                        </span>
+                                        <p class="text-muted fs-11px mb-0">Total des loyers mensuels exigibles</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <!-- Progress Bar pour proportion -->
-                        <div class="progress mt-3" style="height: 4px;">
-                            <div class="progress-bar bg-primary" role="progressbar"
-                                [style.width]="(stats.activeContracts / stats.totalContracts * 100) + '%'"></div>
+                    </div>
+                </div>
+                <!-- Card 3: Taux de Défaut (Defect Rate) -->
+                <div class="col-md-4 grid-margin stretch-card">
+                    <div class="card border-0 shadow-sm"
+                        [ngClass]="stats.defectRate > 5 ? 'border-start border-danger border-3' : ''">
+                        <div class="card-body">
+                            <h6 class="card-title mb-2 text-uppercase fs-11px fw-bold text-muted">Taux de Défaut
+                                (Impayés)
+                            </h6>
+                            <div class="row align-items-center mt-2">
+                                <div class="col-7">
+                                    <h3 class="mb-2 fw-bolder"
+                                        [ngClass]="stats.defectRate > 5 ? 'text-danger' : 'text-success'">{{
+                                        stats.defectRate }}%</h3>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge fw-bold px-2 py-1 me-2 rounded-pill"
+                                            [ngClass]="stats.defectRateTrend === 'down' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'">
+                                            <i [attr.data-feather]="stats.defectRateTrend === 'down' ? 'arrow-down-right' : 'arrow-up-right'"
+                                                appFeatherIcon class="icon-sm me-1"></i>
+                                            Tendance {{ stats.defectRateTrend === 'down' ? 'Baisse' : 'Hausse' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-5 text-end">
+                                    <div class="bg-light rounded p-2 text-center border">
+                                        <span class="d-block fs-11px text-muted text-uppercase fw-bold">Seuil
+                                            Alerte</span>
+                                        <span class="fs-5 fw-bolder text-dark">5.0%</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- Card 2: Revenu Mensuel Récurrent (MRR) -->
-            <div class="col-md-4 grid-margin stretch-card">
-                <div class="card border-0 shadow-sm border-start border-primary border-3">
-                    <div class="card-body">
-                        <h6 class="card-title mb-2 text-uppercase fs-11px fw-bold text-muted">MRR Attendu (Contrats)
+        </div>
+    </div> <!-- End KPIs -->
+    <!-- ================= CHARTS & LISTS ================= -->
+    <div class="row">
+        <!-- Chart: Prévision des Rentrées Cashflow -->
+        <div class="col-lg-8 grid-margin stretch-card">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-baseline mb-3">
+                        <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">Prévision des
+                            Encaissements vs
+                            Réalisé</h6>
+                        <div ngbDropdown class="mb-2">
+                            <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButtonChart">
+                                <i class="icon-md text-secondary pb-3px" data-feather="more-horizontal"
+                                    appFeatherIcon></i>
+                            </a>
+                            <div ngbDropdownMenu aria-labelledby="dropdownMenuButtonChart">
+                                <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i
+                                        data-feather="calendar" appFeatherIcon class="icon-sm me-2"></i> <span>Détail
+                                        Mensuel</span></a>
+                            </div>
+                        </div>
+                    </div>
+                    <apx-chart [series]="cashflowChartOptions.series" [chart]="cashflowChartOptions.chart"
+                        [colors]="cashflowChartOptions.colors" [xaxis]="cashflowChartOptions.xaxis"
+                        [stroke]="cashflowChartOptions.stroke" [dataLabels]="cashflowChartOptions.dataLabels"
+                        [legend]="cashflowChartOptions.legend" [fill]="cashflowChartOptions.fill">
+                    </apx-chart>
+                </div>
+            </div>
+        </div>
+        <!-- List: Risques Imminents -->
+        <div class="col-lg-4 grid-margin stretch-card">
+            <div class="card border-0 shadow-sm border-top border-warning border-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-baseline mb-3">
+                        <h6 class="card-title text-warning mb-0 fs-13px fw-bold text-uppercase">Risques Contractuels
                         </h6>
-                        <div class="row align-items-center mt-2">
-                            <div class="col-12">
-                                <h3 class="mb-2 fw-bolder text-primary">{{ formatCurrency(stats.mrr) }}</h3>
-                                <div class="d-flex align-items-center">
-                                    <span
-                                        class="badge bg-primary-subtle text-primary fw-bold px-2 py-1 me-2 rounded-pill">
-                                        <i data-feather="trending-up" appFeatherIcon class="icon-sm me-1"></i>+{{
-                                        stats.mrrGrowth }}%
-                                    </span>
-                                    <p class="text-muted fs-11px mb-0">Total des loyers mensuels exigibles</p>
-                                </div>
+                        <span class="badge bg-warning text-dark rounded-pill">{{ imminentRisks.length }} Cas</span>
+                    </div>
+                    <p class="text-secondary fs-12px mb-3">Dossiers nécessitant une intervention d'urgence.</p>
+                    <div class="d-flex flex-column mt-2">
+                        <div *ngFor="let risk of imminentRisks" class="p-3 border rounded mb-2 bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold fs-13px text-dark">{{ risk.client }}</span>
+                                <span class="badge" [ngClass]="'bg-' + risk.severity">{{ risk.id }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span class="text-danger fw-bolder fs-12px"><i data-feather="alert-triangle"
+                                        appFeatherIcon class="icon-xs me-1"></i>{{ risk.issue }}</span>
+                            </div>
+                            <div class="d-grid mt-2 text-end" *ngIf="risk.value > 0">
+                                <span class="text-secondary fs-11px">Exposition: <strong class="text-dark">{{
+                                        formatCurrency(risk.value) }}</strong></span>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            <!-- Card 3: Taux de Défaut (Defect Rate) -->
-            <div class="col-md-4 grid-margin stretch-card">
-                <div class="card border-0 shadow-sm"
-                    [ngClass]="stats.defectRate > 5 ? 'border-start border-danger border-3' : ''">
-                    <div class="card-body">
-                        <h6 class="card-title mb-2 text-uppercase fs-11px fw-bold text-muted">Taux de Défaut (Impayés)
-                        </h6>
-                        <div class="row align-items-center mt-2">
-                            <div class="col-7">
-                                <h3 class="mb-2 fw-bolder"
-                                    [ngClass]="stats.defectRate > 5 ? 'text-danger' : 'text-success'">{{
-                                    stats.defectRate }}%</h3>
-                                <div class="d-flex align-items-center">
-                                    <span class="badge fw-bold px-2 py-1 me-2 rounded-pill"
-                                        [ngClass]="stats.defectRateTrend === 'down' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'">
-                                        <i [attr.data-feather]="stats.defectRateTrend === 'down' ? 'arrow-down-right' : 'arrow-up-right'"
-                                            appFeatherIcon class="icon-sm me-1"></i>
-                                        Tendance {{ stats.defectRateTrend === 'down' ? 'Baisse' : 'Hausse' }}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="col-5 text-end">
-                                <div class="bg-light rounded p-2 text-center border">
-                                    <span class="d-block fs-11px text-muted text-uppercase fw-bold">Seuil Alerte</span>
-                                    <span class="fs-5 fw-bolder text-dark">5.0%</span>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="d-grid mt-3">
+                        <button class="btn btn-outline-secondary btn-sm">Gérer les alertes</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div> <!-- End KPIs -->
-<!-- ================= CHARTS & LISTS ================= -->
-<div class="row">
-    <!-- Chart: Prévision des Rentrées Cashflow -->
-    <div class="col-lg-8 grid-margin stretch-card">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-baseline mb-3">
-                    <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">Prévision des Encaissements vs
-                        Réalisé</h6>
-                    <div ngbDropdown class="mb-2">
-                        <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownMenuButtonChart">
-                            <i class="icon-md text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
-                        </a>
-                        <div ngbDropdownMenu aria-labelledby="dropdownMenuButtonChart">
-                            <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false"><i
-                                    data-feather="calendar" appFeatherIcon class="icon-sm me-2"></i> <span>Détail
-                                    Mensuel</span></a>
-                        </div>
-                    </div>
-                </div>
-                <apx-chart [series]="cashflowChartOptions.series" [chart]="cashflowChartOptions.chart"
-                    [colors]="cashflowChartOptions.colors" [xaxis]="cashflowChartOptions.xaxis"
-                    [stroke]="cashflowChartOptions.stroke" [dataLabels]="cashflowChartOptions.dataLabels"
-                    [legend]="cashflowChartOptions.legend" [fill]="cashflowChartOptions.fill">
-                </apx-chart>
+</ng-container>
+
+<!-- FALLBACK FOR UNAUTHORIZED ACCESS -->
+<ng-container *ngxPermissionsExcept="['CONTRACT:LIST']">
+    <div class="row mt-5">
+        <div class="col-md-12 text-center">
+            <div class="card p-5 border-0 shadow-sm">
+                <i data-feather="lock" appFeatherIcon class="text-danger mb-4 mx-auto"
+                    style="width: 60px; height: 60px;"></i>
+                <h4 class="text-dark fw-bold mb-3">Accès Refusé</h4>
+                <p class="text-secondary fs-14px">
+                    Vous n'avez pas les permissions nécessaires pour consulter le tableau de bord des contrats.
+                </p>
             </div>
         </div>
     </div>
-    <!-- List: Risques Imminents -->
-    <div class="col-lg-4 grid-margin stretch-card">
-        <div class="card border-0 shadow-sm border-top border-warning border-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-baseline mb-3">
-                    <h6 class="card-title text-warning mb-0 fs-13px fw-bold text-uppercase">Risques Contractuels</h6>
-                    <span class="badge bg-warning text-dark rounded-pill">{{ imminentRisks.length }} Cas</span>
-                </div>
-                <p class="text-secondary fs-12px mb-3">Dossiers nécessitant une intervention d'urgence.</p>
-                <div class="d-flex flex-column mt-2">
-                    <div *ngFor="let risk of imminentRisks" class="p-3 border rounded mb-2 bg-light">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="fw-bold fs-13px text-dark">{{ risk.client }}</span>
-                            <span class="badge" [ngClass]="'bg-' + risk.severity">{{ risk.id }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <span class="text-danger fw-bolder fs-12px"><i data-feather="alert-triangle" appFeatherIcon
-                                    class="icon-xs me-1"></i>{{ risk.issue }}</span>
-                        </div>
-                        <div class="d-grid mt-2 text-end" *ngIf="risk.value > 0">
-                            <span class="text-secondary fs-11px">Exposition: <strong class="text-dark">{{
-                                    formatCurrency(risk.value) }}</strong></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="d-grid mt-3">
-                    <button class="btn btn-outline-secondary btn-sm">Gérer les alertes</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+</ng-container>

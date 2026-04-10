@@ -91,7 +91,8 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="card-title text-warning mb-0">INCIDENTS DÉCLARÉS ({{ filteredAlerts.length }})</h6>
                     <div class="d-flex align-items-center">
-                        <div *ngIf="loading" class="spinner-border spinner-border-sm text-warning me-3" role="status"></div>
+                        <div *ngIf="loading" class="spinner-border spinner-border-sm text-warning me-3" role="status">
+                        </div>
                         <input type="text" class="form-control form-control-sm me-2"
                             placeholder="Recherche véhicule, locataire..." style="width: 250px;"
                             [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
@@ -128,16 +129,21 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <a *ngIf="alert.vehicle" [routerLink]="['/gbatcar/vehicles/details', alert.vehicle.uuid]" class="text-primary fw-medium">
-                                        {{ alert.vehicle.marque }} {{ alert.vehicle.modele }} <small>({{ alert.vehicle.immatriculation }})</small>
+                                    <a *ngIf="alert.vehicle"
+                                        [routerLink]="['/gbatcar/vehicles/details', alert.vehicle.uuid]"
+                                        class="text-primary fw-medium">
+                                        {{ alert.vehicle.marque }} {{ alert.vehicle.modele }} <small>({{
+                                            alert.vehicle.immatriculation }})</small>
                                     </a>
                                 </td>
                                 <td>
-                                    {{ alert.client ? (alert.client.firstName + ' ' + alert.client.lastName) : alert.driverInfo || 'Non spécifié' }}
+                                    {{ alert.client ? (alert.client.firstName + ' ' + alert.client.lastName) :
+                                    alert.driverInfo || 'Non spécifié' }}
                                 </td>
                                 <td>
                                     <div class="fw-medium text-dark">{{ alert.type }}</div>
-                                    <div class="tx-11 text-muted text-truncate" style="max-width: 250px;" [title]="alert.description">{{ alert.description }}</div>
+                                    <div class="tx-11 text-muted text-truncate" style="max-width: 250px;"
+                                        [title]="alert.description">{{ alert.description }}</div>
                                 </td>
                                 <td>
                                     <span class="badge" [ngClass]="{
@@ -149,28 +155,34 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge" [ngClass]="{
-                                        'bg-secondary': alert.status === 'Ouvert',
-                                        'bg-warning text-dark': alert.status === 'En traitement',
-                                        'bg-danger': alert.status === 'Immobilisé',
-                                        'bg-success': alert.status === 'Résolu',
-                                        'bg-info': alert.status === 'Facturé',
-                                        'bg-light text-dark': alert.status === 'Annulé'
-                                    }">
-                                        {{ alert.status }}
-                                    </span>
+                                    <div class="d-flex flex-column gap-1">
+                                        <span class="badge" [ngClass]="{
+                                            'bg-secondary': alert.status === 'Ouvert',
+                                            'bg-warning text-dark': alert.status === 'En traitement',
+                                            'bg-danger': alert.status === 'Immobilisé',
+                                            'bg-success': alert.status === 'Résolu',
+                                            'bg-light text-dark': alert.status === 'Annulé'
+                                        }">
+                                            {{ alert.status }}
+                                        </span>
+                                        <span class="badge bg-info" *ngIf="alert.isInvoiced">
+                                            <i data-feather="dollar-sign" appFeatherIcon class="icon-xs"></i> Facturé
+                                        </span>
+                                    </div>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <button [routerLink]="['/gbatcar/maintenance/alerts/details', alert.uuid]"
-                                            class="btn btn-sm btn-icon btn-outline-secondary me-1" title="Voir les détails">
+                                            class="btn btn-sm btn-icon btn-outline-secondary me-1"
+                                            title="Voir les détails">
                                             <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
                                         </button>
                                         <button [routerLink]="['/gbatcar/maintenance/alerts/edit', alert.uuid]"
                                             class="btn btn-sm btn-icon btn-outline-primary me-1" title="Modifier">
                                             <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-icon btn-outline-info" title="Imprimer" (click)="printAlert(alert)">
+                                        <button class="btn btn-sm btn-icon btn-outline-info" title="Imprimer"
+                                            (click)="printAlert(alert)">
                                             <i data-feather="printer" appFeatherIcon class="icon-sm"></i>
                                         </button>
                                     </div>

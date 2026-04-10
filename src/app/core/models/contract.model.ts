@@ -28,6 +28,7 @@ export interface Contract {
     uuid?: string;
     id?: string;
     reference?: string;
+    libelle?: string;
     vehicleSummary?: string; // Summary of all assigned vehicles
 
     // ===================== RELATIONS =====================

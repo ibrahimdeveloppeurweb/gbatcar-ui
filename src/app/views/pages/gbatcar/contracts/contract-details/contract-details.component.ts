@@ -9,20 +9,24 @@ import { PaymentService } from '../../../../../core/services/payment/payment.ser
 import { PaymentScheduleService } from '../../../../../core/services/payment/payment-schedule.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 import { environment } from '../../../../../../environments/environment';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-contract-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, NgbNavModule, FeatherIconDirective, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule, NgbNavModule, FeatherIconDirective, ReactiveFormsModule, NgxPermissionsModule],
   templateUrl: './contract-details.component.html',
   styleUrl: './contract-details.component.scss'
 })
 export class ContractDetailsComponent implements OnInit {
 
   contract: Contract | null = null;
+  penaltySummary: any = null;
   loading: boolean = true;
+  loadingPenalties: boolean = false;
   activeId = 1;
 
   scrollToTabs(tabId: number): void {
@@ -41,6 +45,9 @@ export class ContractDetailsComponent implements OnInit {
   private scheduleService = inject(PaymentScheduleService);
   private modalService = inject(NgbModal);
   private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private authService = inject(AuthService);
+  private permissionsService = inject(NgxPermissionsService);
 
   baseUrl = environment.serverUrl.replace('/api', '');
 
@@ -157,6 +164,9 @@ export class ContractDetailsComponent implements OnInit {
   };
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
+
     const uuid = this.route.snapshot.paramMap.get('id');
     if (uuid) {
       this.loadContract(uuid);
@@ -169,7 +179,13 @@ export class ContractDetailsComponent implements OnInit {
     this.loading = true;
     this.contractService.getSingle(uuid).subscribe({
       next: (res: any) => {
-        this.contract = res.data || res;
+        // The API now returns { contract: ..., penaltySummary: ... }
+        if (res.contract) {
+          this.contract = res.contract;
+          this.penaltySummary = res.penaltySummary;
+        } else {
+          this.contract = res.data || res;
+        }
 
         // Force sorting DESC by entry time/ID
         if (this.contract && this.contract.payments) {
@@ -427,6 +443,29 @@ export class ContractDetailsComponent implements OnInit {
       error: () => {
         this.loading = false;
         Swal.fire('Erreur', 'Impossible de mettre à jour les retards.', 'error');
+      }
+    });
+  }
+
+  calculatePenalties(): void {
+    if (!this.contract || !this.contract.uuid) return;
+
+    this.loadingPenalties = true;
+    this.scheduleService.calculatePenalties(this.contract.uuid).subscribe({
+      next: (res: any) => {
+        Swal.fire({
+          title: 'Calcul terminé',
+          text: `${res.count || 0} pénalité(s) mise(s) à jour.`,
+          icon: 'success',
+          timer: 2000
+        });
+        if (this.contract?.uuid) this.loadContract(this.contract.uuid);
+        this.loadingPenalties = false;
+      },
+      error: (err) => {
+        console.error('Error calculating penalties', err);
+        Swal.fire('Erreur', 'Impossible de calculer les pénalités.', 'error');
+        this.loadingPenalties = false;
       }
     });
   }
@@ -723,7 +762,7 @@ export class ContractDetailsComponent implements OnInit {
   translateStatus(status?: string): string {
     if (!status) return 'Inconnu';
     const normalized = status.toUpperCase();
-    if (normalized === 'NEW' || normalized === 'PENDING') return 'NOUVEAU';
+    if (normalized === 'NEW' || normalized === 'PENDING' || normalized === 'ATTENTE') return 'EN ATTENTE';
     if (normalized === 'VALIDATED' || normalized === 'VALIDÉ') return 'VALIDÉ';
     if (normalized === 'ACTIVE' || normalized === 'EN COURS') return 'EN COURS';
     if (normalized === 'SOLDÉ') return 'SOLDÉ';
@@ -731,6 +770,40 @@ export class ContractDetailsComponent implements OnInit {
     if (normalized === 'ROMPU' || normalized === 'ANNULÉ') return 'ROMPU';
     if (normalized === 'RÉSILIÉ') return 'RÉSILIÉ';
     return status;
+  }
+
+  getSeverityClass(severity: string | undefined): string {
+    if (!severity) return 'bg-secondary';
+    const s = severity.toLowerCase();
+    if (s.includes('faible')) return 'bg-info';
+    if (s.includes('moyen')) return 'bg-warning text-dark';
+    if (s.includes('élevée') || s.includes('eleve')) return 'bg-danger';
+    if (s.includes('critique')) return 'bg-dark';
+    return 'bg-secondary';
+  }
+
+  getPenaltyStatusClass(status: string | undefined): string {
+    if (!status) return 'bg-soft-secondary text-muted';
+    const s = status.toLowerCase();
+    if (s.includes('payé') || s.includes('paye') || s.includes('soldé') || s.includes('solde')) return 'bg-success';
+    if (s.includes('non payé') || s.includes('impayé') || s.includes('critique')) return 'bg-danger';
+    if (s.includes('attente') || s.includes('partiel')) return 'bg-warning text-dark';
+    return 'bg-light text-dark border';
+  }
+
+  onSolderPenalty(penalty: any) {
+    if (!this.contract?.uuid) return;
+
+    const amountToPay = (penalty.amount || 0) - (penalty.paidAmount || 0);
+
+    this.router.navigate(['/gbatcar/payments/new'], {
+      queryParams: {
+        contractId: this.contract.uuid,
+        amount: amountToPay,
+        type: 'PÉNALITÉ',
+        penaltyRef: penalty.reference
+      }
+    });
   }
 
   getRiskLevel(contract: Contract | null): { label: string, class: string, reason?: string } {

@@ -23,74 +23,61 @@
 
       <ul class="sidebar-nav metismenu" id="sidebar-menu" #sidebarMenu>
 
-        @for (item of menuItems; track item.label) {
+        <ng-container *ngFor="let item of menuItems">
 
-        <!-- nav item title -->
-        @if (item.isTitle) {
-        <li class="nav-item nav-category">{{ item.label }}</li>
-        }
+          <!-- nav item title -->
+          <li class="nav-item nav-category" *ngIf="item.isTitle">{{ item.label }}</li>
 
-        <!-- nav item -->
-        @else {
-        <li class="nav-item">
-          <!-- nav item with submenu -->
-          @if (hasItems(item)) {
-          <a class="nav-link" href="javascript:void(0);">
-            <i class="link-icon" [attr.data-feather]="item.icon" appFeatherIcon></i>
-            <span class="link-title"> {{ item.label }}</span>
-            <span class="link-arrow" data-feather="chevron-down" appFeatherIcon></span>
-          </a>
-          <ul class="sidebar-nav sub-menu nav-second-level" aria-expanded="false">
-            @for (subitem of item.subItems; track subitem.label) {
-            <li class="nav-item" [ngClass]="{'side-nav-item': hasItems(subitem)}">
-              <!-- nav link with submenu -->
-              @if (hasItems(subitem)) {
-              <a class="nav-link side-nav-link-a-ref" href="javascript:void(0);">
-                <span class="link-title"> {{ subitem.label }}</span>
+          <!-- nav item -->
+          <li class="nav-item" *ngIf="!item.isTitle">
+            <!-- nav item with submenu -->
+            <ng-container *ngIf="hasItems(item)">
+              <a class="nav-link" href="javascript:void(0);">
+                <i class="link-icon" [attr.data-feather]="item.icon" appFeatherIcon></i>
+                <span class="link-title"> {{ item.label }}</span>
                 <span class="link-arrow" data-feather="chevron-down" appFeatherIcon></span>
               </a>
-              <ul class="sidebar-nav sub-menu nav-third-level" aria-expanded="false">
-                @for (subSubitem of subitem.subItems; track subSubitem.label) {
-                <li class="nav-item">
-                  <a class="nav-link nav-link-ref" [routerLink]="subSubitem.link" [routerLinkActive]="['active']">
-                    {{ subSubitem.label }}
-                  </a>
-                </li>
-                }
+              <ul class="sidebar-nav sub-menu nav-second-level">
+                <ng-container *ngFor="let subitem of item.subItems">
+                  <li class="nav-item" [ngClass]="{'side-nav-item': hasItems(subitem)}">
+                    <!-- nav link with submenu -->
+                    <ng-container *ngIf="hasItems(subitem)">
+                      <a class="nav-link side-nav-link-a-ref" href="javascript:void(0);">
+                        <span class="link-title"> {{ subitem.label }}</span>
+                        <span class="link-arrow" data-feather="chevron-down" appFeatherIcon></span>
+                      </a>
+                      <ul class="sidebar-nav sub-menu nav-third-level">
+                        <li class="nav-item" *ngFor="let subSubitem of subitem.subItems">
+                          <a class="nav-link nav-link-ref" [routerLink]="subSubitem.link"
+                            [routerLinkActive]="['active']">
+                            {{ subSubitem.label }}
+                          </a>
+                        </li>
+                      </ul>
+                    </ng-container>
+                    <!-- nav link without submenu -->
+                    <ng-container *ngIf="!hasItems(subitem)">
+                      <a class="nav-link nav-link-ref" [routerLink]="subitem.link" [routerLinkActive]="['active']">
+                        {{ subitem.label }}
+                      </a>
+                    </ng-container>
+                  </li>
+                </ng-container>
               </ul>
-              }
-              <!-- nav link without submenu -->
-              @else {
-              <a class="nav-link nav-link-ref" [routerLink]="subitem.link">
-                {{ subitem.label }}
+            </ng-container>
+
+            <!-- nav item without submenu -->
+            <ng-container *ngIf="!hasItems(item)">
+              <a class="nav-link nav-link-ref" [routerLink]="item.link" [routerLinkActive]="['active']">
+                <i class="link-icon" [attr.data-feather]="item.icon" appFeatherIcon></i>
+                <span class="link-title"> {{ item.label }}</span>
+                <span *ngIf="item.badge" class="badge bg-{{item.badge.variant}}">{{item.badge.text}}</span>
               </a>
-              }
-            </li>
-            }
-          </ul>
-          }
-          <!-- nav item without submenu -->
-          @else {
-          <a class="nav-link nav-link-ref" [routerLink]="item.link">
-            <i class="link-icon" [attr.data-feather]="item.icon" appFeatherIcon></i>
-            <span class="link-title"> {{ item.label }}</span>
-            @if (item.badge) {
-            <span class="badge bg-{{item.badge.variant}}">{{item.badge.text}}</span>
-            }
-          </a>
-          }
-        </li>
-        }
+            </ng-container>
+          </li>
 
-        }
+        </ng-container>
 
-        <!-- <li class="nav-item nav-category">Docs</li>
-        <li class="nav-item">
-          <a href="https://www.nobleui.com/angular/documentation/" target="_blank" class="nav-link">
-            <i class="link-icon" data-feather="hash" appFeatherIcon></i>
-            <span class="link-title">Documentation</span>
-          </a>
-        </li> -->
       </ul>
 
     </ng-scrollbar>

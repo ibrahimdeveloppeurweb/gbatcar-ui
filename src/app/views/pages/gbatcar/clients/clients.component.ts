@@ -5,17 +5,21 @@ import { RouterModule } from '@angular/router';
 import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon.directive';
 import { ClientService } from '../../../../core/services/client/client.service';
 import { Client } from '../../../../core/models/client.model';
+import { AuthService } from '../../../../core/services/auth/auth.service';
 import Swal from 'sweetalert2';
+import { NgxPermissionsService, NgxPermissionsModule } from 'ngx-permissions';
 
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule],
+  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule, NgxPermissionsModule],
   templateUrl: './clients.component.html',
   styleUrl: './clients.component.scss'
 })
 export class ClientsComponent implements OnInit {
   private clientService = inject(ClientService);
+  private permissionsService = inject(NgxPermissionsService);
+  private authService = inject(AuthService);
 
   clients: Client[] = [];
   loading: boolean = false;
@@ -51,6 +55,8 @@ export class ClientsComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
     this.loadClients();
   }
 
@@ -124,7 +130,8 @@ export class ClientsComponent implements OnInit {
     this.applyAdvancedFilters();
   }
 
-  deleteClient(uuid: string) {
+  deleteClient(uuid: string | undefined) {
+    if (!uuid) return;
     Swal.fire({
       title: 'Êtes-vous sûr ?',
       text: "Cette action est irréversible !",

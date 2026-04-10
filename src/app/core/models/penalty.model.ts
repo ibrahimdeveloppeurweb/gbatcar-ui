@@ -32,6 +32,8 @@ export interface Penalty {
     severity?: 'Faible' | 'Moyenne' | 'Élevée' | 'Critique' | string;
 
     observation?: string;
+    proofUrl?: string;
+    paidAmount?: number;
 
     createdAt?: string;
     updatedAt?: string;

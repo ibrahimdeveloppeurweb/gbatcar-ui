@@ -5,827 +5,1101 @@
     </div>
 </div>
 
-<div *ngIf="!loading && contract" class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
-    <div>
-        <nav class="page-breadcrumb mb-1">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a routerLink="/gbatcar/contracts">Contrats</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ contract.reference || (contract.uuid |
-                    slice:0:8 | uppercase) }}</li>
-            </ol>
-        </nav>
-        <h4 class="mb-3 mb-md-0">Détails du Contrat <span class="text-primary">{{ contract.reference || (contract.uuid |
-                slice:0:8 | uppercase) }}</span></h4>
-    </div>
-    <div class="d-flex align-items-center flex-wrap text-nowrap">
-        <button [routerLink]="['/gbatcar/contracts']" class="btn btn-secondary btn-icon-text me-2 mb-2 mb-md-0"
-            title="Retour à la liste">
-            <i data-feather="arrow-left" appFeatherIcon class="btn-icon-prepend"></i> Retour
-        </button>
-        <button *ngIf="contract.status === 'NEW'" (click)="validateContract()"
-            class="btn btn-success btn-icon-text me-2 mb-2 mb-md-0" title="Valider le contrat">
-            <i data-feather="check-square" appFeatherIcon class="btn-icon-prepend"></i> Valider le contrat
-        </button>
-        <button class="btn btn-outline-primary btn-icon-text me-2 mb-2 mb-md-0" title="Imprimer le contrat PDF">
-            <i data-feather="printer" appFeatherIcon class="btn-icon-prepend"></i> Exporter PDF
-        </button>
-        <button *ngIf="contract.status === 'VALIDÉ' || contract.status === 'En cours' || contract.status === 'ACTIVE'"
-            (click)="terminateContract()" class="btn btn-outline-success btn-icon-text me-2 mb-2 mb-md-0"
-            title="Terminer le contrat (Fin de cycle / Retour véhicule)">
-            <i data-feather="stop-circle" appFeatherIcon class="btn-icon-prepend"></i> Terminer le contrat
-        </button>
-        <button *ngIf="contract.status === 'VALIDÉ' || contract.status === 'En cours' || contract.status === 'ACTIVE'"
-            (click)="ruptureContract()" class="btn btn-outline-danger btn-icon-text me-2 mb-2 mb-md-0"
-            title="Rupture de contrat (Résiliation anticipée)">
-            <i data-feather="slash" appFeatherIcon class="btn-icon-prepend"></i> Rupture de contrat
-        </button>
-        <button [routerLink]="['/gbatcar/contracts/edit', contract.uuid]"
-            *ngIf="contract.status !== 'VALIDÉ' && contract.status !== 'TERMINÉ'"
-            class="btn btn-warning btn-icon-text mb-2 mb-md-0" title="Modifier le contrat">
-            <i data-feather="edit" appFeatherIcon class="icon-sm me-1"></i> Modifier
-        </button>
-    </div>
-</div>
+<ng-container *ngxPermissionsOnly="['CONTRACT:SHOW']">
+    <div *ngIf="!loading && contract" class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+        <div>
+            <nav class="page-breadcrumb mb-1">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a routerLink="/gbatcar/contracts">Contrats</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ contract.reference || (contract.uuid |
+                        slice:0:8 | uppercase) }}</li>
+                </ol>
+            </nav>
+            <h4 class="mb-3 mb-md-0">Détails du Contrat <span class="text-primary">{{ contract.reference ||
+                    (contract.uuid |
+                    slice:0:8 | uppercase) }}</span></h4>
+        </div>
+        <div class="d-flex align-items-center flex-wrap text-nowrap">
+            <button [routerLink]="['/gbatcar/contracts']" class="btn btn-secondary btn-icon-text me-2 mb-2 mb-md-0"
+                title="Retour à la liste">
+                <i data-feather="arrow-left" appFeatherIcon class="btn-icon-prepend"></i> Retour
+            </button>
+            <ng-container *ngxPermissionsOnly="'CONTRACT:VALIDATE'">
+                <button *ngIf="contract.status === 'NEW'" (click)="validateContract()"
+                    class="btn btn-success btn-icon-text me-2 mb-2 mb-md-0" title="Valider le contrat">
+                    <i data-feather="check-square" appFeatherIcon class="btn-icon-prepend"></i> Valider le contrat
+                </button>
+            </ng-container>
 
-<div *ngIf="!loading && contract" class="row">
-    <!-- Header Card -->
-    <div class="col-md-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-5">
-                        <div class="d-flex align-items-center mb-3 mb-md-0">
-                            <div class="me-3">
-                                <i data-feather="file-text" appFeatherIcon class="text-primary"
-                                    style="width: 48px; height: 48px;"></i>
-                            </div>
-                            <div>
-                                <h5 class="mb-1">Locataire : <a
-                                        [routerLink]="['/gbatcar/clients/details', contract.client?.uuid]"
-                                        class="text-primary">{{ contract.client?.firstName }} {{
-                                        contract.client?.lastName }}</a></h5>
-                                <p class="text-muted tx-13 mb-0" *ngIf="contract.vehicle">Véhicule Assigné : <a
-                                        class="text-dark fw-medium" [routerLink]="['/gbatcar/vehicles']">{{
-                                        contract.vehicle.marque }} {{
-                                        contract.vehicle.modele }} ({{ contract.vehicle.immatriculation }})</a></p>
+            <ng-container *ngxPermissionsOnly="'CONTRACT:PDF'">
+                <button class="btn btn-outline-primary btn-icon-text me-2 mb-2 mb-md-0" title="Imprimer le contrat PDF">
+                    <i data-feather="printer" appFeatherIcon class="btn-icon-prepend"></i> Exporter PDF
+                </button>
+            </ng-container>
 
-                                <div class="mt-2" *ngIf="contract.vehicleDemands && contract.vehicleDemands.length > 0">
-                                    <p class="text-muted d-flex align-items-center tx-13 mb-1">
-                                        <i data-feather="truck" appFeatherIcon class="icon-xs me-1 text-primary"></i>
-                                        Flotte / Commande :
-                                    </p>
-                                    <div class="d-flex flex-column gap-2 mt-1">
-                                        <div *ngFor="let d of contract.vehicleDemands"
-                                            class="border-start border-3 border-primary ps-2 py-1 bg-light bg-opacity-10 rounded-end">
-                                            <span class="fw-bold tx-13">{{ d.quantity }}x {{ d.brand?.name }} {{
-                                                d.vehicleModel?.name }}</span>
-                                            <div class="d-flex flex-wrap gap-1 mt-1">
-                                                <span *ngFor="let v of d.assignedVehicles"
-                                                    class="badge bg-white text-primary border border-primary tx-10 fw-normal">
-                                                    {{ v.immatriculation }} <span class="text-muted ms-1"
-                                                        *ngIf="v.couleur || v.color || v.couleur_vehicule">({{ v.couleur
-                                                        || v.color || v.couleur_vehicule }})</span>
-                                                </span>
-                                                <span *ngIf="!d.assignedVehicles?.length" class="text-muted tx-11">
-                                                    (En attente d'affectation physique)
-                                                </span>
+            <ng-container *ngxPermissionsOnly="'CONTRACT:TERMINATE'">
+                <button
+                    *ngIf="contract.status === 'VALIDÉ' || contract.status === 'En cours' || contract.status === 'ACTIVE'"
+                    (click)="terminateContract()" class="btn btn-outline-success btn-icon-text me-2 mb-2 mb-md-0"
+                    title="Terminer le contrat (Fin de cycle / Retour véhicule)">
+                    <i data-feather="stop-circle" appFeatherIcon class="btn-icon-prepend"></i> Terminer le contrat
+                </button>
+                <button
+                    *ngIf="contract.status === 'VALIDÉ' || contract.status === 'En cours' || contract.status === 'ACTIVE'"
+                    (click)="ruptureContract()" class="btn btn-outline-danger btn-icon-text me-2 mb-2 mb-md-0"
+                    title="Rupture de contrat (Résiliation anticipée)">
+                    <i data-feather="slash" appFeatherIcon class="btn-icon-prepend"></i> Rupture de contrat
+                </button>
+            </ng-container>
+
+            <ng-container *ngxPermissionsOnly="'CONTRACT:EDIT'">
+                <button [routerLink]="['/gbatcar/contracts/edit', contract.uuid]"
+                    *ngIf="contract.status !== 'VALIDÉ' && contract.status !== 'TERMINÉ'"
+                    class="btn btn-warning btn-icon-text mb-2 mb-md-0" title="Modifier le contrat">
+                    <i data-feather="edit" appFeatherIcon class="icon-sm me-1"></i> Modifier
+                </button>
+            </ng-container>
+        </div>
+    </div>
+
+    <div *ngIf="!loading && contract" class="row">
+        <!-- Header Card -->
+        <div class="col-md-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-5">
+                            <div class="d-flex align-items-center mb-3 mb-md-0">
+                                <div class="me-3">
+                                    <i data-feather="file-text" appFeatherIcon class="text-primary"
+                                        style="width: 48px; height: 48px;"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">Locataire : <a
+                                            [routerLink]="['/gbatcar/clients/details', contract.client?.uuid]"
+                                            class="text-primary">{{ contract.client?.firstName }} {{
+                                            contract.client?.lastName }}</a></h5>
+                                    <p class="text-muted tx-13 mb-0" *ngIf="contract.vehicle">Véhicule Assigné : <a
+                                            class="text-dark fw-medium" [routerLink]="['/gbatcar/vehicles']">{{
+                                            contract.vehicle.marque }} {{
+                                            contract.vehicle.modele }} ({{ contract.vehicle.immatriculation }})</a></p>
+
+                                    <div class="mt-2"
+                                        *ngIf="contract.vehicleDemands && contract.vehicleDemands.length > 0">
+                                        <p class="text-muted d-flex align-items-center tx-13 mb-1">
+                                            <i data-feather="truck" appFeatherIcon
+                                                class="icon-xs me-1 text-primary"></i>
+                                            Flotte / Commande :
+                                        </p>
+                                        <div class="d-flex flex-column gap-2 mt-1">
+                                            <div *ngFor="let d of contract.vehicleDemands"
+                                                class="border-start border-3 border-primary ps-2 py-1 bg-light bg-opacity-10 rounded-end">
+                                                <span class="fw-bold tx-13">{{ d.quantity }}x {{ d.brand?.name }} {{
+                                                    d.vehicleModel?.name }}</span>
+                                                <div class="d-flex flex-wrap gap-1 mt-1">
+                                                    <span *ngFor="let v of d.assignedVehicles"
+                                                        class="badge bg-white text-primary border border-primary tx-10 fw-normal">
+                                                        {{ v.immatriculation }} <span class="text-muted ms-1"
+                                                            *ngIf="v.couleur || v.color || v.couleur_vehicule">({{
+                                                            v.couleur
+                                                            || v.color || v.couleur_vehicule }})</span>
+                                                    </span>
+                                                    <span *ngIf="!d.assignedVehicles?.length" class="text-muted tx-11">
+                                                        (En attente d'affectation physique)
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="d-flex flex-column mb-3 mb-md-0">
-                            <p class="text-muted tx-13 mb-1">Période du contrat</p>
-                            <h6 class="mb-0">{{ contract.startDate | date:'dd/MM/yyyy' }} <i data-feather="arrow-right"
-                                    appFeatherIcon class="icon-sm mx-1"></i> {{ contract.endDate | date:'dd/MM/yyyy' }}
-                            </h6>
-                            <p class="text-muted tx-12 mt-2 mb-0">
-                                <i data-feather="calendar" appFeatherIcon class="icon-xs me-1"></i>
-                                Créé le {{ contract.createdAt | date:'dd/MM/yyyy à HH:mm' }}
-                            </p>
-                            <p class="text-muted tx-12 mb-0" *ngIf="contract.create">
-                                <i data-feather="user" appFeatherIcon class="icon-xs me-1"></i>
-                                Par <strong>{{ contract.create }}</strong>
-                            </p>
+                        <div class="col-md-4">
+                            <div class="d-flex flex-column mb-3 mb-md-0">
+                                <p class="text-muted tx-13 mb-1">Période du contrat</p>
+                                <h6 class="mb-0">{{ contract.startDate | date:'dd/MM/yyyy' }} <i
+                                        data-feather="arrow-right" appFeatherIcon class="icon-sm mx-1"></i> {{
+                                    contract.endDate | date:'dd/MM/yyyy' }}
+                                </h6>
+                                <p class="text-muted tx-12 mt-2 mb-0">
+                                    <i data-feather="calendar" appFeatherIcon class="icon-xs me-1"></i>
+                                    Créé le {{ contract.createdAt | date:'dd/MM/yyyy à HH:mm' }}
+                                </p>
+                                <p class="text-muted tx-12 mb-0" *ngIf="contract.create">
+                                    <i data-feather="user" appFeatherIcon class="icon-xs me-1"></i>
+                                    Par <strong>{{ contract.create }}</strong>
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-3 text-md-end">
-                        <div class="d-flex flex-column align-items-md-end">
-                            <span class="badge fs-6 mb-2" [ngClass]="{
+                        <div class="col-md-3 text-md-end">
+                            <div class="d-flex flex-column align-items-md-end">
+                                <span class="badge fs-6 mb-2" [ngClass]="{
                                 'bg-primary': contract.status === 'En cours' || contract.status === 'ACTIVE',
                                 'bg-warning text-dark': contract.status === 'En Attente' || contract.status === 'NEW',
                                 'bg-success': contract.status === 'Soldé' || contract.status === 'VALIDATED' || contract.status === 'VALIDÉ',
                                 'bg-danger': contract.status === 'Résilié'
                             }">{{ translateStatus(contract.status) }}</span>
-                            <div class="d-flex align-items-center tx-12">
-                                <span class="text-muted me-2 text-uppercase fw-bold">Niveau de Risque :</span>
-                                <span class="fw-bold" [ngClass]="getRiskLevel(contract).class">{{
-                                    getRiskLevel(contract).label }}</span>
-                                <small class="d-block text-muted tx-10 ms-2" *ngIf="getRiskLevel(contract).reason">({{
-                                    getRiskLevel(contract).reason }})</small>
+                                <div class="d-flex align-items-center tx-12">
+                                    <span class="text-muted me-2 text-uppercase fw-bold">Niveau de Risque :</span>
+                                    <span class="fw-bold" [ngClass]="getRiskLevel(contract).class">{{
+                                        getRiskLevel(contract).label }}</span>
+                                    <small class="d-block text-muted tx-10 ms-2"
+                                        *ngIf="getRiskLevel(contract).reason">({{
+                                        getRiskLevel(contract).reason }})</small>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Financial Progress & Punctuality -->
-    <div class="col-md-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-8 border-end">
-                        <h6 class="card-title">Avancement Financier du Contrat</h6>
-                        <div class="row text-center mt-3 mb-3">
-                            <div class="col-sm-4 border-end">
-                                <p class="text-muted tx-12 mb-1">Total Exigible</p>
-                                <h4 class="mb-0">{{ contract.totalAmount | number }} <small class="tx-12">FCFA</small>
-                                </h4>
+        <!-- Financial Progress & Punctuality -->
+        <div class="col-md-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8 border-end">
+                            <h6 class="card-title">Avancement Financier du Contrat</h6>
+                            <div class="row text-center mt-3 mb-3">
+                                <div class="col-sm-4 border-end">
+                                    <p class="text-muted tx-12 mb-1">Total Exigible</p>
+                                    <h4 class="mb-0">{{ contract.totalAmount | number }} <small
+                                            class="tx-12">FCFA</small>
+                                    </h4>
+                                </div>
+                                <div class="col-sm-4 border-end">
+                                    <p class="text-muted tx-12 mb-1">Montant Payé</p>
+                                    <h4 class="text-success mb-0">{{ totalPaidIncludingDeposit | number }} <small
+                                            class="tx-12">FCFA</small></h4>
+                                </div>
+                                <div class="col-sm-4">
+                                    <p class="text-muted tx-12 mb-1">Reste à payer</p>
+                                    <h4 class="text-danger mb-0">{{ remainingBalance | number }}
+                                        <small class="tx-12">FCFA</small>
+                                    </h4>
+                                </div>
                             </div>
-                            <div class="col-sm-4 border-end">
-                                <p class="text-muted tx-12 mb-1">Montant Payé</p>
-                                <h4 class="text-success mb-0">{{ totalPaidIncludingDeposit | number }} <small
-                                        class="tx-12">FCFA</small></h4>
-                            </div>
-                            <div class="col-sm-4">
-                                <p class="text-muted tx-12 mb-1">Reste à payer</p>
-                                <h4 class="text-danger mb-0">{{ remainingBalance | number }}
-                                    <small class="tx-12">FCFA</small>
-                                </h4>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="tx-13 fw-medium">Progression du recouvrement</span>
-                                <span class="tx-13 fw-bolder">{{ progressPercentage | number:'1.0-1' }}%</span>
-                            </div>
-                            <div class="progress" style="height: 10px;">
-                                <div class="progress-bar progress-bar-striped progress-bar-animated" [ngClass]="{
+                            <div class="mt-4">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="tx-13 fw-medium">Progression du recouvrement</span>
+                                    <span class="tx-13 fw-bolder">{{ progressPercentage | number:'1.0-1' }}%</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" [ngClass]="{
                                         'bg-success': progressPercentage >= 100 || contract.paymentStatus === 'À jour',
                                         'bg-warning': contract.paymentStatus === 'En retard',
                                         'bg-danger': contract.status === 'Résilié',
                                         'bg-primary': progressPercentage < 100 && contract.paymentStatus !== 'En retard' && contract.status !== 'Résilié'
                                     }" role="progressbar" [style.width.%]="progressPercentage"
-                                    aria-valuenow="progressPercentage" aria-valuemin="0" aria-valuemax="100">
+                                        aria-valuenow="progressPercentage" aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Penalty Summary Section -->
+                            <div class="mt-4 p-3 bg-light bg-opacity-50 border rounded" *ngIf="penaltySummary">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="tx-12 fw-bolder text-uppercase mb-0"><i data-feather="alert-octagon"
+                                            appFeatherIcon class="icon-sm me-1 text-danger"></i> Pénalités de Retard
+                                    </h6>
+                                    <button class="btn btn-xs btn-outline-danger" (click)="calculatePenalties()"
+                                        [disabled]="loadingPenalties">
+                                        <span *ngIf="loadingPenalties" class="spinner-border spinner-border-sm me-1"
+                                            role="status" aria-hidden="true"></span>
+                                        <i *ngIf="!loadingPenalties" data-feather="refresh-cw" appFeatherIcon
+                                            class="icon-xs me-1"></i>
+                                        Rafraîchir
+                                    </button>
+                                </div>
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <p class="text-muted tx-10 mb-0">Total Cumulé</p>
+                                        <p class="fw-bold mb-0 text-dark">{{ penaltySummary.total | number }} <span
+                                                class="tx-10">F</span></p>
+                                    </div>
+                                    <div class="col-4">
+                                        <p class="text-muted tx-10 mb-0">Dû / Impayé</p>
+                                        <p class="fw-bold mb-0 text-danger">{{ penaltySummary.pending | number }} <span
+                                                class="tx-10">F</span></p>
+                                    </div>
+                                    <div class="col-4">
+                                        <p class="text-muted tx-10 mb-0">Déjà Payé</p>
+                                        <p class="fw-bold mb-0 text-success">{{ penaltySummary.paid | number }} <span
+                                                class="tx-10">F</span></p>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-center" *ngIf="penaltySummary.waived > 0">
+                                    <span class="badge bg-soft-info text-info border border-info tx-10 fw-normal">
+                                        {{ penaltySummary.waived | number }} FCFA annulés (Remise)
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-4 d-flex flex-column justify-content-center border-start">
-                        <div *ngIf="schedules && schedules.length > 0; else noScheduleTemplate">
-                            <h6 class="card-title text-center mb-3">Historique Ponctualité ({{ getFrequencyLabel() |
-                                uppercase }})</h6>
-                            <div class="d-flex flex-wrap gap-2">
-                                <div *ngFor="let item of punctualityHistory" class="text-center" style="flex: 1 0 30%;">
-                                    <div class="rounded-circle mb-1 mx-auto d-flex align-items-center justify-content-center text-white tx-10 fw-bold"
-                                        [ngClass]="{
+                        <div class="col-md-4 d-flex flex-column justify-content-center border-start">
+                            <div *ngIf="schedules && schedules.length > 0; else noScheduleTemplate">
+                                <h6 class="card-title text-center mb-3">Historique Ponctualité ({{ getFrequencyLabel() |
+                                    uppercase }})</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <div *ngFor="let item of punctualityHistory" class="text-center"
+                                        style="flex: 1 0 30%;">
+                                        <div class="rounded-circle mb-1 mx-auto d-flex align-items-center justify-content-center text-white tx-10 fw-bold"
+                                            [ngClass]="{
                                             'bg-success': item.status === 'À jour',
                                             'bg-danger': item.status === 'En retard',
                                             'bg-secondary': item.status === 'N/A'
                                         }" style="width: 24px; height: 24px;">
-                                        {{ item.status === 'À jour' ? '✓' : (item.status === 'En retard' ? '!' : '-') }}
+                                            {{ item.status === 'À jour' ? '✓' : (item.status === 'En retard' ? '!' :
+                                            '-') }}
+                                        </div>
+                                        <span class="tx-10 text-muted">{{ item.month }}</span>
                                     </div>
-                                    <span class="tx-10 text-muted">{{ item.month }}</span>
+                                </div>
+                                <div class="mt-3 p-2 bg-light rounded text-center">
+                                    <p class="tx-11 mb-0">Score de fiabilité : <span class="fw-bold"
+                                            [ngClass]="reliabilityClass">{{ reliabilityScore !== null ? reliabilityScore
+                                            +
+                                            '%' : 'N/A' }}</span></p>
                                 </div>
                             </div>
-                            <div class="mt-3 p-2 bg-light rounded text-center">
-                                <p class="tx-11 mb-0">Score de fiabilité : <span class="fw-bold"
-                                        [ngClass]="reliabilityClass">{{ reliabilityScore !== null ? reliabilityScore +
-                                        '%' : 'N/A' }}</span></p>
-                            </div>
+                            <ng-template #noScheduleTemplate>
+                                <div class="text-center py-3">
+                                    <i data-feather="calendar" appFeatherIcon class="text-muted mb-2 icon-lg"></i>
+                                    <h6 class="tx-13 fw-bold text-muted">Aucun Calendrier de Paiement</h6>
+                                    <p class="tx-11 text-muted mb-3">L'historique de ponctualité nécessite un échéancier
+                                        actif.</p>
+                                    <button (click)="scrollToTabs(5)" class="btn btn-xs btn-outline-primary">
+                                        Générer un Échéancier
+                                    </button>
+                                </div>
+                            </ng-template>
                         </div>
-                        <ng-template #noScheduleTemplate>
-                            <div class="text-center py-3">
-                                <i data-feather="calendar" appFeatherIcon class="text-muted mb-2 icon-lg"></i>
-                                <h6 class="tx-13 fw-bold text-muted">Aucun Calendrier de Paiement</h6>
-                                <p class="tx-11 text-muted mb-3">L'historique de ponctualité nécessite un échéancier
-                                    actif.</p>
-                                <button (click)="scrollToTabs(5)" class="btn btn-xs btn-outline-primary">
-                                    Générer un Échéancier
-                                </button>
-                            </div>
-                        </ng-template>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Tabs Area -->
-    <div class="col-md-12 grid-margin stretch-card" id="contract-tabs">
-        <div class="card">
-            <div class="card-body">
-                <ul ngbNav #nav="ngbNav" [(activeId)]="activeId" class="nav-tabs">
-                    <!-- ONGLET PARAMETRES -->
-                    <li [ngbNavItem]="1">
-                        <a ngbNavLink class="tx-14"><i data-feather="settings" appFeatherIcon class="icon-sm me-1"></i>
-                            Paramètres du contrat</a>
-                        <ng-template ngbNavContent>
-                            <div class="row mt-4">
-                                <div class="col-md-6 mb-4 pe-md-4">
-                                    <h6 class="text-uppercase text-muted fw-bolder mb-3 tx-12">Informations Financières
-                                        & Structuration</h6>
-                                    <div class="table-responsive">
-                                        <table class="table table-sm table-borderless">
-                                            <tbody>
-                                                <tr>
-                                                    <td class="text-muted ps-0">Usage du Véhicule</td>
-                                                    <td class="fw-medium text-end pe-0">{{ contract.usageType || 'Non
-                                                        Renseigné' }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-muted ps-0">Prix de Vente (Valeur)</td>
-                                                    <td class="fw-medium text-end pe-0">{{ contract.prixDeVente | number
-                                                        }} <span class="text-muted tx-11">FCFA</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-muted ps-0">Apport Initial / Garantie</td>
-                                                    <td class="fw-medium text-end pe-0">{{ contract.initialDeposit ||
-                                                        contract.caution | number }} <span
-                                                            class="text-muted tx-11">FCFA</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-muted ps-0">Fréquence de Paiement</td>
-                                                    <td class="fw-medium text-end pe-0">{{
-                                                        translateFrequency(contract.paymentFrequency) }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-muted ps-0 fw-bold">Redevance ({{
-                                                        translateFrequency(contract.paymentFrequency) }})</td>
-                                                    <td class="fw-bolder text-primary fs-6 text-end pe-0">{{
-                                                        contract.dailyRate || contract.nextPaymentAmount | number }}
-                                                        <span class="text-muted tx-11">FCFA</span>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-muted ps-0">Durée du Contrat</td>
-                                                    <td class="fw-medium text-end pe-0">{{ contract.durationInMonths }}
-                                                        <span class="text-muted tx-11">Mois</span>
-                                                    </td>
-                                                </tr>
-                                                <tr class="border-top">
-                                                    <td class="text-muted ps-0 fw-bold py-2">Total Exigible</td>
-                                                    <td class="fw-bolder text-end pe-0 py-2"
-                                                        style="color: #c0392b; font-size: 1.1rem;">
-                                                        {{ contract.totalAmount | number }} <span
-                                                            class="text-muted tx-11 fw-normal">FCFA</span>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+        <!-- Tabs Area -->
+        <div class="col-md-12 grid-margin stretch-card" id="contract-tabs">
+            <div class="card">
+                <div class="card-body">
+                    <ul ngbNav #nav="ngbNav" [(activeId)]="activeId" class="nav-tabs">
+                        <!-- ONGLET PARAMETRES -->
+                        <li [ngbNavItem]="1">
+                            <a ngbNavLink class="tx-14"><i data-feather="settings" appFeatherIcon
+                                    class="icon-sm me-1"></i>
+                                Paramètres du contrat</a>
+                            <ng-template ngbNavContent>
+                                <div class="row mt-4">
+                                    <div class="col-md-6 mb-4 pe-md-4">
+                                        <h6 class="text-uppercase text-muted fw-bolder mb-3 tx-12">Informations
+                                            Financières
+                                            & Structuration</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-borderless">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="text-muted ps-0">Usage du Véhicule</td>
+                                                        <td class="fw-medium text-end pe-0">{{ contract.usageType ||
+                                                            'Non
+                                                            Renseigné' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted ps-0">Prix de Vente (Valeur)</td>
+                                                        <td class="fw-medium text-end pe-0">{{ contract.prixDeVente |
+                                                            number
+                                                            }} <span class="text-muted tx-11">FCFA</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted ps-0">Apport Initial / Garantie</td>
+                                                        <td class="fw-medium text-end pe-0">{{ contract.initialDeposit
+                                                            ||
+                                                            contract.caution | number }} <span
+                                                                class="text-muted tx-11">FCFA</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted ps-0">Fréquence de Paiement</td>
+                                                        <td class="fw-medium text-end pe-0">{{
+                                                            translateFrequency(contract.paymentFrequency) }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted ps-0 fw-bold">Redevance ({{
+                                                            translateFrequency(contract.paymentFrequency) }})</td>
+                                                        <td class="fw-bolder text-primary fs-6 text-end pe-0">{{
+                                                            contract.dailyRate || contract.nextPaymentAmount | number }}
+                                                            <span class="text-muted tx-11">FCFA</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted ps-0">Durée du Contrat</td>
+                                                        <td class="fw-medium text-end pe-0">{{ contract.durationInMonths
+                                                            }}
+                                                            <span class="text-muted tx-11">Mois</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="border-top">
+                                                        <td class="text-muted ps-0 fw-bold py-2">Total Exigible</td>
+                                                        <td class="fw-bolder text-end pe-0 py-2"
+                                                            style="color: #c0392b; font-size: 1.1rem;">
+                                                            {{ contract.totalAmount | number }} <span
+                                                                class="text-muted tx-11 fw-normal">FCFA</span>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-4 ps-md-4" style="border-left: 1px dashed #e9ecef;">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <i data-feather="shield" appFeatherIcon
+                                                class="icon-sm text-danger me-2"></i>
+                                            <h6 class="text-uppercase text-danger fw-bolder mb-0 tx-12">Gestion des
+                                                Risques
+                                                & Recouvrement</h6>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-borderless">
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="text-muted ps-0">Délai de Grâce</td>
+                                                        <td class="fw-bold text-end pe-0">{{ contract.gracePeriodDays }}
+                                                            <span class="text-muted tx-11">Jours</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted ps-0">Taux de Pénalité</td>
+                                                        <td class="fw-bold text-danger text-end pe-0">{{
+                                                            contract.penaltyRate }} <span class="text-muted tx-11">% /
+                                                                jour</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted ps-0">Entretien & Assurance</td>
+                                                        <td class="fw-medium text-end pe-0">{{
+                                                            translateMaintenance(contract.maintenanceAndInsurance) }}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-muted ps-0 pt-3">Exigibilité de la prochaine
+                                                            traite
+                                                        </td>
+                                                        <td class="fw-bold text-end pe-0 pt-3">N/A</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6 mb-4 ps-md-4" style="border-left: 1px dashed #e9ecef;">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <i data-feather="shield" appFeatherIcon class="icon-sm text-danger me-2"></i>
-                                        <h6 class="text-uppercase text-danger fw-bolder mb-0 tx-12">Gestion des Risques
-                                            & Recouvrement</h6>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-sm table-borderless">
-                                            <tbody>
-                                                <tr>
-                                                    <td class="text-muted ps-0">Délai de Grâce</td>
-                                                    <td class="fw-bold text-end pe-0">{{ contract.gracePeriodDays }}
-                                                        <span class="text-muted tx-11">Jours</span>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-muted ps-0">Taux de Pénalité</td>
-                                                    <td class="fw-bold text-danger text-end pe-0">{{
-                                                        contract.penaltyRate }} <span class="text-muted tx-11">% /
-                                                            jour</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-muted ps-0">Entretien & Assurance</td>
-                                                    <td class="fw-medium text-end pe-0">{{
-                                                        translateMaintenance(contract.maintenanceAndInsurance) }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-muted ps-0 pt-3">Exigibilité de la prochaine traite
-                                                    </td>
-                                                    <td class="fw-bold text-end pe-0 pt-3">N/A</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+
+                                <div class="row mt-2"
+                                    *ngIf="contract.vehicleDemands && contract.vehicleDemands.length > 0">
+                                    <div class="col-md-12">
+                                        <h6 class="text-uppercase text-muted fw-bolder mb-3 tx-12">Détail de la Flotte
+                                            Affectée</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover border">
+                                                <thead>
+                                                    <tr class="bg-light">
+                                                        <th>Marque / Modèle</th>
+                                                        <th>Immatriculation</th>
+                                                        <th>Couleur</th>
+                                                        <th>Année</th>
+                                                        <th>N° Chassis</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <ng-container *ngFor="let d of contract.vehicleDemands">
+                                                        <tr *ngFor="let v of d.assignedVehicles">
+                                                            <td class="fw-bold">
+                                                                {{ v.marque || d.brand?.name }} {{ v.modele ||
+                                                                d.vehicleModel?.name }}
+                                                            </td>
+                                                            <td><span
+                                                                    class="badge bg-primary bg-opacity-10 text-primary border-primary">{{
+                                                                    v.immatriculation }}</span></td>
+                                                            <td>{{ v.couleur || v.color || v.couleur_vehicule || '-' }}
+                                                            </td>
+                                                            <td>{{ v.annee || v.year || v.annee_fabrication || '-' }}
+                                                            </td>
+                                                            <td><small class="text-muted">{{ v.numeroChassis ||
+                                                                    v.numero_chassis || v.vin || '-'
+                                                                    }}</small></td>
+                                                        </tr>
+                                                    </ng-container>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="row mt-2" *ngIf="contract.vehicleDemands && contract.vehicleDemands.length > 0">
-                                <div class="col-md-12">
-                                    <h6 class="text-uppercase text-muted fw-bolder mb-3 tx-12">Détail de la Flotte
-                                        Affectée</h6>
+                                <hr class="text-muted opacity-25 mt-1 mb-4">
+                                <div class="row">
+                                    <div class="col-md-7 mb-4 pe-md-4">
+                                        <h6 class="text-uppercase text-muted fw-bolder mb-3 tx-12">Observations
+                                            particulières</h6>
+                                        <div class="p-3 bg-light border rounded text-muted tx-13">
+                                            {{ contract.observation || 'Aucune observation particulière enregistrée.' }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5 mb-4 ps-md-4" style="border-left: 1px dashed #e9ecef;">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <i data-feather="check-square" appFeatherIcon
+                                                class="icon-sm text-warning me-2"></i>
+                                            <h6 class="text-uppercase text-warning fw-bolder mb-0 tx-12">Checklist
+                                                Dossier
+                                            </h6>
+                                        </div>
+                                        <div class="d-flex flex-column gap-2 tx-13 mt-3">
+                                            <div class="d-flex align-items-center">
+                                                <i *ngIf="contract.hasValidID" data-feather="check-square"
+                                                    appFeatherIcon class="icon-sm me-2 text-success"
+                                                    style="width: 16px;"></i>
+                                                <i *ngIf="!contract.hasValidID" data-feather="square" appFeatherIcon
+                                                    class="icon-sm me-2 text-muted" style="width: 16px;"></i>
+                                                <span
+                                                    [ngClass]="contract.hasValidID ? 'text-dark fw-bold' : 'text-muted'">CNI
+                                                    / Passeport (Valide)</span>
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <i *ngIf="contract.hasDriverLicense" data-feather="check-square"
+                                                    appFeatherIcon class="icon-sm me-2 text-success"
+                                                    style="width: 16px;"></i>
+                                                <i *ngIf="!contract.hasDriverLicense" data-feather="square"
+                                                    appFeatherIcon class="icon-sm me-2 text-muted"
+                                                    style="width: 16px;"></i>
+                                                <span
+                                                    [ngClass]="contract.hasDriverLicense ? 'text-dark fw-bold' : 'text-muted'">Permis
+                                                    de Conduire</span>
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <i *ngIf="contract.hasProofOfAddress" data-feather="check-square"
+                                                    appFeatherIcon class="icon-sm me-2 text-success"
+                                                    style="width: 16px;"></i>
+                                                <i *ngIf="!contract.hasProofOfAddress" data-feather="square"
+                                                    appFeatherIcon class="icon-sm me-2 text-muted"
+                                                    style="width: 16px;"></i>
+                                                <span
+                                                    [ngClass]="contract.hasProofOfAddress ? 'text-dark fw-bold' : 'text-muted'">Justificatif
+                                                    de domicile</span>
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <i *ngIf="contract.hasCriminalRecord" data-feather="check-square"
+                                                    appFeatherIcon class="icon-sm me-2 text-success"
+                                                    style="width: 16px;"></i>
+                                                <i *ngIf="!contract.hasCriminalRecord" data-feather="square"
+                                                    appFeatherIcon class="icon-sm me-2 text-muted"
+                                                    style="width: 16px;"></i>
+                                                <span
+                                                    [ngClass]="contract.hasCriminalRecord ? 'text-dark fw-bold' : 'text-muted'">Casier
+                                                    Judiciaire</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ng-template>
+                        </li>
+
+                        <li [ngbNavItem]="2">
+                            <a ngbNavLink class="tx-14"><i data-feather="dollar-sign" appFeatherIcon
+                                    class="icon-sm me-1"></i> Reçus & Paiements Liés</a>
+                            <ng-template ngbNavContent>
+                                <div class="mt-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="mb-0 text-uppercase fw-bold text-muted tx-12">Journal des
+                                            Encaissements
+                                        </h6>
+                                        <ng-container *ngxPermissionsOnly="'PAYMENT:NEW'">
+                                            <button [routerLink]="['/gbatcar/payments/new']"
+                                                [queryParams]="{ contractUuid: contract.uuid }"
+                                                class="btn btn-sm btn-primary btn-icon-text shadow-sm"
+                                                title="Enregistrer un nouveau paiement pour ce contrat">
+                                                <i data-feather="plus-circle" appFeatherIcon
+                                                    class="btn-icon-prepend"></i>
+                                                Nouveau Paiement
+                                            </button>
+                                        </ng-container>
+                                    </div>
                                     <div class="table-responsive">
-                                        <table class="table table-sm table-hover border">
+                                        <table class="table table-hover">
                                             <thead>
-                                                <tr class="bg-light">
-                                                    <th>Marque / Modèle</th>
-                                                    <th>Immatriculation</th>
-                                                    <th>Couleur</th>
-                                                    <th>Année</th>
-                                                    <th>N° Chassis</th>
+                                                <tr>
+                                                    <th class="fs-11px text-muted text-uppercase fw-bold">Date
+                                                        Transaction
+                                                    </th>
+                                                    <th class="fs-11px text-muted text-uppercase fw-bold">Réf.
+                                                        Encaissement
+                                                    </th>
+                                                    <th class="fs-11px text-muted text-uppercase fw-bold">Moyen de
+                                                        paiement
+                                                    </th>
+                                                    <th class="fs-11px text-muted text-uppercase fw-bold">Montant (FCFA)
+                                                    </th>
+                                                    <th class="fs-11px text-muted text-uppercase fw-bold">Statut</th>
+                                                    <th class="fs-11px text-muted text-uppercase fw-bold">Créé par / le
+                                                    </th>
+                                                    <th class="fs-11px text-muted text-uppercase fw-bold text-end">
+                                                        Actions
+                                                    </th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <ng-container *ngFor="let d of contract.vehicleDemands">
-                                                    <tr *ngFor="let v of d.assignedVehicles">
-                                                        <td class="fw-bold">
-                                                            {{ v.marque || d.brand?.name }} {{ v.modele ||
-                                                            d.vehicleModel?.name }}
-                                                        </td>
-                                                        <td><span
-                                                                class="badge bg-primary bg-opacity-10 text-primary border-primary">{{
-                                                                v.immatriculation }}</span></td>
-                                                        <td>{{ v.couleur || v.color || v.couleur_vehicule || '-' }}</td>
-                                                        <td>{{ v.annee || v.year || v.annee_fabrication || '-' }}</td>
-                                                        <td><small class="text-muted">{{ v.numeroChassis ||
-                                                                v.numero_chassis || v.vin || '-'
-                                                                }}</small></td>
-                                                    </tr>
-                                                </ng-container>
+                                                <tr *ngFor="let payment of contract.payments">
+                                                    <td class="text-muted">{{ payment.date | date:'dd/MM/yyyy HH:mm' }}
+                                                    </td>
+                                                    <td class="fw-medium text-dark">{{ payment.reference || 'PAY-' +
+                                                        payment.id }}</td>
+                                                    <td>{{ payment.method }} <span class="tx-11 text-muted d-block">{{
+                                                            payment.period }}</span></td>
+                                                    <td class="fw-bolder">{{ payment.amount | number }}</td>
+                                                    <td>
+                                                        <span class="badge" [ngClass]="{
+                                                        'bg-success': payment.status === 'Validé' || payment.status === 'VALIDATED' || payment.status === 'VALIDÉ',
+                                                        'bg-warning text-dark': payment.status === 'En attente' || payment.status === 'PENDING' || payment.status === 'ATTENTE'
+                                                    }">{{ translateStatus(payment.status) }}</span>
+                                                    </td>
+                                                    <td class="tx-12">
+                                                        <span class="d-block fw-medium text-dark">{{ payment.create ||
+                                                            'Système' }}</span>
+                                                        <span class="d-block tx-11 text-muted italic">{{
+                                                            payment.createdAt |
+                                                            date:'dd/MM/yyyy HH:mm' }}</span>
+                                                    </td>
+                                                    <td class="text-nowrap text-end">
+                                                        <a [routerLink]="['/gbatcar/payments/details', payment.uuid]"
+                                                            class="btn btn-sm btn-icon btn-outline-secondary me-1"
+                                                            title="Voir les détails">
+                                                            <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                                        </a>
+                                                        <button
+                                                            *ngIf="payment.status === 'En attente' || payment.status === 'PENDING' || payment.status === 'ATTENTE'"
+                                                            [routerLink]="['/gbatcar/payments/edit', payment.uuid]"
+                                                            class="btn btn-sm btn-icon btn-outline-warning me-1"
+                                                            title="Modifier le paiement">
+                                                            <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
+                                                        </button>
+                                                        <button
+                                                            *ngIf="payment.status === 'En attente' || payment.status === 'PENDING' || payment.status === 'ATTENTE'"
+                                                            (click)="validatePayment(payment.uuid || '')"
+                                                            class="btn btn-sm btn-icon btn-outline-success me-1"
+                                                            title="Valider le paiement">
+                                                            <i data-feather="check-circle" appFeatherIcon
+                                                                class="icon-sm"></i>
+                                                        </button>
+                                                        <button
+                                                            *ngIf="payment.status === 'En attente' || payment.status === 'PENDING' || payment.status === 'ATTENTE'"
+                                                            (click)="deletePayment(payment.uuid || '')"
+                                                            class="btn btn-sm btn-icon btn-outline-danger me-1"
+                                                            title="Supprimer le paiement">
+                                                            <i data-feather="trash-2" appFeatherIcon
+                                                                class="icon-sm"></i>
+                                                        </button>
+                                                        <button (click)="openReceipt(payment.receiptUrl || '')"
+                                                            class="btn btn-sm btn-icon btn-outline-primary"
+                                                            title="Imprimer le reçu">
+                                                            <i data-feather="printer" appFeatherIcon
+                                                                class="icon-sm"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                <tr *ngIf="!contract.payments || contract.payments.length === 0">
+                                                    <td colspan="7" class="text-center py-4 text-muted">Aucun paiement
+                                                        enregistré pour ce contrat.</td>
+                                                </tr>
                                             </tbody>
+                                            <tfoot *ngIf="contract.payments && contract.payments.length > 0">
+                                                <tr>
+                                                    <th colspan="3" class="text-end">Sous-total perçu :</th>
+                                                    <th colspan="3" class="fs-5 text-success">{{ contract.paidAmount ||
+                                                        0 |
+                                                        number }} FCFA</th>
+                                                </tr>
+                                            </tfoot>
                                         </table>
                                     </div>
                                 </div>
-                            </div>
-
-                            <hr class="text-muted opacity-25 mt-1 mb-4">
-                            <div class="row">
-                                <div class="col-md-7 mb-4 pe-md-4">
-                                    <h6 class="text-uppercase text-muted fw-bolder mb-3 tx-12">Observations
-                                        particulières</h6>
-                                    <div class="p-3 bg-light border rounded text-muted tx-13">
-                                        {{ contract.observation || 'Aucune observation particulière enregistrée.' }}
-                                    </div>
-                                </div>
-                                <div class="col-md-5 mb-4 ps-md-4" style="border-left: 1px dashed #e9ecef;">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <i data-feather="check-square" appFeatherIcon
-                                            class="icon-sm text-warning me-2"></i>
-                                        <h6 class="text-uppercase text-warning fw-bolder mb-0 tx-12">Checklist Dossier
-                                        </h6>
-                                    </div>
-                                    <div class="d-flex flex-column gap-2 tx-13 mt-3">
-                                        <div class="d-flex align-items-center">
-                                            <i *ngIf="contract.hasValidID" data-feather="check-square" appFeatherIcon
-                                                class="icon-sm me-2 text-success" style="width: 16px;"></i>
-                                            <i *ngIf="!contract.hasValidID" data-feather="square" appFeatherIcon
-                                                class="icon-sm me-2 text-muted" style="width: 16px;"></i>
-                                            <span
-                                                [ngClass]="contract.hasValidID ? 'text-dark fw-bold' : 'text-muted'">CNI
-                                                / Passeport (Valide)</span>
-                                        </div>
-                                        <div class="d-flex align-items-center">
-                                            <i *ngIf="contract.hasDriverLicense" data-feather="check-square"
-                                                appFeatherIcon class="icon-sm me-2 text-success"
-                                                style="width: 16px;"></i>
-                                            <i *ngIf="!contract.hasDriverLicense" data-feather="square" appFeatherIcon
-                                                class="icon-sm me-2 text-muted" style="width: 16px;"></i>
-                                            <span
-                                                [ngClass]="contract.hasDriverLicense ? 'text-dark fw-bold' : 'text-muted'">Permis
-                                                de Conduire</span>
-                                        </div>
-                                        <div class="d-flex align-items-center">
-                                            <i *ngIf="contract.hasProofOfAddress" data-feather="check-square"
-                                                appFeatherIcon class="icon-sm me-2 text-success"
-                                                style="width: 16px;"></i>
-                                            <i *ngIf="!contract.hasProofOfAddress" data-feather="square" appFeatherIcon
-                                                class="icon-sm me-2 text-muted" style="width: 16px;"></i>
-                                            <span
-                                                [ngClass]="contract.hasProofOfAddress ? 'text-dark fw-bold' : 'text-muted'">Justificatif
-                                                de domicile</span>
-                                        </div>
-                                        <div class="d-flex align-items-center">
-                                            <i *ngIf="contract.hasCriminalRecord" data-feather="check-square"
-                                                appFeatherIcon class="icon-sm me-2 text-success"
-                                                style="width: 16px;"></i>
-                                            <i *ngIf="!contract.hasCriminalRecord" data-feather="square" appFeatherIcon
-                                                class="icon-sm me-2 text-muted" style="width: 16px;"></i>
-                                            <span
-                                                [ngClass]="contract.hasCriminalRecord ? 'text-dark fw-bold' : 'text-muted'">Casier
-                                                Judiciaire</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </ng-template>
-                    </li>
-
-                    <li [ngbNavItem]="2">
-                        <a ngbNavLink class="tx-14"><i data-feather="dollar-sign" appFeatherIcon
-                                class="icon-sm me-1"></i> Reçus & Paiements Liés</a>
-                        <ng-template ngbNavContent>
-                            <div class="mt-3">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 class="mb-0 text-uppercase fw-bold text-muted tx-12">Journal des Encaissements
-                                    </h6>
-                                    <button [routerLink]="['/gbatcar/payments/new']"
-                                        [queryParams]="{ contractUuid: contract.uuid }"
-                                        class="btn btn-sm btn-primary btn-icon-text shadow-sm"
-                                        title="Enregistrer un nouveau paiement pour ce contrat">
-                                        <i data-feather="plus-circle" appFeatherIcon class="btn-icon-prepend"></i>
-                                        Nouveau Paiement
-                                    </button>
-                                </div>
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th class="fs-11px text-muted text-uppercase fw-bold">Date Transaction
-                                                </th>
-                                                <th class="fs-11px text-muted text-uppercase fw-bold">Réf. Encaissement
-                                                </th>
-                                                <th class="fs-11px text-muted text-uppercase fw-bold">Moyen de paiement
-                                                </th>
-                                                <th class="fs-11px text-muted text-uppercase fw-bold">Montant (FCFA)
-                                                </th>
-                                                <th class="fs-11px text-muted text-uppercase fw-bold">Statut</th>
-                                                <th class="fs-11px text-muted text-uppercase fw-bold">Créé par / le</th>
-                                                <th class="fs-11px text-muted text-uppercase fw-bold text-end">Actions
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr *ngFor="let payment of contract.payments">
-                                                <td class="text-muted">{{ payment.date | date:'dd/MM/yyyy HH:mm' }}</td>
-                                                <td class="fw-medium text-dark">{{ payment.reference || 'PAY-' +
-                                                    payment.id }}</td>
-                                                <td>{{ payment.method }} <span class="tx-11 text-muted d-block">{{
-                                                        payment.period }}</span></td>
-                                                <td class="fw-bolder">{{ payment.amount | number }}</td>
-                                                <td>
-                                                    <span class="badge" [ngClass]="{
-                                                        'bg-success': payment.status === 'Validé' || payment.status === 'VALIDATED' || payment.status === 'VALIDÉ',
-                                                        'bg-warning text-dark': payment.status === 'En attente' || payment.status === 'PENDING'
-                                                    }">{{ translateStatus(payment.status) }}</span>
-                                                </td>
-                                                <td class="tx-12">
-                                                    <span class="d-block fw-medium text-dark">{{ payment.create ||
-                                                        'Système' }}</span>
-                                                    <span class="d-block tx-11 text-muted italic">{{ payment.createdAt |
-                                                        date:'dd/MM/yyyy HH:mm' }}</span>
-                                                </td>
-                                                <td class="text-nowrap text-end">
-                                                    <a [routerLink]="['/gbatcar/payments/details', payment.uuid]"
-                                                        class="btn btn-sm btn-icon btn-outline-secondary me-1"
-                                                        title="Voir les détails">
-                                                        <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
-                                                    </a>
-                                                    <button
-                                                        *ngIf="payment.status === 'En attente' || payment.status === 'PENDING'"
-                                                        [routerLink]="['/gbatcar/payments/edit', payment.uuid]"
-                                                        class="btn btn-sm btn-icon btn-outline-warning me-1"
-                                                        title="Modifier le paiement">
-                                                        <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
-                                                    </button>
-                                                    <button
-                                                        *ngIf="payment.status === 'En attente' || payment.status === 'PENDING'"
-                                                        (click)="validatePayment(payment.uuid || '')"
-                                                        class="btn btn-sm btn-icon btn-outline-success me-1"
-                                                        title="Valider le paiement">
-                                                        <i data-feather="check-circle" appFeatherIcon
-                                                            class="icon-sm"></i>
-                                                    </button>
-                                                    <button
-                                                        *ngIf="payment.status === 'En attente' || payment.status === 'PENDING'"
-                                                        (click)="deletePayment(payment.uuid || '')"
-                                                        class="btn btn-sm btn-icon btn-outline-danger me-1"
-                                                        title="Supprimer le paiement">
-                                                        <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
-                                                    </button>
-                                                    <button (click)="openReceipt(payment.receiptUrl || '')"
-                                                        class="btn btn-sm btn-icon btn-outline-primary"
-                                                        title="Imprimer le reçu">
-                                                        <i data-feather="printer" appFeatherIcon class="icon-sm"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            <tr *ngIf="!contract.payments || contract.payments.length === 0">
-                                                <td colspan="7" class="text-center py-4 text-muted">Aucun paiement
-                                                    enregistré pour ce contrat.</td>
-                                            </tr>
-                                        </tbody>
-                                        <tfoot *ngIf="contract.payments && contract.payments.length > 0">
-                                            <tr>
-                                                <th colspan="3" class="text-end">Sous-total perçu :</th>
-                                                <th colspan="3" class="fs-5 text-success">{{ contract.paidAmount || 0 |
-                                                    number }} FCFA</th>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </div>
-                        </ng-template>
-                    </li>
-                    <li [ngbNavItem]="3">
-                        <a ngbNavLink class="tx-14"><i data-feather="map-pin" appFeatherIcon class="icon-sm me-1"></i>
-                            Tracker GPS</a>
-                        <ng-template ngbNavContent>
-                            <div class="mt-4">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="card bg-light">
-                                            <div class="card-body">
-                                                <h6 class="card-title d-flex align-items-center">
-                                                    <i data-feather="monitor" appFeatherIcon class="icon-sm me-2"></i>
-                                                    État de Connexion
-                                                </h6>
-                                                <div class="d-flex align-items-center mb-3">
-                                                    <div class="dot ms-0 me-2"
-                                                        [ngClass]="gpsStatus.connected ? 'bg-success' : 'bg-danger'">
+                            </ng-template>
+                        </li>
+                        <li [ngbNavItem]="3">
+                            <a ngbNavLink class="tx-14"><i data-feather="map-pin" appFeatherIcon
+                                    class="icon-sm me-1"></i>
+                                Tracker GPS</a>
+                            <ng-template ngbNavContent>
+                                <div class="mt-4">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="card bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title d-flex align-items-center">
+                                                        <i data-feather="monitor" appFeatherIcon
+                                                            class="icon-sm me-2"></i>
+                                                        État de Connexion
+                                                    </h6>
+                                                    <div class="d-flex align-items-center mb-3">
+                                                        <div class="dot ms-0 me-2"
+                                                            [ngClass]="gpsStatus.connected ? 'bg-success' : 'bg-danger'">
+                                                        </div>
+                                                        <span class="fw-bold"
+                                                            [ngClass]="gpsStatus.connected ? 'text-success' : 'text-danger'">
+                                                            {{ gpsStatus.connected ? 'En ligne' : 'Déconnecté' }}
+                                                        </span>
+                                                        <span class="text-muted tx-12 ms-2"> - {{ gpsStatus.lastUpdate
+                                                            }}</span>
                                                     </div>
-                                                    <span class="fw-bold"
-                                                        [ngClass]="gpsStatus.connected ? 'text-success' : 'text-danger'">
-                                                        {{ gpsStatus.connected ? 'En ligne' : 'Déconnecté' }}
-                                                    </span>
-                                                    <span class="text-muted tx-12 ms-2"> - {{ gpsStatus.lastUpdate
-                                                        }}</span>
+                                                    <p class="tx-13 mb-1"><span class="text-muted">Localisation :</span>
+                                                        {{
+                                                        gpsStatus.lastLocation }}</p>
+                                                    <p class="tx-13 mb-3"><span class="text-muted">Moteur :</span>
+                                                        <span class="badge"
+                                                            [ngClass]="gpsStatus.engineStatus === 'Tournant' ? 'bg-success' : 'bg-danger'">{{
+                                                            gpsStatus.engineStatus }}</span>
+                                                    </p>
+                                                    <button class="btn btn-primary btn-sm me-2">
+                                                        <i data-feather="map" appFeatherIcon class="icon-xs me-1"></i>
+                                                        Voir
+                                                        sur la carte
+                                                    </button>
+                                                    <button class="btn btn-danger btn-sm"
+                                                        [disabled]="contract.paymentStatus !== 'Impayé définitif'">
+                                                        <i data-feather="power" appFeatherIcon class="icon-xs me-1"></i>
+                                                        {{ gpsStatus.engineStatus === 'Immobilisé' ? 'Rétablir Moteur' :
+                                                        'Coupure Moteur' }}
+                                                    </button>
                                                 </div>
-                                                <p class="tx-13 mb-1"><span class="text-muted">Localisation :</span> {{
-                                                    gpsStatus.lastLocation }}</p>
-                                                <p class="tx-13 mb-3"><span class="text-muted">Moteur :</span>
-                                                    <span class="badge"
-                                                        [ngClass]="gpsStatus.engineStatus === 'Tournant' ? 'bg-success' : 'bg-danger'">{{
-                                                        gpsStatus.engineStatus }}</span>
-                                                </p>
-                                                <button class="btn btn-primary btn-sm me-2">
-                                                    <i data-feather="map" appFeatherIcon class="icon-xs me-1"></i> Voir
-                                                    sur la carte
-                                                </button>
-                                                <button class="btn btn-danger btn-sm"
-                                                    [disabled]="contract.paymentStatus !== 'Impayé définitif'">
-                                                    <i data-feather="power" appFeatherIcon class="icon-xs me-1"></i>
-                                                    {{ gpsStatus.engineStatus === 'Immobilisé' ? 'Rétablir Moteur' :
-                                                    'Coupure Moteur' }}
-                                                </button>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="bg-secondary-subtle rounded d-flex align-items-center justify-content-center"
-                                            style="height: 180px;">
-                                            <div class="text-center text-muted">
-                                                <i data-feather="map" appFeatherIcon
-                                                    style="width: 48px; height: 48px;"></i>
-                                                <p class="tx-12">Aperçu Carte GPS</p>
+                                        <div class="col-md-6">
+                                            <div class="bg-secondary-subtle rounded d-flex align-items-center justify-content-center"
+                                                style="height: 180px;">
+                                                <div class="text-center text-muted">
+                                                    <i data-feather="map" appFeatherIcon
+                                                        style="width: 48px; height: 48px;"></i>
+                                                    <p class="tx-12">Aperçu Carte GPS</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </ng-template>
-                    </li>
-                    <li [ngbNavItem]="4">
-                        <a ngbNavLink class="tx-14"><i data-feather="file" appFeatherIcon class="icon-sm me-1"></i>
-                            Pièces du dossier</a>
-                        <ng-template ngbNavContent>
-                            <!-- Header with Add button -->
-                            <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
-                                <h6 class="mb-0">Documents du Dossier</h6>
-                                <div>
-                                    <button (click)="triggerContractDocUpload()"
-                                        class="btn btn-sm btn-primary btn-icon-text"
-                                        title="Ajouter un document au dossier">
-                                        <i data-feather="plus" appFeatherIcon class="btn-icon-prepend"></i> Ajouter
-                                    </button>
-                                    <input type="file" id="contractDocUpload" multiple class="d-none"
-                                        (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                </div>
-                            </div>
-
-                            <!-- Document list rows -->
-                            <div class="d-flex flex-column gap-3">
-                                <div *ngFor="let doc of contract.documents"
-                                    class="bg-light p-3 rounded d-flex align-items-center w-100"
-                                    style="max-width: 560px;">
-                                    <i data-feather="file" appFeatherIcon class="text-secondary me-3 icon-lg"></i>
-                                    <div class="flex-grow-1 overflow-hidden">
-                                        <p class="mb-0 tx-13 fw-medium text-truncate">{{ doc.libelle || doc.originalName
-                                            }}</p>
-                                        <span class="tx-11 text-muted">
-                                            {{ (doc.size / 1024) | number:'1.0-0' }} KB • {{ doc.originalName }}
-                                        </span>
-                                    </div>
-                                    <div class="d-flex ms-3 gap-1">
-                                        <button (click)="viewDocument(doc.uuid)"
-                                            class="btn btn-xs btn-outline-primary border-0 bg-white" title="Visionner">
-                                            <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
-                                        </button>
-                                        <button (click)="downloadDocument(doc.uuid)"
-                                            class="btn btn-xs btn-outline-secondary border-0 bg-white"
-                                            title="Télécharger">
-                                            <i data-feather="download" appFeatherIcon class="icon-sm"></i>
-                                        </button>
-                                        <button (click)="deleteDocument(doc.uuid)"
-                                            class="btn btn-xs btn-outline-danger border-0 bg-white" title="Supprimer">
-                                            <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Empty state -->
-                                <p *ngIf="!contract.documents || contract.documents.length === 0"
-                                    class="text-muted tx-12 fst-italic">
-                                    Aucun document associé à ce contrat.
-                                </p>
-                            </div>
-                        </ng-template>
-                    </li>
-                    <li [ngbNavItem]="5">
-                        <a ngbNavLink class="tx-14"><i data-feather="calendar" appFeatherIcon class="icon-sm me-1"></i>
-                            Calendrier de Paiement</a>
-                        <ng-template ngbNavContent>
-                            <div class="mt-4">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
+                            </ng-template>
+                        </li>
+                        <li [ngbNavItem]="4">
+                            <a ngbNavLink class="tx-14"><i data-feather="file" appFeatherIcon class="icon-sm me-1"></i>
+                                Pièces du dossier</a>
+                            <ng-template ngbNavContent>
+                                <!-- Header with Add button -->
+                                <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+                                    <h6 class="mb-0">Documents du Dossier</h6>
                                     <div>
-                                        <h6 class="fw-bold mb-0 text-dark">{{ schedules.length }} échéance(s)</h6>
-                                        <small class="text-muted">Calendrier de paiement du contrat</small>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-sm btn-outline-warning" (click)="markOverdueSchedules()"
-                                            [disabled]="loading || (contract.status !== 'VALIDÉ' && contract.status !== 'SUSPENDU')">
-                                            <i data-feather="alert-triangle" appFeatherIcon class="icon-sm me-1"></i>
-                                            Mettre à jour les retards
-                                        </button>
-
-                                        <!-- Actions si échéancier déjà généré -->
-                                        <ng-container *ngIf="schedules.length > 0">
-                                            <button class="btn btn-sm btn-outline-primary" (click)="prolongContract()"
-                                                [disabled]="loading || (contract.status !== 'VALIDÉ' && contract.status !== 'SUSPENDU')">
-                                                <i data-feather="clock" appFeatherIcon class="icon-sm me-1"></i>
-                                                Prolonger (Force Majeure)
+                                        <ng-container *ngxPermissionsOnly="'CONTRACT:DOCUMENT'">
+                                            <button (click)="triggerContractDocUpload()"
+                                                class="btn btn-sm btn-primary btn-icon-text"
+                                                title="Ajouter un document au dossier">
+                                                <i data-feather="plus" appFeatherIcon class="btn-icon-prepend"></i>
+                                                Ajouter
                                             </button>
-                                            <button class="btn btn-sm"
-                                                [ngClass]="contract.status === 'SUSPENDU' ? 'btn-success' : 'btn-outline-danger'"
-                                                (click)="toggleSuspension()" [disabled]="loading">
-                                                <i [attr.data-feather]="contract.status === 'SUSPENDU' ? 'play' : 'pause'"
-                                                    appFeatherIcon class="icon-sm me-1"></i>
-                                                {{ contract.status === 'SUSPENDU' ? 'Réactiver le contrat' : 'Suspendre
-                                                le contrat' }}
-                                            </button>
+                                            <input type="file" id="contractDocUpload" multiple class="d-none"
+                                                (change)="onFileSelected($event)"
+                                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
                                         </ng-container>
-
-                                        <!-- Bouton Générer uniquement si vide -->
-                                        <button *ngIf="schedules.length === 0" class="btn btn-danger btn-icon-text"
-                                            (click)="openScheduleModal(scheduleModalTemplate)"
-                                            [disabled]="contract.status !== 'VALIDÉ'">
-                                            <i data-feather="plus" appFeatherIcon class="btn-icon-prepend"></i>
-                                            Générer un Échéancier
-                                        </button>
                                     </div>
                                 </div>
 
-                                <div class="alert alert-info d-flex align-items-center mb-4"
-                                    *ngIf="contract.status === 'SUSPENDU'">
-                                    <i data-feather="pause-circle" appFeatherIcon class="icon-sm me-2"></i>
-                                    <div>
-                                        <strong>Contrat Suspendu :</strong> Le contrat est actuellement en pause (Force
-                                        Majeure). Les retards automatiques sont désactivés.
+                                <!-- Document list rows -->
+                                <div class="d-flex flex-column gap-3">
+                                    <div *ngFor="let doc of contract.documents"
+                                        class="bg-light p-3 rounded d-flex align-items-center w-100"
+                                        style="max-width: 560px;">
+                                        <i data-feather="file" appFeatherIcon class="text-secondary me-3 icon-lg"></i>
+                                        <div class="flex-grow-1 overflow-hidden">
+                                            <p class="mb-0 tx-13 fw-medium text-truncate">{{ doc.libelle ||
+                                                doc.originalName
+                                                }}</p>
+                                            <span class="tx-11 text-muted">
+                                                {{ (doc.size / 1024) | number:'1.0-0' }} KB • {{ doc.originalName }}
+                                            </span>
+                                        </div>
+                                        <div class="d-flex ms-3 gap-1">
+                                            <button (click)="viewDocument(doc.uuid)"
+                                                class="btn btn-xs btn-outline-primary border-0 bg-white"
+                                                title="Visionner">
+                                                <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                            </button>
+                                            <button (click)="downloadDocument(doc.uuid)"
+                                                class="btn btn-xs btn-outline-secondary border-0 bg-white"
+                                                title="Télécharger">
+                                                <i data-feather="download" appFeatherIcon class="icon-sm"></i>
+                                            </button>
+                                            <ng-container *ngxPermissionsOnly="'CONTRACT:DOCUMENT'">
+                                                <button (click)="deleteDocument(doc.uuid)"
+                                                    class="btn btn-xs btn-outline-danger border-0 bg-white"
+                                                    title="Supprimer">
+                                                    <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
+                                                </button>
+                                            </ng-container>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="alert alert-warning d-flex align-items-center mb-4"
-                                    *ngIf="contract.status !== 'VALIDÉ' && contract.status !== 'SUSPENDU'">
-                                    <i data-feather="alert-circle" appFeatherIcon class="icon-sm me-2"></i>
-                                    <div>
-                                        <strong>Contrat non-validé :</strong> Vous devez d'abord valider le contrat (via
-                                        le bouton en haut) pour pouvoir générer ou gérer l'échéancier de paiement.
-                                    </div>
+                                    <!-- Empty state -->
+                                    <p *ngIf="!contract.documents || contract.documents.length === 0"
+                                        class="text-muted tx-12 fst-italic">
+                                        Aucun document associé à ce contrat.
+                                    </p>
                                 </div>
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th class="text-uppercase tx-11 fw-bolder text-muted">Date Prévue</th>
-                                                <th class="text-uppercase tx-11 fw-bolder text-muted">Montant Dû</th>
-                                                <th class="text-uppercase tx-11 fw-bolder text-muted">Progression</th>
-                                                <th class="text-uppercase tx-11 fw-bolder text-muted">Type</th>
-                                                <th class="text-uppercase tx-11 fw-bolder text-muted">Statut</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr *ngFor="let s of schedules">
-                                                <td class="text-dark">
-                                                    {{ s.localDate | date:'dd MMM yyyy':'UTC' }}
-                                                    <small *ngIf="s.paidAt" class="d-block text-muted tx-11">
-                                                        Payé le {{ s.paidAt | date:'dd/MM/yyyy à HH:mm' }}
-                                                    </small>
-                                                </td>
-                                                <td class="fw-bold">{{ s.amount | number }} FCFA</td>
-                                                <td style="min-width: 140px;">
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <div class="progress flex-grow-1" style="height: 8px;">
-                                                            <div class="progress-bar" [ngClass]="{
+                            </ng-template>
+                        </li>
+                        <li [ngbNavItem]="5">
+                            <a ngbNavLink class="tx-14"><i data-feather="calendar" appFeatherIcon
+                                    class="icon-sm me-1"></i>
+                                Calendrier de Paiement</a>
+                            <ng-template ngbNavContent>
+                                <div class="mt-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <h6 class="fw-bold mb-0 text-dark">{{ schedules.length }} échéance(s)</h6>
+                                            <small class="text-muted">Calendrier de paiement du contrat</small>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <ng-container *ngxPermissionsOnly="'PAYMENT:SCHEDULE:MARK:OVERDUE'">
+                                                <button class="btn btn-sm btn-outline-warning"
+                                                    (click)="markOverdueSchedules()"
+                                                    [disabled]="loading || (contract.status !== 'VALIDÉ' && contract.status !== 'SUSPENDU')">
+                                                    <i data-feather="alert-triangle" appFeatherIcon
+                                                        class="icon-sm me-1"></i>
+                                                    Mettre à jour les retards
+                                                </button>
+                                            </ng-container>
+
+                                            <!-- Actions si échéancier déjà généré -->
+                                            <ng-container *ngIf="schedules.length > 0">
+                                                <ng-container *ngxPermissionsOnly="'PAYMENT:SCHEDULE:PROLONG'">
+                                                    <button class="btn btn-sm btn-outline-primary"
+                                                        (click)="prolongContract()"
+                                                        [disabled]="loading || (contract.status !== 'VALIDÉ' && contract.status !== 'SUSPENDU')">
+                                                        <i data-feather="clock" appFeatherIcon class="icon-sm me-1"></i>
+                                                        Prolonger (Force Majeure)
+                                                    </button>
+                                                </ng-container>
+                                                <ng-container *ngxPermissionsOnly="'CONTRACT:SUSPEND'">
+                                                    <button class="btn btn-sm"
+                                                        [ngClass]="contract.status === 'SUSPENDU' ? 'btn-success' : 'btn-outline-danger'"
+                                                        (click)="toggleSuspension()" [disabled]="loading">
+                                                        <i [attr.data-feather]="contract.status === 'SUSPENDU' ? 'play' : 'pause'"
+                                                            appFeatherIcon class="icon-sm me-1"></i>
+                                                        {{ contract.status === 'SUSPENDU' ? 'Réactiver le contrat' :
+                                                        'Suspendre
+                                                        le contrat' }}
+                                                    </button>
+                                                </ng-container>
+                                            </ng-container>
+
+                                            <!-- Bouton Générer uniquement si vide -->
+                                            <ng-container *ngxPermissionsOnly="'PAYMENT:SCHEDULE:GENERATE'">
+                                                <button *ngIf="schedules.length === 0"
+                                                    class="btn btn-danger btn-icon-text"
+                                                    (click)="openScheduleModal(scheduleModalTemplate)"
+                                                    [disabled]="contract.status !== 'VALIDÉ'">
+                                                    <i data-feather="plus" appFeatherIcon class="btn-icon-prepend"></i>
+                                                    Générer un Échéancier
+                                                </button>
+                                            </ng-container>
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-info d-flex align-items-center mb-4"
+                                        *ngIf="contract.status === 'SUSPENDU'">
+                                        <i data-feather="pause-circle" appFeatherIcon class="icon-sm me-2"></i>
+                                        <div>
+                                            <strong>Contrat Suspendu :</strong> Le contrat est actuellement en pause
+                                            (Force
+                                            Majeure). Les retards automatiques sont désactivés.
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-warning d-flex align-items-center mb-4"
+                                        *ngIf="contract.status !== 'VALIDÉ' && contract.status !== 'SUSPENDU'">
+                                        <i data-feather="alert-circle" appFeatherIcon class="icon-sm me-2"></i>
+                                        <div>
+                                            <strong>Contrat non-validé :</strong> Vous devez d'abord valider le contrat
+                                            (via
+                                            le bouton en haut) pour pouvoir générer ou gérer l'échéancier de paiement.
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th class="text-uppercase tx-11 fw-bolder text-muted">Date Prévue
+                                                    </th>
+                                                    <th class="text-uppercase tx-11 fw-bolder text-muted">Montant Dû
+                                                    </th>
+                                                    <th class="text-uppercase tx-11 fw-bolder text-muted">Progression
+                                                    </th>
+                                                    <th class="text-uppercase tx-11 fw-bolder text-muted">Type</th>
+                                                    <th class="text-uppercase tx-11 fw-bolder text-muted">Statut</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let s of schedules">
+                                                    <td class="text-dark">
+                                                        {{ s.localDate | date:'dd MMM yyyy':'UTC' }}
+                                                        <small *ngIf="s.paidAt" class="d-block text-muted tx-11">
+                                                            Payé le {{ s.paidAt | date:'dd/MM/yyyy à HH:mm' }}
+                                                        </small>
+                                                    </td>
+                                                    <td class="fw-bold">{{ s.amount | number }} FCFA</td>
+                                                    <td style="min-width: 140px;">
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <div class="progress flex-grow-1" style="height: 8px;">
+                                                                <div class="progress-bar" [ngClass]="{
                                                                     'bg-success': s.status === 'Payé',
                                                                     'bg-warning': s.status === 'Partiel',
                                                                     'bg-danger': s.status === 'En retard',
                                                                     'bg-secondary': s.status === 'À venir'
                                                                 }" role="progressbar"
-                                                                [style.width.%]="s.amount > 0 ? ((s.paidAmount || 0) / s.amount * 100) : 0">
+                                                                    [style.width.%]="s.amount > 0 ? ((s.paidAmount || 0) / s.amount * 100) : 0">
+                                                                </div>
                                                             </div>
+                                                            <small class="text-muted tx-10">{{ ((s.paidAmount || 0) /
+                                                                s.amount * 100) | number:'1.0-0' }}%</small>
                                                         </div>
-                                                        <small class="text-muted tx-10">{{ ((s.paidAmount || 0) /
-                                                            s.amount * 100) | number:'1.0-0' }}%</small>
-                                                    </div>
-                                                </td>
-                                                <td>{{ s.type }}</td>
-                                                <td>
-                                                    <span class="badge" [ngClass]="{
+                                                    </td>
+                                                    <td>{{ s.type }}</td>
+                                                    <td>
+                                                        <span class="badge" [ngClass]="{
                                                         'bg-warning text-dark': s.status === 'À venir',
                                                         'bg-success': s.status === 'Payé',
                                                         'bg-danger': s.status === 'En retard',
                                                         'bg-info': s.status === 'Partiel'
                                                     }">{{ s.status }}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            <tr *ngIf="schedules.length === 0">
-                                                <td colspan="4" class="text-center py-4 text-muted">
-                                                    Aucun échéancier généré pour ce contrat.
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </ng-template>
-                    </li>
-                    <li [ngbNavItem]="6">
-                        <a ngbNavLink class="tx-14"><i data-feather="calendar" appFeatherIcon class="icon-sm me-1"></i>
-                            Promesses de paiement</a>
-                        <ng-template ngbNavContent>
-                            <div class="mt-4">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div>
-                                        <h6 class="fw-bold mb-0 text-dark">{{ contract.promises?.length || 0 }}
-                                            promesse(s) enregistrée(s)</h6>
-                                        <small class="text-muted">Engagements de paiement exceptionnels</small>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                <tr *ngIf="schedules.length === 0">
+                                                    <td colspan="4" class="text-center py-4 text-muted">
+                                                        Aucun échéancier généré pour ce contrat.
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
-                                    <button class="btn btn-sm btn-primary btn-icon-text"
-                                        (click)="openPromiseModal(promiseModalTemplate)">
-                                        <i data-feather="plus-circle" appFeatherIcon class="btn-icon-prepend"></i>
-                                        Enregistrer une promesse
-                                    </button>
                                 </div>
+                            </ng-template>
+                        </li>
+                        <li [ngbNavItem]="6">
+                            <a ngbNavLink class="tx-14"><i data-feather="calendar" appFeatherIcon
+                                    class="icon-sm me-1"></i>
+                                Promesses de paiement</a>
+                            <ng-template ngbNavContent>
+                                <div class="mt-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <h6 class="fw-bold mb-0 text-dark">{{ contract.promises?.length || 0 }}
+                                                promesse(s) enregistrée(s)</h6>
+                                            <small class="text-muted">Engagements de paiement exceptionnels</small>
+                                        </div>
+                                        <ng-container *ngxPermissionsOnly="'CONTRACT:PROMISE'">
+                                            <button class="btn btn-sm btn-primary btn-icon-text"
+                                                (click)="openPromiseModal(promiseModalTemplate)">
+                                                <i data-feather="plus-circle" appFeatherIcon
+                                                    class="btn-icon-prepend"></i>
+                                                Enregistrer une promesse
+                                            </button>
+                                        </ng-container>
+                                    </div>
 
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th class="text-uppercase tx-11 fw-bolder text-muted">Date Prévue</th>
-                                                <th class="text-uppercase tx-11 fw-bolder text-muted">Montant</th>
-                                                <th class="text-uppercase tx-11 fw-bolder text-muted">Statut</th>
-                                                <th class="text-uppercase tx-11 fw-bolder text-muted">Note / Motif</th>
-                                                <th class="text-uppercase tx-11 fw-bolder text-muted">Enregistré le</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr *ngFor="let p of contract.promises">
-                                                <td class="fw-bold text-primary">{{ p.expectedDate | date:'dd/MM/yyyy'
-                                                    }}</td>
-                                                <td class="fw-bold">{{ p.amount | number }} FCFA</td>
-                                                <td>
-                                                    <span class="badge" [ngClass]="{
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th class="text-uppercase tx-11 fw-bolder text-muted">Date Prévue
+                                                    </th>
+                                                    <th class="text-uppercase tx-11 fw-bolder text-muted">Montant</th>
+                                                    <th class="text-uppercase tx-11 fw-bolder text-muted">Statut</th>
+                                                    <th class="text-uppercase tx-11 fw-bolder text-muted">Note / Motif
+                                                    </th>
+                                                    <th class="text-uppercase tx-11 fw-bolder text-muted">Enregistré le
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let p of contract.promises">
+                                                    <td class="fw-bold text-primary">{{ p.expectedDate |
+                                                        date:'dd/MM/yyyy'
+                                                        }}</td>
+                                                    <td class="fw-bold">{{ p.amount | number }} FCFA</td>
+                                                    <td>
+                                                        <span class="badge" [ngClass]="{
                                                         'bg-warning text-dark': p.status === 'EN ATTENTE',
                                                         'bg-success': p.status === 'TENUE',
                                                         'bg-danger': p.status === 'ROMPUE',
                                                         'bg-secondary': p.status === 'ANNULÉE'
                                                     }">{{ translatePromiseStatus(p.status) }}</span>
-                                                </td>
-                                                <td class="tx-13">{{ p.note || '-' }}</td>
-                                                <td class="text-muted tx-12">{{ p.createdAt | date:'dd/MM/yyyy à HH:mm'
-                                                    }}</td>
-                                            </tr>
-                                            <tr *ngIf="!contract.promises || contract.promises.length === 0">
-                                                <td colspan="5" class="text-center py-4 text-muted fst-italic">
-                                                    Aucune promesse de paiement pour ce contrat.
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                                    </td>
+                                                    <td class="tx-13">{{ p.note || '-' }}</td>
+                                                    <td class="text-muted tx-12">{{ p.createdAt | date:'dd/MM/yyyy à
+                                                        HH:mm'
+                                                        }}</td>
+                                                </tr>
+                                                <tr *ngIf="!contract.promises || contract.promises.length === 0">
+                                                    <td colspan="5" class="text-center py-4 text-muted fst-italic">
+                                                        Aucune promesse de paiement pour ce contrat.
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                            </div>
-                        </ng-template>
-                    </li>
-                </ul>
-                <div [ngbNavOutlet]="nav" class="mt-3"></div>
+                            </ng-template>
+                        <li [ngbNavItem]="7">
+                            <a ngbNavLink class="tx-14"><i data-feather="alert-triangle" appFeatherIcon
+                                    class="icon-sm me-1 text-danger"></i>
+                                Pénalités</a>
+                            <ng-template ngbNavContent>
+                                <div class="mt-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="mb-0 text-uppercase fw-bold text-muted tx-12">Registre des
+                                            Infractions
+                                            ({{ contract.penalties?.length || 0 }})</h6>
+                                        <ng-container *ngxPermissionsOnly="'PENALTY:NEW'">
+                                            <button [routerLink]="['/gbatcar/payments/penalties/new']"
+                                                [queryParams]="{ contractUuid: contract.uuid }"
+                                                class="btn btn-sm btn-outline-danger btn-icon-text shadow-sm">
+                                                <i data-feather="plus-circle" appFeatherIcon
+                                                    class="btn-icon-prepend"></i>
+                                                Nouvelle Pénalité
+                                            </button>
+                                        </ng-container>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th class="fs-11px text-muted text-uppercase fw-bold">Date
+                                                        d'émission
+                                                    </th>
+                                                    <th class="fs-11px text-muted text-uppercase fw-bold">Référence</th>
+                                                    <th class="fs-11px text-muted text-uppercase fw-bold">Motif de la
+                                                        pénalité</th>
+                                                    <th class="fs-11px text-muted text-uppercase fw-bold">Gravité</th>
+                                                    <th class="fs-11px text-muted text-uppercase fw-bold">Montant (FCFA)
+                                                    </th>
+                                                    <th class="fs-11px text-muted text-uppercase fw-bold">Statut</th>
+                                                    <th class="fs-11px text-muted text-uppercase fw-bold text-end">
+                                                        Actions
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let penalty of contract.penalties">
+                                                    <td class="text-muted">{{ penalty.date | date:'dd/MM/yyyy' }}</td>
+                                                    <td class="fw-bold text-dark">{{ penalty.reference }}</td>
+                                                    <td>
+                                                        <span class="d-block fw-medium">{{ penalty.reason }}</span>
+                                                        <small class="text-muted tx-11" *ngIf="penalty.observation">{{
+                                                            penalty.observation }}</small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge"
+                                                            [ngClass]="getSeverityClass(penalty.severity)">
+                                                            {{ penalty.severity }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="fw-bold">
+                                                        {{ (penalty.amount || 0) | number }}
+                                                        <small class="d-block text-success tx-10"
+                                                            *ngIf="(penalty.paidAmount || 0) > 0">Payé: {{
+                                                            (penalty.paidAmount || 0) |
+                                                            number }}</small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge"
+                                                            [ngClass]="getPenaltyStatusClass(penalty.status)">
+                                                            {{ penalty.status }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-end text-nowrap">
+                                                        <a [routerLink]="['/gbatcar/payments/penalties/details', penalty.uuid]"
+                                                            class="btn btn-sm btn-icon btn-outline-secondary me-1"
+                                                            title="Voir les détails">
+                                                            <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                                        </a>
+                                                        <button class="btn btn-sm btn-icon btn-outline-success me-1"
+                                                            *ngIf="penalty.status !== 'Payé' && penalty.status !== 'SOLDÉ'"
+                                                            (click)="onSolderPenalty(penalty)"
+                                                            title="Payer la pénalité">
+                                                            <i data-feather="credit-card" appFeatherIcon
+                                                                class="icon-sm"></i>
+                                                        </button>
+                                                        <a [routerLink]="['/gbatcar/payments/penalties/new']"
+                                                            [queryParams]="{ uuid: penalty.uuid }"
+                                                            class="btn btn-sm btn-icon btn-outline-warning"
+                                                            title="Modifier la pénalité"
+                                                            *ngIf="penalty.status !== 'Payé' && penalty.status !== 'PAYÉ'">
+                                                            <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                <tr *ngIf="!contract.penalties || contract.penalties.length === 0">
+                                                    <td colspan="7" class="text-center py-4 text-muted fst-italic">
+                                                        Aucune
+                                                        pénalité enregistrée pour ce contrat.</td>
+                                                </tr>
+                                            </tbody>
+                                            <tfoot
+                                                *ngIf="contract && contract.penalties && contract.penalties.length > 0 && penaltySummary">
+                                                <tr class="bg-light bg-opacity-10">
+                                                    <th colspan="4"
+                                                        class="text-end text-muted tx-11 text-uppercase border-top">
+                                                        Total
+                                                        cumulé :</th>
+                                                    <th colspan="3" class="fs-6 fw-bold text-dark border-top text-end">
+                                                        {{
+                                                        (penaltySummary?.total || 0) | number }} FCFA</th>
+                                                </tr>
+                                                <tr>
+                                                    <th colspan="4"
+                                                        class="text-end text-muted tx-11 text-uppercase border-top-0">
+                                                        Reste
+                                                        à recouvrer :</th>
+                                                    <th colspan="3"
+                                                        class="fs-5 fw-bold text-danger border-top-0 text-end">
+                                                        {{ (penaltySummary?.pending || 0) | number }} FCFA</th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </ng-template>
+                        </li>
+                    </ul>
+                    <div [ngbNavOutlet]="nav" class="mt-3"></div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div *ngIf="!loading && !contract" class="row">
-    <div class="col-md-12 text-center py-5">
-        <h4 class="text-muted">Contrat introuvable.</h4>
-        <button [routerLink]="['/gbatcar/contracts']" class="btn btn-primary mt-3">Retour à la liste</button>
+    <div *ngIf="!loading && !contract" class="row">
+        <div class="col-md-12 text-center py-5">
+            <h4 class="text-muted">Contrat introuvable.</h4>
+            <button [routerLink]="['/gbatcar/contracts']" class="btn btn-primary mt-3">Retour à la liste</button>
+        </div>
     </div>
-</div>
+</ng-container>
+
+<!-- FALLBACK FOR UNAUTHORIZED ACCESS -->
+<ng-container *ngxPermissionsExcept="['CONTRACT:SHOW']">
+    <div class="row mt-5">
+        <div class="col-md-12 text-center">
+            <div class="card p-5 border-0 shadow-sm">
+                <i data-feather="lock" appFeatherIcon class="text-danger mb-4 mx-auto"
+                    style="width: 60px; height: 60px;"></i>
+                <h4 class="text-dark fw-bold mb-3">Accès Refusé</h4>
+                <p class="text-secondary fs-14px">
+                    Vous n'avez pas les permissions nécessaires pour consulter les détails du contrat.
+                </p>
+                <button [routerLink]="['/gbatcar/contracts']" class="btn btn-primary mt-3">Retour à la liste</button>
+            </div>
+        </div>
+    </div>
+</ng-container>
 
 <ng-template #scheduleModalTemplate let-modal>
     <div class="modal-header">

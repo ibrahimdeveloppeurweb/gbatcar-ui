@@ -9,230 +9,237 @@
             <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
             {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
         </button>
-        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" routerLink="new">
+        <button *ngxPermissionsOnly="'CLIENT:NEW'" type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0"
+            routerLink="new">
             <i data-feather="user-plus" appFeatherIcon class="btn-icon-prepend"></i>
             Nouveau Dossier
         </button>
     </div>
 </div>
 
-<!-- KPI Summary Cards -->
-<div class="row mb-4">
-    <div class="col-md-3 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #6c757d;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Total Clients</p>
-                        <h4 class="fw-bold mb-0">{{ clients.length }}</h4>
+<ng-container *ngxPermissionsOnly="['CLIENT:LIST']">
+    <!-- KPI Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-6 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #6c757d;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Total Clients</p>
+                            <h4 class="fw-bold mb-0">{{ clients.length }}</h4>
+                        </div>
+                        <i data-feather="users" appFeatherIcon class="icon-lg text-secondary"></i>
                     </div>
-                    <i data-feather="users" appFeatherIcon class="icon-lg text-secondary"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #2ecc71;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Clients Actifs</p>
+                            <h4 class="fw-bold mb-0 text-success">{{ activeCount }}</h4>
+                        </div>
+                        <i data-feather="user-check" appFeatherIcon class="icon-lg text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card h-100" style="border-left: 4px solid #e74c3c;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">En Retard Paiement</p>
+                            <h4 class="fw-bold mb-0 text-danger">{{ lateCount }}</h4>
+                        </div>
+                        <i data-feather="alert-triangle" appFeatherIcon class="icon-lg text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card h-100" style="border-left: 4px solid #f39c12;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">En Attente Validation</p>
+                            <h4 class="fw-bold mb-0 text-warning">{{ pendingCount }}</h4>
+                        </div>
+                        <i data-feather="clock" appFeatherIcon class="icon-lg text-warning"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #2ecc71;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Clients Actifs</p>
-                        <h4 class="fw-bold mb-0 text-success">{{ activeCount }}</h4>
-                    </div>
-                    <i data-feather="user-check" appFeatherIcon class="icon-lg text-success"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="card h-100" style="border-left: 4px solid #e74c3c;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">En Retard Paiement</p>
-                        <h4 class="fw-bold mb-0 text-danger">{{ lateCount }}</h4>
-                    </div>
-                    <i data-feather="alert-triangle" appFeatherIcon class="icon-lg text-danger"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="card h-100" style="border-left: 4px solid #f39c12;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">En Attente Validation</p>
-                        <h4 class="fw-bold mb-0 text-warning">{{ pendingCount }}</h4>
-                    </div>
-                    <i data-feather="clock" appFeatherIcon class="icon-lg text-warning"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 
-<!-- Filtres Avancés -->
-<div class="row mb-3" *ngIf="!showAdvancedFilters">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title mb-3">Filtres de recherche</h6>
-                <div class="row g-3">
-                    <!-- Text & Selectors -->
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
-                        <input type="text" class="form-control form-control-sm" placeholder="Nom, ID, Tél, Email..."
-                            [(ngModel)]="advSearchTerm">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Véhicule (Imm/Modèle)</label>
-                        <input type="text" class="form-control form-control-sm" placeholder="Ex: 1234 AB 01"
-                            [(ngModel)]="advVehicleFilter">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Statut du Dossier</label>
-                        <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
-                            <option value="">Tous</option>
-                            <option value="Dossier Approuvé">Actif (Dossier Approuvé)</option>
-                            <option value="En Cours de Contrat">En Cours de Contrat</option>
-                            <option value="En attente de Validation">En Attente Validation</option>
-                            <option value="Prospect">Prospect</option>
-                            <option value="Inactif">Inactif</option>
-                            <option value="Litige / Bloqué">Litige / Bloqué</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Situation Financière</label>
-                        <select class="form-select form-select-sm" [(ngModel)]="advFinancialStatusFilter">
-                            <option value="">Toutes</option>
-                            <option value="À jour / Soldé">À jour / Soldé</option>
-                            <option value="Impayé">Impayé (Retards)</option>
-                            <option value="Aucun (En Attente)">En attente d'infos</option>
-                        </select>
-                    </div>
+    <!-- Filtres Avancés -->
+    <div class="row mb-3" *ngIf="!showAdvancedFilters">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Filtres de recherche</h6>
+                    <div class="row g-3">
+                        <!-- Text & Selectors -->
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Nom, ID, Tél, Email..."
+                                [(ngModel)]="advSearchTerm">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Véhicule (Imm/Modèle)</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Ex: 1234 AB 01"
+                                [(ngModel)]="advVehicleFilter">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Statut du Dossier</label>
+                            <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
+                                <option value="">Tous</option>
+                                <option value="Dossier Approuvé">Actif (Dossier Approuvé)</option>
+                                <option value="En Cours de Contrat">En Cours de Contrat</option>
+                                <option value="En attente de Validation">En Attente Validation</option>
+                                <option value="Prospect">Prospect</option>
+                                <option value="Inactif">Inactif</option>
+                                <option value="Litige / Bloqué">Litige / Bloqué</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Situation Financière</label>
+                            <select class="form-select form-select-sm" [(ngModel)]="advFinancialStatusFilter">
+                                <option value="">Toutes</option>
+                                <option value="À jour / Soldé">À jour / Soldé</option>
+                                <option value="Impayé">Impayé (Retards)</option>
+                                <option value="Aucun (En Attente)">En attente d'infos</option>
+                            </select>
+                        </div>
 
-                    <!-- Min/Max Ranges -->
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Jours de Retard</label>
-                        <div class="d-flex align-items-center">
-                            <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
-                                [(ngModel)]="advMinDelay">
-                            <span class="text-secondary">-</span>
-                            <input type="number" class="form-control form-control-sm ms-1" placeholder="Max"
-                                [(ngModel)]="advMaxDelay">
+                        <!-- Min/Max Ranges -->
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Jours de Retard</label>
+                            <div class="d-flex align-items-center">
+                                <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
+                                    [(ngModel)]="advMinDelay">
+                                <span class="text-secondary">-</span>
+                                <input type="number" class="form-control form-control-sm ms-1" placeholder="Max"
+                                    [(ngModel)]="advMaxDelay">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Dette FCFA (Restant dû)</label>
+                            <div class="d-flex align-items-center">
+                                <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
+                                    [(ngModel)]="advMinDebt">
+                                <span class="text-secondary">-</span>
+                                <input type="number" class="form-control form-control-sm ms-1" placeholder="Max"
+                                    [(ngModel)]="advMaxDebt">
+                            </div>
+                        </div>
+
+                        <!-- Count Limiter -->
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Résultats à afficher</label>
+                            <select class="form-select form-select-sm" [(ngModel)]="advCountFilter">
+                                <option [value]="5">5</option>
+                                <option [value]="10">10</option>
+                                <option [value]="20">20</option>
+                                <option [value]="50">50</option>
+                                <option [value]="1000">Tous</option>
+                            </select>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-sm btn-primary me-2 w-50" (click)="applyAdvancedFilters()">
+                                <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Filtrer
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary w-50" (click)="resetFilters()">
+                                <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
+                            </button>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Dette FCFA (Restant dû)</label>
-                        <div class="d-flex align-items-center">
-                            <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
-                                [(ngModel)]="advMinDebt">
-                            <span class="text-secondary">-</span>
-                            <input type="number" class="form-control form-control-sm ms-1" placeholder="Max"
-                                [(ngModel)]="advMaxDebt">
-                        </div>
-                    </div>
-
-                    <!-- Count Limiter -->
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Résultats à afficher</label>
-                        <select class="form-select form-select-sm" [(ngModel)]="advCountFilter">
-                            <option [value]="5">5</option>
-                            <option [value]="10">10</option>
-                            <option [value]="20">20</option>
-                            <option [value]="50">50</option>
-                            <option [value]="1000">Tous</option>
-                        </select>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button class="btn btn-sm btn-primary me-2 w-50" (click)="applyAdvancedFilters()">
-                            <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Filtrer
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary w-50" (click)="resetFilters()">
-                            <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-md-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h6 class="card-title mb-0 fw-bold text-uppercase">LISTE DES CLIENTS GBATCAR ({{
-                        filteredClients.length }})</h6>
-                    <div class="d-flex align-items-center">
-                        <input type="text" class="form-control form-control-sm me-2 border-light shadow-none"
-                            placeholder="Rechercher par nom/ID..." style="width: 280px; background-color: #f9fafb;"
-                            [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
-                        <select class="form-select form-select-sm border-light shadow-none"
-                            style="width: 180px; background-color: #f9fafb;" [(ngModel)]="quickStatusFilter"
-                            (change)="applyQuickFilters()">
-                            <option value="">Tous les statuts</option>
-                            <option value="Dossier Approuvé">Actifs</option>
-                            <option value="Dossier Validé">Validés (En attente contrat)</option>
-                            <option value="En attente de Validation">En Attente</option>
-                            <option value="Prospect">Prospects</option>
-                            <option value="Inactif">Inactifs</option>
-                        </select>
+    <div class="row">
+        <div class="col-md-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="card-title mb-0 fw-bold text-uppercase">LISTE DES CLIENTS GBATCAR ({{
+                            filteredClients.length }})</h6>
+                        <div class="d-flex align-items-center">
+                            <input type="text" class="form-control form-control-sm me-2 border-light shadow-none"
+                                placeholder="Rechercher par nom/ID..." style="width: 280px; background-color: #f9fafb;"
+                                [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
+                            <select class="form-select form-select-sm border-light shadow-none"
+                                style="width: 180px; background-color: #f9fafb;" [(ngModel)]="quickStatusFilter"
+                                (change)="applyQuickFilters()">
+                                <option value="">Tous les statuts</option>
+                                <option value="Dossier Approuvé">Actifs</option>
+                                <option value="Dossier Validé">Validés (En attente contrat)</option>
+                                <option value="En attente de Validation">En Attente</option>
+                                <option value="Prospect">Prospects</option>
+                                <option value="Inactif">Inactifs</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="bg-light-subtle">
-                            <tr>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">ID CLIENT</th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">NOM & PRÉNOM</th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">CONTACT (TÉL / EMAIL)
-                                </th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">VÉHICULE /
-                                    IMMATRICULATION</th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">STATUT DOSSIER</th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0">SITUATION FINANCIÈRE</th>
-                                <th class="text-uppercase fs-10px fw-bold text-muted border-0 text-center">ACTIONS</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let client of filteredClients"
-                                [ngClass]="{'bg-light': client.status === 'Inactif'}">
-                                <td class="fw-bold text-danger">CLI-{{ (client.uuid || '') | slice:0:3 | uppercase }}
-                                </td>
-                                <td class="text-dark">{{ client.lastName }} {{ client.firstName }}</td>
-                                <td>
-                                    <div class="fw-bold fs-13px">{{ client.phone }}</div>
-                                    <div class="text-muted fs-11px">{{ client.email }}</div>
-                                </td>
-                                <td>
-                                    <div *ngIf="client.vehicle">
-                                        <div class="fs-13px fw-bold text-danger mb-1">
-                                            {{ client.vehicle.marque }} {{ client.vehicle.modele }} - {{
-                                            client.vehicle.immatriculation }}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="bg-light-subtle">
+                                <tr>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">ID CLIENT</th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">NOM & PRÉNOM</th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">CONTACT (TÉL / EMAIL)
+                                    </th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">VÉHICULE /
+                                        IMMATRICULATION</th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">STATUT DOSSIER</th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0">SITUATION FINANCIÈRE
+                                    </th>
+                                    <th class="text-uppercase fs-10px fw-bold text-muted border-0 text-center">ACTIONS
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let client of filteredClients"
+                                    [ngClass]="{'bg-light': client.status === 'Inactif'}">
+                                    <td class="fw-bold text-danger">CLI-{{ (client.uuid || '') | slice:0:3 | uppercase
+                                        }}
+                                    </td>
+                                    <td class="text-dark">{{ client.lastName }} {{ client.firstName }}</td>
+                                    <td>
+                                        <div class="fw-bold fs-13px">{{ client.phone }}</div>
+                                        <div class="text-muted fs-11px">{{ client.email }}</div>
+                                    </td>
+                                    <td>
+                                        <div *ngIf="client.vehicle">
+                                            <div class="fs-13px fw-bold text-danger mb-1">
+                                                {{ client.vehicle.marque }} {{ client.vehicle.modele }} - {{
+                                                client.vehicle.immatriculation }}
+                                            </div>
+                                            <div *ngIf="client.vehicle.compliance?.technicalInspectionDeliveryDate"
+                                                class="fs-11px text-muted">
+                                                Dernière visite technique : <span class="fw-bold text-dark">{{
+                                                    client.vehicle.compliance?.technicalInspectionDeliveryDate |
+                                                    date:'dd MMM yyyy' }}</span>
+                                            </div>
+                                            <div *ngIf="client.vehicle.prochainEntretien !== null && client.vehicle.prochainEntretien !== undefined"
+                                                class="fs-11px text-muted mt-1">
+                                                Prochaine vidange : <span class="text-warning fw-bold">Dans {{
+                                                    (client.vehicle.prochainEntretien - (client.vehicle.kilometrage ||
+                                                    0)) |
+                                                    number:'1.0-0' }} km</span>
+                                            </div>
                                         </div>
-                                        <div *ngIf="client.vehicle.compliance?.technicalInspectionDeliveryDate"
-                                            class="fs-11px text-muted">
-                                            Dernière visite technique : <span class="fw-bold text-dark">{{
-                                                client.vehicle.compliance?.technicalInspectionDeliveryDate | date:'dd
-                                                MMM yyyy' }}</span>
-                                        </div>
-                                        <div *ngIf="client.vehicle.prochainEntretien !== null && client.vehicle.prochainEntretien !== undefined"
-                                            class="fs-11px text-muted mt-1">
-                                            Prochaine vidange : <span class="text-warning fw-bold">Dans {{
-                                                (client.vehicle.prochainEntretien - (client.vehicle.kilometrage || 0)) |
-                                                number:'1.0-0' }} km</span>
-                                        </div>
-                                    </div>
-                                    <span *ngIf="!client.vehicle" class="text-muted fs-13px italic">Non assigné</span>
-                                </td>
-                                <td>
-                                    <span class="badge rounded-pill px-2" [ngClass]="{
+                                        <span *ngIf="!client.vehicle" class="text-muted fs-13px italic">Non
+                                            assigné</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge rounded-pill px-2" [ngClass]="{
                                         'bg-success': client.status === 'Dossier Approuvé' || client.status === 'En Cours de Contrat',
                                         'bg-info text-white': client.status === 'Dossier Validé',
                                         'bg-warning text-dark': client.status === 'En attente de Validation',
@@ -240,51 +247,72 @@
                                         'bg-secondary': client.status === 'Inactif',
                                         'bg-primary-subtle text-primary border border-primary-subtle': client.status === 'Prospect'
                                     }">
-                                        {{ client.status }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <!-- Dynamic Finance Badge based on screenshot logic -->
-                                    <span
-                                        *ngIf="(client.unpaidAmount || 0) === 0 && (client.status === 'Dossier Approuvé' || client.status === 'En Cours de Contrat')"
-                                        class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2">À
-                                        jour</span>
+                                            {{ client.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <!-- Dynamic Finance Badge based on screenshot logic -->
+                                        <span
+                                            *ngIf="(client.unpaidAmount || 0) === 0 && (client.status === 'Dossier Approuvé' || client.status === 'En Cours de Contrat')"
+                                            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2">À
+                                            jour</span>
 
-                                    <span *ngIf="(client.unpaidAmount || 0) > 0"
-                                        class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2">
-                                        Impayé ({{ (client.unpaidAmount || 0) | number }} FCFA)
-                                    </span>
+                                        <span *ngIf="(client.unpaidAmount || 0) > 0"
+                                            class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2">
+                                            Impayé ({{ (client.unpaidAmount || 0) | number }} FCFA)
+                                        </span>
 
-                                    <span *ngIf="client.status === 'En attente de Validation'"
-                                        class="badge bg-light text-muted border border-light-subtle rounded-pill px-2">-</span>
+                                        <span *ngIf="client.status === 'En attente de Validation'"
+                                            class="badge bg-light text-muted border border-light-subtle rounded-pill px-2">-</span>
 
-                                    <span
-                                        *ngIf="client.status === 'Soldé' || (client.status === 'Inactif' && (client.unpaidAmount || 0) === 0)"
-                                        class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2">Soldé</span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <button class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
-                                            [routerLink]="['details', client.uuid]" title="Voir détails">
-                                            <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
-                                        </button>
-                                        <button class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
-                                            [routerLink]="['edit', client.uuid]" title="Modifier">
-                                            <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr *ngIf="filteredClients.length === 0 && !loading">
-                                <td colspan="7" class="text-center py-5 text-muted bg-white">
-                                    <i data-feather="search" appFeatherIcon class="icon-xxl mb-3 text-light"></i>
-                                    <p class="fs-14px">Aucun dossier trouvé avec ces critères.</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                        <span
+                                            *ngIf="client.status === 'Soldé' || (client.status === 'Inactif' && (client.unpaidAmount || 0) === 0)"
+                                            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2">Soldé</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <button *ngxPermissionsOnly="'CLIENT:SHOW'"
+                                                class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
+                                                [routerLink]="['details', client.uuid]" title="Voir détails">
+                                                <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                            </button>
+                                            <button *ngxPermissionsOnly="'CLIENT:EDIT'"
+                                                class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
+                                                [routerLink]="['edit', client.uuid]" title="Modifier">
+                                                <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
+                                            </button>
+                                            <button *ngxPermissionsOnly="'CLIENT:DELETE'"
+                                                class="btn btn-xs btn-icon btn-outline-danger border-1 shadow-none"
+                                                (click)="client.uuid && deleteClient(client.uuid)" title="Supprimer">
+                                                <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="filteredClients.length === 0 && !loading">
+                                    <td colspan="7" class="text-center py-5 text-muted bg-white">
+                                        <i data-feather="search" appFeatherIcon class="icon-xxl mb-3 text-light"></i>
+                                        <p class="fs-14px">Aucun dossier trouvé avec ces critères.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</ng-container>
+
+<ng-container *ngxPermissionsExcept="['CLIENT:LIST']">
+    <div class="row mt-5">
+        <div class="col-md-12 text-center">
+            <div class="card p-5">
+                <i data-feather="lock" appFeatherIcon class="icon-xxl text-muted mb-3 mx-auto"></i>
+                <h4 class="text-danger">Accès Refusé</h4>
+                <p class="text-secondary">Vous n'avez pas les permissions nécessaires pour consulter la liste des
+                    clients.</p>
+            </div>
+        </div>
+    </div>
+</ng-container>

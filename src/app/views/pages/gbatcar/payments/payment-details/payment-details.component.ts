@@ -174,10 +174,10 @@ export class PaymentDetailsComponent implements OnInit {
     });
   }
 
-  translateStatus(status?: string): string {
+  translateStatus(status: string): string {
     if (!status) return 'Inconnu';
     const normalized = status.toUpperCase();
-    if (normalized === 'NEW' || normalized === 'PENDING' || normalized === 'EN ATTENTE') return 'EN ATTENTE';
+    if (normalized === 'NEW' || normalized === 'PENDING' || normalized === 'EN ATTENTE' || normalized === 'ATTENTE') return 'EN ATTENTE';
     if (normalized === 'VALIDATED' || normalized === 'VALIDÉ') return 'VALIDÉ';
     if (normalized === 'REJECTED' || normalized === 'REJETÉ') return 'REJETÉ';
     return status;

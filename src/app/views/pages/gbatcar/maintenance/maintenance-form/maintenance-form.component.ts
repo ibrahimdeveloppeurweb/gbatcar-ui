@@ -8,6 +8,7 @@ import { MaintenanceService } from '../../../../../core/services/maintenance/mai
 import { VehicleService } from '../../../../../core/services/vehicle/vehicle.service';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { ApiService } from '../../../../../utils/api.service';
+import { MaintenanceTypeService } from '../../../../../core/services/maintenance/maintenance-type.service';
 
 @Component({
     selector: 'app-maintenance-form',
@@ -24,6 +25,7 @@ export class MaintenanceFormComponent implements OnInit {
     private maintenanceService = inject(MaintenanceService);
     private vehicleService = inject(VehicleService);
     private apiService = inject(ApiService);
+    private maintenanceTypeService = inject(MaintenanceTypeService);
 
     customSearchFn = (term: string, item: any) => {
         term = term.toLowerCase();
@@ -60,6 +62,10 @@ export class MaintenanceFormComponent implements OnInit {
     vehicles: any[] = [];
     loadingVehicles = false;
 
+    // Maintenance types
+    maintenanceTypes: any[] = [];
+    loadingTypes = false;
+
     // Files handling
     selectedFiles: File[] = [];
     existingDocs: any[] = [];
@@ -70,6 +76,7 @@ export class MaintenanceFormComponent implements OnInit {
     ngOnInit(): void {
         this.newForm();
         this.loadVehicles();
+        this.loadMaintenanceTypes();
 
         this.maintenanceId = this.route.snapshot.paramMap.get('uuid') || this.route.snapshot.paramMap.get('id');
 
@@ -121,6 +128,38 @@ export class MaintenanceFormComponent implements OnInit {
             }
         });
     }
+
+    loadMaintenanceTypes(): void {
+        this.loadingTypes = true;
+        this.maintenanceTypeService.getAll().subscribe({
+            next: (res: any) => {
+                this.maintenanceTypes = res.data || res;
+                this.loadingTypes = false;
+            },
+            error: () => {
+                this.loadingTypes = false;
+                this.toast('Erreur lors du chargement des types d\'intervention', 'Erreur', 'error');
+            }
+        });
+    }
+
+    addTypeTag = (name: string) => {
+        return new Promise((resolve) => {
+            this.loadingTypes = true;
+            this.maintenanceTypeService.create(name).subscribe({
+                next: (res: any) => {
+                    const newType = res.data || res;
+                    this.maintenanceTypes = [...this.maintenanceTypes, newType];
+                    this.loadingTypes = false;
+                    resolve(newType);
+                },
+                error: () => {
+                    this.loadingTypes = false;
+                    resolve(null);
+                }
+            });
+        });
+    };
 
     loadMaintenanceData(uuid: string): void {
         this.loading = true;
@@ -198,11 +237,15 @@ export class MaintenanceFormComponent implements OnInit {
     saveData(): void {
         this.isSubmitting = true;
         const vals = this.form.value;
+        let typeValue = vals.type;
+        if (typeValue && typeof typeValue === 'object') {
+            typeValue = typeValue.name;
+        }
 
         const payload: any = {
             dateIntervention: vals.date,
             vehicle: vals.vehicle,
-            type: vals.type === 'Autre' ? vals.typeAutre : vals.type,
+            type: typeValue === 'Autre' ? vals.typeAutre : typeValue,
             prestataire: vals.provider === 'Autre prestataire' ? vals.providerAutre : vals.provider,
             cost: vals.cost,
             statut: vals.status,
