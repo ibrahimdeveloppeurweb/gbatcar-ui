@@ -1,235 +1,240 @@
-<!-- ==================== HEADER ==================== -->
-<div class="row mb-4 align-items-center">
-    <div class="col-md-8">
-        <h4 class="mb-1 text-dark fw-bold">Tableau de Bord : Administration des Opérations</h4>
-        <p class="text-muted fs-13px mb-0">Vue globale de l'activité des collaborateurs, journal d'audit et approbations
-            en attente.</p>
-    </div>
-    <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end gap-2">
-        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center bg-white"
-            routerLink="/gbatcar/admin/settings">
-            <i data-feather="settings" appFeatherIcon class="icon-sm me-1"></i> Paramètres
-        </button>
-        <button class="btn btn-primary btn-sm d-flex align-items-center" routerLink="/gbatcar/admin/users">
-            <i data-feather="users" appFeatherIcon class="icon-sm me-1"></i> Gestion Équipe
-        </button>
+<!-- ==================== LOADING STATE ==================== -->
+<div *ngIf="isLoading" class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Chargement...</span>
     </div>
 </div>
 
-<!-- ==================== KPI CARDS ==================== -->
-<div class="row mb-4">
-    <!-- Utilisateurs Actifs -->
-    <div class="col-md-3 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #3498db;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Collaborateurs Actifs (Audit)</p>
-                        <h4 class="fw-bold mb-0" style="color: #3498db;">{{ stats.activeCollaborators }}</h4>
-                        <small class="text-muted fs-11px">Ont effectué une action</small>
-                    </div>
-                    <i data-feather="users" appFeatherIcon class="icon-lg" style="color: #3498db;"></i>
-                </div>
-            </div>
+<div *ngIf="dashboardData && !isLoading">
+    <!-- ==================== HEADER ==================== -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h4 class="mb-1 text-dark fw-bold">Tableau de Bord : Administration des Opérations</h4>
+            <p class="text-muted fs-13px mb-0">Vue globale de l'activité des collaborateurs, journal d'audit et
+                approbations
+                en attente.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end gap-2">
+            <button class="btn btn-outline-secondary btn-sm d-flex align-items-center bg-white"
+                routerLink="/gbatcar/admin/settings">
+                <i data-feather="settings" appFeatherIcon class="icon-sm me-1"></i> Paramètres
+            </button>
+            <button class="btn btn-primary btn-sm d-flex align-items-center" routerLink="/gbatcar/admin/users">
+                <i data-feather="users" appFeatherIcon class="icon-sm me-1"></i> Gestion Équipe
+            </button>
         </div>
     </div>
 
-    <!-- Opérations du jour -->
-    <div class="col-md-3 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #2ecc71;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Total Actions d'Audit</p>
-                        <h4 class="fw-bold mb-0" style="color: #2ecc71;">{{ stats.totalAuditActions }}</h4>
-                        <small class="text-muted fs-11px">Tracés aujourd'hui</small>
-                    </div>
-                    <i data-feather="activity" appFeatherIcon class="icon-lg" style="color: #2ecc71;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Validations requises -->
-    <div class="col-md-3 col-6">
-        <div class="card h-100" style="border-left: 4px solid #f39c12;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Approbations en Attente</p>
-                        <h4 class="fw-bold mb-0" style="color: #f39c12;">{{ stats.pendingApprovals }}</h4>
-                        <small class="text-muted fs-11px">Remises, suppressions, anomalies</small>
-                    </div>
-                    <i data-feather="check-square" appFeatherIcon class="icon-lg" style="color: #f39c12;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Anomalies critiques -->
-    <div class="col-md-3 col-6">
-        <div class="card h-100" style="border-left: 4px solid #e74c3c;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Alertes / Anomalies</p>
-                        <h4 class="fw-bold mb-0" style="color: #e74c3c;">{{ stats.criticalAnomalies }}</h4>
-                        <small class="text-muted fs-11px">Comportements inhabituels</small>
-                    </div>
-                    <i data-feather="alert-octagon" appFeatherIcon class="icon-lg" style="color: #e74c3c;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ==================== CHARTS ==================== -->
-<div class="row">
-    <!-- Chart: Actions d'Audit (Donut) -->
-    <div class="col-lg-4 grid-margin stretch-card">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">Types d'Actions d'Audit (7 jours)
-                </h6>
-                <apx-chart [series]="auditActionChartOptions.series" [chart]="auditActionChartOptions.chart"
-                    [labels]="auditActionChartOptions.labels" [colors]="auditActionChartOptions.colors"
-                    [stroke]="auditActionChartOptions.stroke" [legend]="auditActionChartOptions.legend"
-                    [dataLabels]="auditActionChartOptions.dataLabels"
-                    [plotOptions]="auditActionChartOptions.plotOptions">
-                </apx-chart>
-            </div>
-        </div>
-    </div>
-
-    <!-- Chart: Approbations & Audit Volume (Area) -->
-    <div class="col-lg-8 grid-margin stretch-card">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">
-                        Activité d'Audit & Approbations par Collaborateur
-                    </h6>
-                    <div ngbDropdown class="mb-2">
-                        <a class="no-dropdown-toggle-icon" ngbDropdownToggle id="dropdownLoadChart">
-                            <i class="icon-md text-secondary pb-3px" data-feather="more-horizontal" appFeatherIcon></i>
-                        </a>
-                        <div ngbDropdownMenu aria-labelledby="dropdownLoadChart">
-                            <a ngbDropdownItem class="d-flex align-items-center" href="" (click)="false">
-                                <i data-feather="users" appFeatherIcon class="icon-sm me-2"></i>
-                                <span>Voir tous les collaborateurs</span>
-                            </a>
+    <!-- ==================== KPI CARDS ==================== -->
+    <div class="row mb-4">
+        <!-- Utilisateurs Actifs -->
+        <div class="col-md-3 col-6 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #3498db;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Collaborateurs Actifs (Audit)</p>
+                            <h4 class="fw-bold mb-0" style="color: #3498db;">{{ dashboardData.stats.activeCollaborators
+                                }}</h4>
+                            <small class="text-muted fs-11px">Ont effectué une action</small>
                         </div>
+                        <i data-feather="users" appFeatherIcon class="icon-lg" style="color: #3498db;"></i>
                     </div>
                 </div>
-                <apx-chart [series]="approvalTrendChartOptions.series" [chart]="approvalTrendChartOptions.chart"
-                    [colors]="approvalTrendChartOptions.colors" [stroke]="approvalTrendChartOptions.stroke"
-                    [fill]="approvalTrendChartOptions.fill" [xaxis]="approvalTrendChartOptions.xaxis"
-                    [grid]="approvalTrendChartOptions.grid" [legend]="approvalTrendChartOptions.legend"
-                    [dataLabels]="approvalTrendChartOptions.dataLabels">
-                </apx-chart>
+            </div>
+        </div>
+
+        <!-- Opérations du jour -->
+        <div class="col-md-3 col-6 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #2ecc71;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Total Actions d'Audit</p>
+                            <h4 class="fw-bold mb-0" style="color: #2ecc71;">{{ dashboardData.stats.totalAuditActions }}
+                            </h4>
+                            <small class="text-muted fs-11px">Tracés aujourd'hui</small>
+                        </div>
+                        <i data-feather="activity" appFeatherIcon class="icon-lg" style="color: #2ecc71;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Validations requises -->
+        <div class="col-md-3 col-6">
+            <div class="card h-100" style="border-left: 4px solid #f39c12;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Approbations en Attente</p>
+                            <h4 class="fw-bold mb-0" style="color: #f39c12;">{{ dashboardData.stats.pendingApprovals }}
+                            </h4>
+                            <small class="text-muted fs-11px">Remises, contrats, et paiements</small>
+                        </div>
+                        <i data-feather="check-square" appFeatherIcon class="icon-lg" style="color: #f39c12;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Anomalies critiques -->
+        <div class="col-md-3 col-6">
+            <div class="card h-100" style="border-left: 4px solid #e74c3c;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Alertes / Anomalies</p>
+                            <h4 class="fw-bold mb-0" style="color: #e74c3c;">{{ dashboardData.stats.criticalAnomalies }}
+                            </h4>
+                            <small class="text-muted fs-11px">Comportements inhabituels</small>
+                        </div>
+                        <i data-feather="alert-octagon" appFeatherIcon class="icon-lg" style="color: #e74c3c;"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- ==================== TÂCHES ET AUDIT ==================== -->
-<div class="row">
-    <!-- Approbations en attente -->
-    <div class="col-lg-4 grid-margin stretch-card">
-        <div class="card border-0 shadow-sm border-top border-warning border-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="card-title text-warning mb-0 fs-13px fw-bold text-uppercase">
-                        <i data-feather="file-minus" appFeatherIcon class="icon-sm me-1"></i>
-                        Approbations Requises
+    <!-- ==================== CHARTS ==================== -->
+    <div class="row">
+        <!-- Chart: Actions d'Audit (Donut) -->
+        <div class="col-lg-4 grid-margin stretch-card">
+            <div class="card border-0 shadow-sm" *ngIf="auditActionChartOptions">
+                <div class="card-body">
+                    <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">Répartition des Actions
+                        d'Audit
                     </h6>
-                    <span class="badge bg-warning text-dark rounded-pill">{{ pendingTasks.length }}</span>
+                    <apx-chart [series]="auditActionChartOptions.series" [chart]="auditActionChartOptions.chart"
+                        [labels]="auditActionChartOptions.labels" [colors]="auditActionChartOptions.colors"
+                        [stroke]="auditActionChartOptions.stroke" [legend]="auditActionChartOptions.legend"
+                        [dataLabels]="auditActionChartOptions.dataLabels"
+                        [plotOptions]="auditActionChartOptions.plotOptions">
+                    </apx-chart>
                 </div>
-                <div class="d-flex flex-column gap-2 mb-3">
-                    <div *ngFor="let task of pendingTasks" class="p-3 rounded border border-light bg-light"
-                        [ngStyle]="{'border-left': '3px solid ' + (task.priority === 'critical' ? '#e74c3c' : (task.priority === 'high' ? '#f39c12' : '#3498db'))}">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="badge" [ngClass]="getPriorityClass(task.priority)">{{ task.type }}</span>
-                            <span class="text-muted fs-10px">{{ task.date }}</span>
-                        </div>
-                        <p class="fs-12px text-dark fw-medium mb-1">{{ task.description }}</p>
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <span class="text-secondary fs-11px"><i data-feather="user" appFeatherIcon
-                                    class="icon-xs me-1"></i> {{ task.requester }}</span>
-                            <div>
-                                <button class="btn btn-xs btn-icon btn-outline-success me-1" title="Approuver"><i
-                                        data-feather="check" appFeatherIcon class="icon-xs"></i></button>
-                                <button class="btn btn-xs btn-icon btn-outline-danger" title="Rejeter"><i
-                                        data-feather="x" appFeatherIcon class="icon-xs"></i></button>
+            </div>
+        </div>
+
+        <!-- Chart: Collaborator Activity (Bar) -->
+        <div class="col-lg-8 grid-margin stretch-card">
+            <div class="card border-0 shadow-sm" *ngIf="approvalTrendChartOptions">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">
+                            Activité d'Audit & Approbations par Collaborateur
+                        </h6>
+                    </div>
+                    <apx-chart [series]="approvalTrendChartOptions.series" [chart]="approvalTrendChartOptions.chart"
+                        [colors]="approvalTrendChartOptions.colors" [stroke]="approvalTrendChartOptions.stroke"
+                        [fill]="approvalTrendChartOptions.fill" [xaxis]="approvalTrendChartOptions.xaxis"
+                        [grid]="approvalTrendChartOptions.grid" [legend]="approvalTrendChartOptions.legend"
+                        [dataLabels]="approvalTrendChartOptions.dataLabels">
+                    </apx-chart>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TÂCHES ET AUDIT ==================== -->
+    <div class="row">
+        <!-- Approbations en attente -->
+        <div class="col-lg-4 grid-margin stretch-card">
+            <div class="card border-0 shadow-sm border-top border-warning border-3">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="card-title text-warning mb-0 fs-13px fw-bold text-uppercase">
+                            <i data-feather="file-minus" appFeatherIcon class="icon-sm me-1"></i>
+                            Approbations Requises
+                        </h6>
+                        <span class="badge bg-warning text-dark rounded-pill">{{ dashboardData.pendingTasks.length
+                            }}</span>
+                    </div>
+                    <div class="d-flex flex-column gap-2 mb-3">
+                        <div *ngFor="let task of dashboardData.pendingTasks"
+                            class="p-3 rounded border border-light bg-light"
+                            [ngStyle]="{'border-left': '3px solid ' + (task.priority === 'critical' ? '#e74c3c' : (task.priority === 'high' ? '#f39c12' : '#3498db'))}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge" [ngClass]="getPriorityClass(task.priority)">{{ task.type }}</span>
+                                <span class="text-muted fs-10px">{{ task.date | date:'short' }}</span>
+                            </div>
+                            <p class="fs-12px text-dark fw-medium mb-1">{{ task.description }}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span class="text-secondary fs-11px"><i data-feather="user" appFeatherIcon
+                                        class="icon-xs me-1"></i> {{ task.requester }}</span>
+                                <div>
+                                    <button class="btn btn-xs btn-icon btn-outline-success me-1" title="Approuver"><i
+                                            data-feather="check" appFeatherIcon class="icon-xs"></i></button>
+                                    <button class="btn btn-xs btn-icon btn-outline-danger" title="Rejeter"><i
+                                            data-feather="x" appFeatherIcon class="icon-xs"></i></button>
+                                </div>
                             </div>
                         </div>
+                        <div *ngIf="dashboardData.pendingTasks.length === 0" class="text-center py-4">
+                            <i data-feather="check-circle" appFeatherIcon class="text-success mb-2 icon-lg"></i>
+                            <p class="text-muted fs-12px">Aucune approbation en attente</p>
+                        </div>
                     </div>
-                </div>
-                <div class="d-grid mt-auto">
-                    <a routerLink="/gbatcar/admin/notifications" class="btn btn-outline-secondary btn-sm">Voir toutes
-                        les tâches</a>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Journal d'Audit (Actions Récentes) -->
-    <div class="col-lg-8 grid-margin stretch-card">
-        <div class="card border-0 shadow-sm border-top border-primary border-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="card-title mb-0 fs-13px fw-bold text-uppercase text-primary">
-                        <i data-feather="list" appFeatherIcon class="icon-sm me-1"></i>
-                        Journal d'Audit des Opérations
-                    </h6>
-                    <button class="btn btn-sm btn-outline-primary d-flex align-items-center">
-                        <i data-feather="download" appFeatherIcon class="icon-sm me-1"></i> CSV
-                    </button>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Collaborateur</th>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Module</th>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Action</th>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Détails</th>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Heure</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let log of auditLogs">
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold me-2"
-                                            style="width: 28px; height: 28px; font-size: 11px;">
-                                            {{ log.avatar }}
+        <!-- Journal d'Audit (Actions Récentes) -->
+        <div class="col-lg-8 grid-margin stretch-card">
+            <div class="card border-0 shadow-sm border-top border-primary border-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="card-title mb-0 fs-13px fw-bold text-uppercase text-primary">
+                            <i data-feather="list" appFeatherIcon class="icon-sm me-1"></i>
+                            Journal d'Audit des Opérations
+                        </h6>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Collaborateur</th>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Module</th>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Action</th>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Détails</th>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Heure</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let log of dashboardData.auditLogs">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold me-2"
+                                                style="width: 28px; height: 28px; font-size: 11px;">
+                                                {{ log.avatar }}
+                                            </div>
+                                            <span class="fw-medium text-dark fs-12px">{{ log.user }}</span>
                                         </div>
-                                        <span class="fw-medium text-dark fs-12px">{{ log.user }}</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="d-flex align-items-center text-secondary fs-12px">
-                                        <i [attr.data-feather]="getModuleIcon(log.module)" appFeatherIcon
-                                            class="icon-xs me-1"></i>
-                                        {{ log.module }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="fw-bold fs-12px" [ngClass]="getActionClass(log.action)">{{ log.action
-                                        }}</span>
-                                </td>
-                                <td class="text-dark fs-12px text-truncate" style="max-width: 250px;"
-                                    [title]="log.details">
-                                    {{ log.details }}
-                                </td>
-                                <td class="text-muted fs-11px">{{ log.time }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="d-grid mt-3">
-                    <button class="btn btn-light btn-sm text-primary">Charger plus d'historique</button>
+                                    </td>
+                                    <td>
+                                        <span class="d-flex align-items-center text-secondary fs-12px">
+                                            <i [attr.data-feather]="getModuleIcon(log.module)" appFeatherIcon
+                                                class="icon-xs me-1"></i>
+                                            {{ log.module }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold fs-12px" [ngClass]="getActionClass(log.action)">{{
+                                            log.action
+                                            }}</span>
+                                    </td>
+                                    <td class="text-dark fs-12px text-truncate" style="max-width: 250px;"
+                                        [title]="log.details">
+                                        {{ log.details }}
+                                    </td>
+                                    <td class="text-muted fs-11px">{{ log.time | date:'shortTime' }}</td>
+                                </tr>
+                                <tr *ngIf="dashboardData.auditLogs.length === 0">
+                                    <td colspan="5" class="text-center py-4 text-muted fs-12px">Aucune activité récente
+                                        trouvée</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

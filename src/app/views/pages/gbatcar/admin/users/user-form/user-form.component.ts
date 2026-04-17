@@ -5,6 +5,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { PermissionService } from '../../../../../../core/services/permission/permission.service';
 import { UserService } from '../../../../../../core/services/user/user.service';
 import { Role } from '../../../../../../core/models/permission.model';
+import { AuthService } from '../../../../../../core/services/auth/auth.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { FeatherIconDirective } from '../../../../../../core/feather-icon/feather-icon.directive';
@@ -12,7 +14,7 @@ import { FeatherIconDirective } from '../../../../../../core/feather-icon/feathe
 @Component({
   selector: 'app-user-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgSelectModule, FeatherIconDirective],
+  imports: [CommonModule, ReactiveFormsModule, NgSelectModule, FeatherIconDirective, NgxPermissionsModule],
   templateUrl: './user-form.component.html',
   styleUrl: './user-form.component.scss'
 })
@@ -22,6 +24,8 @@ export class UserFormComponent implements OnInit {
   private router = inject(Router);
   private permissionService = inject(PermissionService);
   private userService = inject(UserService);
+  private authService = inject(AuthService);
+  private ngxPermissionsService = inject(NgxPermissionsService);
 
   form!: FormGroup;
   isEditMode = false;
@@ -37,6 +41,7 @@ export class UserFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.ngxPermissionsService.loadPermissions(this.authService.getPermissions());
     // Load available roles from the API
     this.permissionService.getList().subscribe({
       next: (res: any) => {

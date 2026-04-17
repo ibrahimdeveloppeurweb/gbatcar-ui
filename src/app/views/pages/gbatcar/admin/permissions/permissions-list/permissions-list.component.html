@@ -1,79 +1,109 @@
-<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
-    <div>
-        <h4 class="mb-3 mb-md-0">Gestion des Permissions (Rôles)</h4>
-    </div>
-    <div class="d-flex align-items-center flex-wrap text-nowrap">
-        <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" (click)="navigateToAdd()">
-            <i data-feather="plus-circle" appFeatherIcon class="btn-icon-prepend"></i>
-            Nouveau Rôle
-        </button>
-    </div>
-</div>
-
-<div class="row">
-    <div *ngIf="loading" class="col-12 text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+<ng-container *ngxPermissionsOnly="['ROLE:ADMIN:LIST']">
+    <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+        <div>
+            <h4 class="mb-3 mb-md-0">Gestion des Permissions (Rôles)</h4>
+        </div>
+        <div class="d-flex align-items-center flex-wrap text-nowrap">
+            <ng-container *ngxPermissionsOnly="'ROLE:ADMIN:NEW'">
+                <button type="button" class="btn btn-primary btn-icon-text mb-2 mb-md-0" (click)="navigateToAdd()">
+                    <i data-feather="plus-circle" appFeatherIcon class="btn-icon-prepend"></i>
+                    Nouveau Rôle
+                </button>
+            </ng-container>
         </div>
     </div>
-    <div *ngIf="!loading" class="col-md-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title">Rôles existants</h6>
-                <p class="text-muted mb-3">Définissez les niveaux d'accès et d'actions spécifiques pour les différents
-                    profils d'utilisateurs collaborant sur GbatCar.</p>
-                <div class="table-responsive">
-                    <table class="table align-middle table-hover mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="border-top-0 text-uppercase fs-11px fw-bold text-secondary"
-                                    style="width: 15%;">Nom du Rôle</th>
-                                <th class="border-top-0 text-uppercase fs-11px fw-bold text-secondary"
-                                    style="width: 40%;">Description</th>
-                                <th class="border-top-0 text-uppercase fs-11px fw-bold text-secondary text-center"
-                                    style="width: 15%;">Permissions</th>
-                                <th class="border-top-0 text-uppercase fs-11px fw-bold text-secondary text-center"
-                                    style="width: 15%;">Utilisateurs Affiliés</th>
-                                <th class="border-top-0 text-uppercase fs-11px fw-bold text-secondary text-center"
-                                    style="width: 15%;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let role of roles">
-                                <td>
-                                    <span class="badge px-3 py-2 rounded-1 bg-primary">
-                                        {{ role.nom }}
-                                    </span>
-                                </td>
-                                <td class="text-wrap text-dark fs-13px" style="max-width: 400px; line-height: 1.5;">{{
-                                    role.description }}
-                                </td>
-                                <td class="text-center text-dark fw-bold fs-13px">{{ role.paths ? role.paths.length : 0 }} permission(s)</td>
-                                <td class="text-center text-dark fw-bold fs-14px">{{ role.usersCount || 0 }}</td>
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center align-items-center gap-2">
-                                        <!-- View Icon (Cyan outline) -->
-                                        <button class="btn btn-icon btn-square btn-outline-info btn-sm"
-                                            (click)="navigateToDetails(role)" title="Voir les permissions">
-                                            <i data-feather="eye" appFeatherIcon></i>
-                                        </button>
-                                        <!-- Edit Icon (Purple outline) -->
-                                        <button class="btn btn-icon btn-square btn-outline-primary btn-sm"
-                                            (click)="navigateToEdit(role)" title="Modifier les permissions">
-                                            <i data-feather="edit-2" appFeatherIcon></i>
-                                        </button>
-                                        <!-- Delete Icon (Red outline square) -->
-                                        <button class="btn btn-icon btn-square btn-outline-danger btn-sm"
-                                            (click)="onDelete(role)" title="Supprimer le rôle">
-                                            <i data-feather="trash-2" appFeatherIcon></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+    <div class="row">
+        <div *ngIf="loading" class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <div *ngIf="!loading" class="col-md-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Rôles existants</h6>
+                    <p class="text-muted mb-3">Définissez les niveaux d'accès et d'actions spécifiques pour les
+                        différents
+                        profils d'utilisateurs collaborant sur GbatCar.</p>
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="border-top-0 text-uppercase fs-11px fw-bold text-secondary"
+                                        style="width: 15%;">Nom du Rôle</th>
+                                    <th class="border-top-0 text-uppercase fs-11px fw-bold text-secondary"
+                                        style="width: 40%;">Description</th>
+                                    <th class="border-top-0 text-uppercase fs-11px fw-bold text-secondary text-center"
+                                        style="width: 15%;">Permissions</th>
+                                    <th class="border-top-0 text-uppercase fs-11px fw-bold text-secondary text-center"
+                                        style="width: 15%;">Utilisateurs Affiliés</th>
+                                    <th class="border-top-0 text-uppercase fs-11px fw-bold text-secondary text-center"
+                                        style="width: 15%;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let role of roles">
+                                    <td>
+                                        <span class="badge px-3 py-2 rounded-1 bg-primary">
+                                            {{ role.nom }}
+                                        </span>
+                                    </td>
+                                    <td class="text-wrap text-dark fs-13px" style="max-width: 400px; line-height: 1.5;">
+                                        {{
+                                        role.description }}
+                                    </td>
+                                    <td class="text-center text-dark fw-bold fs-13px">{{ role.paths ? role.paths.length
+                                        : 0 }} permission(s)</td>
+                                    <td class="text-center text-dark fw-bold fs-14px">{{ role.usersCount || 0 }}</td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center align-items-center gap-2">
+                                            <ng-container *ngxPermissionsOnly="'ROLE:ADMIN:SHOW'">
+                                                <button class="btn btn-icon btn-square btn-outline-info btn-sm"
+                                                    (click)="navigateToDetails(role)" title="Voir les permissions">
+                                                    <i data-feather="eye" appFeatherIcon></i>
+                                                </button>
+                                            </ng-container>
+                                            <ng-container *ngxPermissionsOnly="'ROLE:ADMIN:EDIT'">
+                                                <button class="btn btn-icon btn-square btn-outline-primary btn-sm"
+                                                    (click)="navigateToEdit(role)" title="Modifier les permissions">
+                                                    <i data-feather="edit-2" appFeatherIcon></i>
+                                                </button>
+                                            </ng-container>
+                                            <ng-container *ngxPermissionsOnly="'ROLE:ADMIN:DELETE'">
+                                                <button class="btn btn-icon btn-square btn-outline-danger btn-sm"
+                                                    (click)="onDelete(role)" title="Supprimer le rôle">
+                                                    <i data-feather="trash-2" appFeatherIcon></i>
+                                                </button>
+                                            </ng-container>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</ng-container>
+
+<ng-container *ngxPermissionsExcept="['ROLE:ADMIN:LIST']">
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+        <div class="card shadow-sm border-0 bg-white" style="max-width: 500px; border-radius: 12px;">
+            <div class="card-body text-center p-5">
+                <div class="rounded-circle bg-danger-transparent d-inline-flex p-3 mb-4">
+                    <i data-feather="lock" appFeatherIcon class="text-danger" style="width: 48px; height: 48px;"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Accès Refusé</h4>
+                <p class="text-secondary mb-4">
+                    Vous ne disposez pas des permissions nécessaires pour gérer les permissions et rôles.
+                    <br>Veuillez contacter votre administrateur si vous pensez qu'il s'agit d'une erreur.
+                </p>
+                <button class="btn btn-danger px-4" routerLink="/dashboard">
+                    Retour au tableau de bord
+                </button>
+            </div>
+        </div>
+    </div>
+</ng-container>

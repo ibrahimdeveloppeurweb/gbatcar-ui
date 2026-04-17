@@ -10,11 +10,13 @@ import { Vehicle } from '../../../../../core/models/vehicle.model';
 import { environment } from '../../../../../../environments/environment';
 import { NgSelectModule } from '@ng-select/ng-select';
 import Swal from 'sweetalert2';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-vehicle-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, NgbNavModule, FeatherIconDirective, ReactiveFormsModule, NgSelectModule],
+  imports: [CommonModule, RouterModule, NgbNavModule, FeatherIconDirective, ReactiveFormsModule, NgSelectModule, NgxPermissionsModule],
   templateUrl: './vehicle-details.component.html',
   styleUrl: './vehicle-details.component.scss'
 })
@@ -24,6 +26,8 @@ export class VehicleDetailsComponent implements OnInit {
   private maintenanceService = inject(MaintenanceService);
   private modalService = inject(NgbModal);
   private fb = inject(FormBuilder);
+  private permissionsService = inject(NgxPermissionsService);
+  private authService = inject(AuthService);
 
   vehicle: Vehicle | any = null;
   loading: boolean = true;
@@ -182,6 +186,9 @@ export class VehicleDetailsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
+
     const uuid = this.route.snapshot.paramMap.get('uuid');
     if (uuid) {
       this.loadVehicle(uuid);

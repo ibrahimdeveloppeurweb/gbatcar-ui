@@ -4,12 +4,14 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import Swal from 'sweetalert2';
 import { GeneralSettingService } from '../../../../../core/services/setting/setting.service';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'app-gbatcar-admin-settings',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, FeatherIconDirective],
+    imports: [CommonModule, ReactiveFormsModule, FeatherIconDirective, NgxPermissionsModule],
     templateUrl: './settings.component.html',
     styleUrl: './settings.component.scss'
 })
@@ -21,7 +23,9 @@ export class GbatcarAdminSettingsComponent implements OnInit, OnDestroy {
 
     constructor(
         private formBuilder: FormBuilder,
-        private generalSettingService: GeneralSettingService
+        private generalSettingService: GeneralSettingService,
+        private authService: AuthService,
+        private ngxPermissionsService: NgxPermissionsService
     ) {
         this.settingsForm = this.formBuilder.group({
             fraisDossier: [null, [Validators.required, Validators.min(0)]],
@@ -33,6 +37,7 @@ export class GbatcarAdminSettingsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
+        this.ngxPermissionsService.loadPermissions(this.authService.getPermissions());
         this.loadSettings();
         this.loadHistory();
     }

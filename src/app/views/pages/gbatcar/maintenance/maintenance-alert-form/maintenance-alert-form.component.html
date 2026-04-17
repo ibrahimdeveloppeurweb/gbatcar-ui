@@ -1,122 +1,150 @@
-<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
-    <div>
-        <nav class="page-breadcrumb mb-1">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a routerLink="/gbatcar/maintenance/alerts">Alertes & Sinistres</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ isEditMode ? 'Modifier' : 'Déclarer' }} un Incident</li>
-            </ol>
-        </nav>
-        <h4 class="mb-3 mb-md-0 text-warning">{{ isEditMode ? 'Modifier le Sinistre' : 'Déclarer un Sinistre ou une Panne' }}</h4>
+<ng-container *ngxPermissionsOnly="isEditMode ? 'MAINTENANCE_ALERT:EDIT' : 'MAINTENANCE_ALERT:NEW'">
+    <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+        <div>
+            <nav class="page-breadcrumb mb-1">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a routerLink="/gbatcar/maintenance/alerts">Alertes & Sinistres</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ isEditMode ? 'Modifier' : 'Déclarer' }} un
+                        Incident</li>
+                </ol>
+            </nav>
+            <h4 class="mb-3 mb-md-0 text-warning">{{ isEditMode ? 'Modifier le Sinistre' : 'Déclarer un Sinistre ou une
+                Panne' }}</h4>
+        </div>
+        <div class="d-flex align-items-center flex-wrap text-nowrap">
+            <button [routerLink]="['/gbatcar/maintenance/alerts']"
+                class="btn btn-outline-secondary btn-icon-text me-2 mb-2 mb-md-0">
+                <i data-feather="x" appFeatherIcon class="btn-icon-prepend"></i>
+                Annuler
+            </button>
+            <button class="btn btn-warning btn-icon-text mb-2 mb-md-0" (click)="onSubmit()" [disabled]="isSubmitting">
+                <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                <i *ngIf="!isSubmitting" data-feather="save" appFeatherIcon class="btn-icon-prepend"></i>
+                Enregistrer la Déclaration
+            </button>
+        </div>
     </div>
-    <div class="d-flex align-items-center flex-wrap text-nowrap">
-        <button [routerLink]="['/gbatcar/maintenance/alerts']"
-            class="btn btn-outline-secondary btn-icon-text me-2 mb-2 mb-md-0">
-            <i data-feather="x" appFeatherIcon class="btn-icon-prepend"></i>
-            Annuler
-        </button>
-        <button class="btn btn-warning btn-icon-text mb-2 mb-md-0" (click)="onSubmit()" [disabled]="isSubmitting">
-            <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1" role="status"></span>
-            <i *ngIf="!isSubmitting" data-feather="save" appFeatherIcon class="btn-icon-prepend"></i>
-            Enregistrer la Déclaration
-        </button>
-    </div>
-</div>
 
-<div class="row" *ngIf="!loading">
-    <div class="col-md-12 stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title text-warning">Formulaire de déclaration d'incident</h6>
-                <form [formGroup]="alertForm">
-                    <div class="row">
-                        <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Véhicule impliqué (Locataire) <span
-                                    class="text-danger">*</span></label>
-                            <ng-select [items]="vehicles" 
-                                       bindLabel="immatriculation" 
-                                       bindValue="uuid"
-                                       placeholder="Sélectionner le véhicule..." 
-                                       formControlName="vehicle"
-                                       [loading]="loadingVehicles"
-                                       [ngClass]="{'is-invalid': alertForm.get('vehicle')?.invalid && alertForm.get('vehicle')?.touched}">
-                                <ng-template ng-option-tmp let-item="item" let-index="index">
-                                    <b>{{ item.marque }} {{ item.modele }}</b><br/>
-                                    <small class="text-muted">{{ item.immatriculation }} - {{ item.client?.name || 'Pas de client' }}</small>
-                                </ng-template>
-                            </ng-select>
+    <div class="row" *ngIf="!loading">
+        <div class="col-md-12 stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-warning">Formulaire de déclaration d'incident</h6>
+                    <form [formGroup]="alertForm">
+                        <div class="row">
+                            <div class="col-sm-6 mb-3">
+                                <label class="form-label text-dark fw-medium">Véhicule impliqué (Locataire) <span
+                                        class="text-danger">*</span></label>
+                                <ng-select [items]="vehicles" bindLabel="immatriculation" bindValue="uuid"
+                                    placeholder="Sélectionner le véhicule..." formControlName="vehicle"
+                                    [loading]="loadingVehicles"
+                                    [ngClass]="{'is-invalid': alertForm.get('vehicle')?.invalid && alertForm.get('vehicle')?.touched}">
+                                    <ng-template ng-option-tmp let-item="item" let-index="index">
+                                        <b>{{ item.marque }} {{ item.modele }}</b><br />
+                                        <small class="text-muted">{{ item.immatriculation }} - {{ item.client?.name ||
+                                            'Pas de client' }}</small>
+                                    </ng-template>
+                                </ng-select>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <label class="form-label text-dark fw-medium">Date & Heure de l'incident <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" class="form-control" formControlName="date"
+                                    [ngClass]="{'is-invalid': alertForm.get('date')?.invalid && alertForm.get('date')?.touched}">
+                            </div>
                         </div>
-                        <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Date & Heure de l'incident <span
-                                    class="text-danger">*</span></label>
-                            <input type="date" class="form-control" formControlName="date"
-                                [ngClass]="{'is-invalid': alertForm.get('date')?.invalid && alertForm.get('date')?.touched}">
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Nature / Type de sinistre <span
-                                    class="text-danger">*</span></label>
-                            <select class="form-select" formControlName="type"
-                                [ngClass]="{'is-invalid': alertForm.get('type')?.invalid && alertForm.get('type')?.touched}">
-                                <option [ngValue]="null">Sélectionnez la nature...</option>
-                                <option *ngFor="let s of typeOptions" [value]="s">{{ s }}</option>
-                            </select>
+                        <div class="row">
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">Nature / Type de sinistre <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select" formControlName="type"
+                                    [ngClass]="{'is-invalid': alertForm.get('type')?.invalid && alertForm.get('type')?.touched}">
+                                    <option [ngValue]="null">Sélectionnez la nature...</option>
+                                    <option *ngFor="let s of typeOptions" [value]="s">{{ s }}</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">Niveau de Gravité (Estimé) <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select" formControlName="severity">
+                                    <option *ngFor="let s of severityOptions" [value]="s">{{ s }}</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">Coût estimatif (XOF)</label>
+                                <input type="number" class="form-control" formControlName="repairCost" placeholder="0">
+                            </div>
                         </div>
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Niveau de Gravité (Estimé) <span
-                                    class="text-danger">*</span></label>
-                            <select class="form-select" formControlName="severity">
-                                <option *ngFor="let s of severityOptions" [value]="s">{{ s }}</option>
-                            </select>
-                        </div>
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Coût estimatif (XOF)</label>
-                            <input type="number" class="form-control" formControlName="repairCost" placeholder="0">
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-sm-12 mb-3">
-                            <label class="form-label text-dark fw-medium">Circonstances détaillées de l'incident <span
-                                    class="text-danger">*</span></label>
-                            <textarea class="form-control" formControlName="description" rows="4"
-                                placeholder="Veuillez décrire avec précision les faits..."
-                                [ngClass]="{'is-invalid': alertForm.get('description')?.invalid && alertForm.get('description')?.touched}"></textarea>
+                        <div class="row">
+                            <div class="col-sm-12 mb-3">
+                                <label class="form-label text-dark fw-medium">Circonstances détaillées de l'incident
+                                    <span class="text-danger">*</span></label>
+                                <textarea class="form-control" formControlName="description" rows="4"
+                                    placeholder="Veuillez décrire avec précision les faits..."
+                                    [ngClass]="{'is-invalid': alertForm.get('description')?.invalid && alertForm.get('description')?.touched}"></textarea>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Informations sur l'autre chauffeur / Tiers</label>
-                            <textarea class="form-control" formControlName="driverInfo" rows="3"
-                                placeholder="S'il y a un tiers (nom, assurance, immatriculation)..."></textarea>
+                        <div class="row">
+                            <div class="col-sm-6 mb-3">
+                                <label class="form-label text-dark fw-medium">Informations sur l'autre chauffeur /
+                                    Tiers</label>
+                                <textarea class="form-control" formControlName="driverInfo" rows="3"
+                                    placeholder="S'il y a un tiers (nom, assurance, immatriculation)..."></textarea>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <label class="form-label text-dark fw-medium">Observations de gestion
+                                    (Optionnel)</label>
+                                <textarea class="form-control" formControlName="observation" rows="3"
+                                    placeholder="Notes internes..."></textarea>
+                            </div>
                         </div>
-                        <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Observations de gestion (Optionnel)</label>
-                            <textarea class="form-control" formControlName="observation" rows="3"
-                                placeholder="Notes internes..."></textarea>
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Constat de police / Rapport officiel (PDF)</label>
-                            <input type="file" class="form-control" (change)="onFileChange($event)" accept="application/pdf">
-                            <small class="text-muted mt-1 d-block">Obligatoire pour les accidents corporels.</small>
+                        <div class="row">
+                            <div class="col-sm-6 mb-3">
+                                <label class="form-label text-dark fw-medium">Constat de police / Rapport officiel
+                                    (PDF)</label>
+                                <input type="file" class="form-control" (change)="onFileChange($event)"
+                                    accept="application/pdf">
+                                <small class="text-muted mt-1 d-block">Obligatoire pour les accidents corporels.</small>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <label class="form-label text-dark fw-medium">Photos du sinistre (Max 5)</label>
+                                <input type="file" class="form-control" (change)="onPhotosChange($event)" multiple
+                                    accept="image/*">
+                            </div>
                         </div>
-                        <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Photos du sinistre (Max 5)</label>
-                            <input type="file" class="form-control" (change)="onPhotosChange($event)" multiple accept="image/*">
-                        </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div *ngIf="loading" class="text-center py-5">
-    <div class="spinner-border text-warning" role="status"></div>
-    <p class="mt-2 text-muted">Chargement des données...</p>
-</div>
+    <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-warning" role="status"></div>
+        <p class="mt-2 text-muted">Chargement des données...</p>
+    </div>
+</ng-container>
+
+<ng-container *ngxPermissionsExcept="isEditMode ? 'MAINTENANCE_ALERT:EDIT' : 'MAINTENANCE_ALERT:NEW'">
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+        <div class="card shadow-sm border-0 bg-white" style="max-width: 500px; border-radius: 12px;">
+            <div class="card-body text-center p-5">
+                <div class="rounded-circle bg-danger-transparent d-inline-flex p-3 mb-4">
+                    <i data-feather="lock" appFeatherIcon class="text-danger" style="width: 48px; height: 48px;"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Accès Refusé</h4>
+                <p class="text-secondary mb-4">
+                    Vous ne disposez pas des permissions nécessaires pour {{ isEditMode ? 'modifier ce sinistre' :
+                    'déclarer un nouveau sinistre' }}.
+                    <br>Veuillez contacter votre administrateur si vous pensez qu'il s'agit d'une erreur.
+                </p>
+                <button class="btn btn-danger px-4" routerLink="/gbatcar/maintenance/alerts">
+                    Retour aux alertes
+                </button>
+            </div>
+        </div>
+    </div>
+</ng-container>

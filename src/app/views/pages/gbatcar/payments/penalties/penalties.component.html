@@ -1,271 +1,286 @@
-<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
-    <div>
-        <h4 class="mb-3 mb-md-0 text-danger">Gestion des Amendes & Pénalités</h4>
-        <p class="text-secondary">Suivi des pénalités financières appliquées aux locataires.</p>
+<ng-container *ngxPermissionsOnly="['PENALTY:LIST']">
+    <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+        <div>
+            <h4 class="mb-3 mb-md-0 text-danger">Gestion des Amendes & Pénalités</h4>
+            <p class="text-secondary">Suivi des pénalités financières appliquées aux locataires.</p>
+        </div>
+        <div class="d-flex align-items-center flex-wrap text-nowrap">
+            <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0 me-2"
+                (click)="toggleAdvancedFilters()">
+                <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
+                {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
+            </button>
+            <ng-container *ngxPermissionsOnly="'PENALTY:NEW'">
+                <button [routerLink]="['/gbatcar/payments/penalties/new']"
+                    class="btn btn-primary btn-icon-text mb-2 mb-md-0">
+                    <i data-feather="plus-circle" appFeatherIcon class="btn-icon-prepend"></i> Déclarer une Amende
+                </button>
+            </ng-container>
+        </div>
     </div>
-    <div class="d-flex align-items-center flex-wrap text-nowrap">
-        <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0 me-2"
-            (click)="toggleAdvancedFilters()">
-            <i data-feather="filter" appFeatherIcon class="btn-icon-prepend"></i>
-            {{ showAdvancedFilters ? 'Masquer Filtres' : 'Filtres Avancés' }}
-        </button>
-        <button [routerLink]="['/gbatcar/payments/penalties/new']" class="btn btn-danger btn-icon-text mb-2 mb-md-0">
-            <i data-feather="plus" appFeatherIcon class="btn-icon-prepend"></i> Émettre une Amende
-        </button>
-    </div>
-</div>
 
-<!-- KPI Summary Cards -->
-<div class="row mb-4">
-    <div class="col-md-3 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #6c757d;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Total Pénalités</p>
-                        <h4 class="fw-bold mb-0">{{ penalties.length }}</h4>
+    <!-- KPI Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-6 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #6c757d;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Total Pénalités</p>
+                            <h4 class="fw-bold mb-0">{{ penalties.length }}</h4>
+                        </div>
+                        <i data-feather="alert-octagon" appFeatherIcon class="icon-lg text-secondary"></i>
                     </div>
-                    <i data-feather="alert-octagon" appFeatherIcon class="icon-lg text-secondary"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #e74c3c;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Montant Non Recouvré</p>
+                            <h4 class="fw-bold mb-0 text-danger">{{ unrecoveredTotal | number }} FCFA</h4>
+                        </div>
+                        <i data-feather="x-circle" appFeatherIcon class="icon-lg text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card h-100" style="border-left: 4px solid #f39c12;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Critiques / Impayés</p>
+                            <h4 class="fw-bold mb-0 text-warning">{{ criticalCount }}</h4>
+                        </div>
+                        <i data-feather="alert-triangle" appFeatherIcon class="icon-lg text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card h-100" style="border-left: 4px solid #2ecc71;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Pénalités Récupérées</p>
+                            <h4 class="fw-bold mb-0 text-success">{{ recoveredTotal | number }} FCFA</h4>
+                            <small class="text-muted fs-10px">Nombre: {{ recoveredCount }}</small>
+                        </div>
+                        <i data-feather="check-circle" appFeatherIcon class="icon-lg text-success"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #e74c3c;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Montant Non Recouvré</p>
-                        <h4 class="fw-bold mb-0 text-danger">{{ unrecoveredTotal | number }} FCFA</h4>
+
+
+    <!-- Filtres Avancés -->
+    <div class="row mb-3" *ngIf="showAdvancedFilters">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-danger mb-3">Recherche d'Infractions</h6>
+                    <div class="row g-3">
+                        <!-- Text & Selectors -->
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="ID, Client, Motif..."
+                                [(ngModel)]="advSearchTerm">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Gravité</label>
+                            <select class="form-select form-select-sm" [(ngModel)]="advSeverityFilter">
+                                <option value="">Toutes</option>
+                                <option value="Faible">Faible</option>
+                                <option value="Moyenne">Moyenne</option>
+                                <option value="Élevée">Élevée</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Statut Recouvrement</label>
+                            <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
+                                <option value="">Tous les statuts</option>
+                                <option value="Non payé">Non payé</option>
+                                <option value="Impayé">Impayé (Critique)</option>
+                                <option value="En attente">En attente d'encaissement</option>
+                                <option value="Payé">Soldé</option>
+                            </select>
+                        </div>
+
+                        <!-- Date Range -->
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Date d'émission (Début/Fin)</label>
+                            <div class="d-flex align-items-center">
+                                <input type="date" class="form-control form-control-sm me-1" [(ngModel)]="advDateMin">
+                                <span class="text-secondary">-</span>
+                                <input type="date" class="form-control form-control-sm ms-1" [(ngModel)]="advDateMax">
+                            </div>
+                        </div>
+
+                        <!-- Amount Range -->
+                        <div class="col-md-5">
+                            <label class="form-label fs-12px text-secondary mb-1">Montant (FCFA)</label>
+                            <div class="d-flex align-items-center">
+                                <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
+                                    [(ngModel)]="advAmountMin">
+                                <span class="text-secondary">-</span>
+                                <input type="number" class="form-control form-control-sm ms-1" placeholder="Max"
+                                    [(ngModel)]="advAmountMax">
+                            </div>
+                        </div>
+
+                        <!-- Count Limiter -->
+                        <div class="col-md-3">
+                            <label class="form-label fs-12px text-secondary mb-1">Résultats à afficher</label>
+                            <select class="form-select form-select-sm" [(ngModel)]="advCountFilter">
+                                <option [value]="5">5</option>
+                                <option [value]="10">10</option>
+                                <option [value]="20">20</option>
+                                <option [value]="50">50</option>
+                                <option [value]="1000">Tous</option>
+                            </select>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="col-md-4 d-flex align-items-end justify-content-end">
+                            <button class="btn btn-sm btn-primary me-2 flex-grow-1" (click)="applyAdvancedFilters()">
+                                <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Filtrer
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary flex-grow-1" (click)="resetFilters()">
+                                <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
+                            </button>
+                        </div>
                     </div>
-                    <i data-feather="x-circle" appFeatherIcon class="icon-lg text-danger"></i>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3 col-6">
-        <div class="card h-100" style="border-left: 4px solid #f39c12;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Critiques / Impayés</p>
-                        <h4 class="fw-bold mb-0 text-warning">{{ criticalCount }}</h4>
-                    </div>
-                    <i data-feather="alert-triangle" appFeatherIcon class="icon-lg text-warning"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="card h-100" style="border-left: 4px solid #2ecc71;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Pénalités Récupérées</p>
-                        <h4 class="fw-bold mb-0 text-success">{{ recoveredTotal | number }} FCFA</h4>
-                        <small class="text-muted fs-10px">Nombre: {{ recoveredCount }}</small>
-                    </div>
-                    <i data-feather="check-circle" appFeatherIcon class="icon-lg text-success"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-
-<!-- Filtres Avancés -->
-<div class="row mb-3" *ngIf="showAdvancedFilters">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title text-danger mb-3">Recherche d'Infractions</h6>
-                <div class="row g-3">
-                    <!-- Text & Selectors -->
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Recherche libre</label>
-                        <input type="text" class="form-control form-control-sm" placeholder="ID, Client, Motif..."
-                            [(ngModel)]="advSearchTerm">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Gravité</label>
-                        <select class="form-select form-select-sm" [(ngModel)]="advSeverityFilter">
-                            <option value="">Toutes</option>
-                            <option value="Faible">Faible</option>
-                            <option value="Moyenne">Moyenne</option>
-                            <option value="Élevée">Élevée</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Statut Recouvrement</label>
-                        <select class="form-select form-select-sm" [(ngModel)]="advStatusFilter">
-                            <option value="">Tous les statuts</option>
-                            <option value="Non payé">Non payé</option>
-                            <option value="Impayé">Impayé (Critique)</option>
-                            <option value="En attente">En attente d'encaissement</option>
-                            <option value="Payé">Soldé</option>
-                        </select>
-                    </div>
-
-                    <!-- Date Range -->
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Date d'émission (Début/Fin)</label>
+    <div class="row">
+        <div class="col-md-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="card-title text-danger mb-0">RÉGISTRE DES INFRACTIONS ({{ filteredPenalties.length
+                            }})
+                        </h6>
                         <div class="d-flex align-items-center">
-                            <input type="date" class="form-control form-control-sm me-1" [(ngModel)]="advDateMin">
-                            <span class="text-secondary">-</span>
-                            <input type="date" class="form-control form-control-sm ms-1" [(ngModel)]="advDateMax">
+                            <input type="text" class="form-control form-control-sm me-2"
+                                placeholder="Recherche client, motif..." style="width: 250px;"
+                                [(ngModel)]="quickSearchTerm" (input)="applyQuickFilters()">
+                            <select class="form-select form-select-sm" style="width: 200px;"
+                                [(ngModel)]="quickStatusFilter" (change)="applyQuickFilters()">
+                                <option value="">Tous les statuts</option>
+                                <option value="Non payé">Non payé</option>
+                                <option value="Impayé">Impayé (Critique)</option>
+                                <option value="En attente">En attente d'encaissement</option>
+                                <option value="Payé">Soldé</option>
+                            </select>
                         </div>
                     </div>
-
-                    <!-- Amount Range -->
-                    <div class="col-md-5">
-                        <label class="form-label fs-12px text-secondary mb-1">Montant (FCFA)</label>
-                        <div class="d-flex align-items-center">
-                            <input type="number" class="form-control form-control-sm me-1" placeholder="Min"
-                                [(ngModel)]="advAmountMin">
-                            <span class="text-secondary">-</span>
-                            <input type="number" class="form-control form-control-sm ms-1" placeholder="Max"
-                                [(ngModel)]="advAmountMax">
+                    <div class="table-responsive" [ngClass]="{'opacity-50': loading}">
+                        <div *ngIf="loading" class="d-flex justify-content-center my-4">
+                            <div class="spinner-border text-danger" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Count Limiter -->
-                    <div class="col-md-3">
-                        <label class="form-label fs-12px text-secondary mb-1">Résultats à afficher</label>
-                        <select class="form-select form-select-sm" [(ngModel)]="advCountFilter">
-                            <option [value]="5">5</option>
-                            <option [value]="10">10</option>
-                            <option [value]="20">20</option>
-                            <option [value]="50">50</option>
-                            <option [value]="1000">Tous</option>
-                        </select>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="col-md-4 d-flex align-items-end justify-content-end">
-                        <button class="btn btn-sm btn-primary me-2 flex-grow-1" (click)="applyAdvancedFilters()">
-                            <i data-feather="filter" appFeatherIcon class="icon-sm me-1"></i> Filtrer
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary flex-grow-1" (click)="resetFilters()">
-                            <i data-feather="refresh-cw" appFeatherIcon class="icon-sm me-1"></i> Réinitialiser
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="card-title text-danger mb-0">RÉGISTRE DES INFRACTIONS ({{ filteredPenalties.length }})
-                    </h6>
-                    <div class="d-flex align-items-center">
-                        <input type="text" class="form-control form-control-sm me-2"
-                            placeholder="Recherche client, motif..." style="width: 250px;" [(ngModel)]="quickSearchTerm"
-                            (input)="applyQuickFilters()">
-                        <select class="form-select form-select-sm" style="width: 200px;" [(ngModel)]="quickStatusFilter"
-                            (change)="applyQuickFilters()">
-                            <option value="">Tous les statuts</option>
-                            <option value="Non payé">Non payé</option>
-                            <option value="Impayé">Impayé (Critique)</option>
-                            <option value="En attente">En attente d'encaissement</option>
-                            <option value="Payé">Soldé</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="table-responsive" [ngClass]="{'opacity-50': loading}">
-                    <div *ngIf="loading" class="d-flex justify-content-center my-4">
-                        <div class="spinner-border text-danger" role="status">
-                            <span class="visually-hidden">Chargement...</span>
-                        </div>
-                    </div>
-                    <table class="table table-hover mb-0" *ngIf="!loading">
-                        <thead>
-                            <tr>
-                                <th>Date d'émission</th>
-                                <th>Référence</th>
-                                <th>Chauffeur / Client</th>
-                                <th>Motif de la Pénalité</th>
-                                <th>Gravité</th>
-                                <th>Montant (FCFA)</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let penalty of filteredPenalties">
-                                <td class="text-muted">{{ penalty.date | date:'dd/MM/yyyy' }}</td>
-                                <td class="fw-medium">{{ penalty.reference }}</td>
-                                <td>
-                                    <div *ngIf="penalty.client">
-                                        <a [routerLink]="['/gbatcar/clients/details', penalty.client.uuid]"
-                                            class="text-primary fw-medium">
-                                            {{ penalty.client.libelle || penalty.client.name ||
-                                            (penalty.client.firstName + ' ' + penalty.client.lastName) }}
-                                        </a>
-                                        <br>
-                                        <small class="text-muted" *ngIf="penalty.contract">
-                                            Contrat: {{ penalty.contract.reference }}
-                                        </small>
-                                    </div>
-                                    <div *ngIf="!penalty.client && penalty.contract">
-                                        <span class="text-muted">Contrat: {{ penalty.contract.reference }}</span>
-                                    </div>
-                                    <span class="text-muted" *ngIf="!penalty.client && !penalty.contract">N/A</span>
-                                </td>
-                                <td>{{ penalty.reason }}</td>
-                                <td>
-                                    <span class="badge" [ngClass]="{
+                        <table class="table table-hover mb-0" *ngIf="!loading">
+                            <thead>
+                                <tr>
+                                    <th>Date d'émission</th>
+                                    <th>Référence</th>
+                                    <th>Chauffeur / Client</th>
+                                    <th>Motif de la Pénalité</th>
+                                    <th>Gravité</th>
+                                    <th>Montant (FCFA)</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let penalty of filteredPenalties">
+                                    <td class="text-muted">{{ penalty.date | date:'dd/MM/yyyy' }}</td>
+                                    <td class="fw-medium">{{ penalty.reference }}</td>
+                                    <td>
+                                        <div *ngIf="penalty.client">
+                                            <a [routerLink]="['/gbatcar/clients/details', penalty.client.uuid]"
+                                                class="text-primary fw-medium">
+                                                {{ penalty.client.libelle || penalty.client.name ||
+                                                (penalty.client.firstName + ' ' + penalty.client.lastName) }}
+                                            </a>
+                                            <br>
+                                            <small class="text-muted" *ngIf="penalty.contract">
+                                                Contrat: {{ penalty.contract.reference }}
+                                            </small>
+                                        </div>
+                                        <div *ngIf="!penalty.client && penalty.contract">
+                                            <span class="text-muted">Contrat: {{ penalty.contract.reference }}</span>
+                                        </div>
+                                        <span class="text-muted" *ngIf="!penalty.client && !penalty.contract">N/A</span>
+                                    </td>
+                                    <td>{{ penalty.reason }}</td>
+                                    <td>
+                                        <span class="badge" [ngClass]="{
                                         'bg-info': penalty.severity === 'Faible',
                                         'bg-warning text-dark': penalty.severity === 'Moyenne' || !penalty.severity,
                                         'bg-danger': penalty.severity === 'Élevée'
                                     }">
-                                        {{ penalty.severity || 'Moyenne' }}
-                                    </span>
-                                </td>
-                                <td class="fw-bolder fs-6">
-                                    {{ penalty.amount | number }}
-                                    <div class="fs-10px text-success" *ngIf="penalty.paidAmount > 0">
-                                        Payé: {{ penalty.paidAmount | number }}
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge" [ngClass]="{
+                                            {{ penalty.severity || 'Moyenne' }}
+                                        </span>
+                                    </td>
+                                    <td class="fw-bolder fs-6">
+                                        {{ penalty.amount | number }}
+                                        <div class="fs-10px text-success" *ngIf="penalty.paidAmount > 0">
+                                            Payé: {{ penalty.paidAmount | number }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge" [ngClass]="{
                                         'bg-danger': penalty.status === 'Impayé' || penalty.status === 'CRITIQUE' || penalty.status === 'IMPAYÉ',
                                         'bg-warning text-dark': penalty.status === 'Non payé' || penalty.status === 'NON_PAYÉ',
                                         'bg-info': penalty.status === 'En attente' || penalty.status === 'EN ATTENTE' || penalty.status === 'PARTIEL' || penalty.status === 'PARTIAL',
                                         'bg-success': penalty.status === 'Payé' || penalty.status === 'SOLDÉ' || penalty.status === 'PAYÉ' || penalty.status === 'PAYE' || penalty.status === 'SOLDE'
                                     }">
-                                        {{ penalty.status }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="d-flex">
-                                        <button [routerLink]="['/gbatcar/payments/penalties/details', penalty.uuid]"
-                                            class="btn btn-xs btn-outline-secondary me-1" title="Voir les détails">
-                                            <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
-                                        </button>
-                                        <button class="btn btn-xs btn-outline-warning me-1" title="Relancer">
-                                            <i data-feather="bell" appFeatherIcon class="icon-sm"></i>
-                                        </button>
-                                        <button class="btn btn-xs btn-outline-success"
-                                            *ngIf="penalty.status !== 'Payé' && penalty.status !== 'SOLDÉ' && (penalty.amount - (penalty.paidAmount || 0)) > 0"
-                                            (click)="onSolder(penalty)" title="Solder l'amende (Paiement)">
-                                            <i data-feather="credit-card" appFeatherIcon class="icon-sm"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr *ngIf="filteredPenalties.length === 0">
-                                <td colspan="8" class="text-center py-4 text-muted">Aucune pénalité correspondante.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                            {{ penalty.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <ng-container *ngxPermissionsOnly="'PENALTY:SHOW'">
+                                                <button
+                                                    [routerLink]="['/gbatcar/payments/penalties/details', penalty.uuid]"
+                                                    class="btn btn-sm btn-icon btn-outline-secondary" title="Détails">
+                                                    <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                                </button>
+                                            </ng-container>
+                                            <ng-container *ngxPermissionsOnly="'PENALTY:EDIT'">
+                                                <button
+                                                    [routerLink]="['/gbatcar/payments/penalties/edit', penalty.uuid]"
+                                                    class="btn btn-sm btn-icon btn-outline-warning" title="Modifier">
+                                                    <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
+                                                </button>
+                                            </ng-container>
+                                            <ng-container *ngxPermissionsOnly="'PENALTY:CHANGE_STATUS'">
+                                                <button *ngIf="penalty.status !== 'Payé'" (click)="onSolder(penalty)"
+                                                    class="btn btn-sm btn-icon btn-outline-success"
+                                                    title="Solder (Payer)">
+                                                    <i data-feather="dollar-sign" appFeatherIcon class="icon-sm"></i>
+                                                </button>
+                                            </ng-container>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="filteredPenalties.length === 0">
+                                    <td colspan="8" class="text-center py-4 text-muted">Aucune pénalité correspondante.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>

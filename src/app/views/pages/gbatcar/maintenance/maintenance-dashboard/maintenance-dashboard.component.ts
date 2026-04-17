@@ -9,11 +9,13 @@ import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-i
 import { ThemeCssVariableService } from '../../../../../core/services/theme-css-variable.service';
 import { MaintenanceService } from '../../../../../core/services/maintenance/maintenance.service';
 import { ContractDurationService } from '../../../../../core/services/contract/contract-duration.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
     selector: 'app-maintenance-dashboard',
     standalone: true,
-    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, NgbModalModule, RouterLink, FeatherIconDirective, FormsModule, NgSelectModule],
+    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, NgbModalModule, RouterLink, FeatherIconDirective, FormsModule, NgSelectModule, NgxPermissionsModule],
     templateUrl: './maintenance-dashboard.component.html',
     styleUrl: './maintenance-dashboard.component.scss'
 })
@@ -24,6 +26,8 @@ export class MaintenanceDashboardComponent implements OnInit {
     private durationService = inject(ContractDurationService);
     private cdr = inject(ChangeDetectorRef);
     private modalService = inject(NgbModal);
+    private permissionsService = inject(NgxPermissionsService);
+    private authService = inject(AuthService);
 
     loading = false;
     isSavingBudget = false;
@@ -81,6 +85,8 @@ export class MaintenanceDashboardComponent implements OnInit {
     public costTrendChartOptions: ApexOptions | any;
 
     ngOnInit(): void {
+        const permissions = this.authService.getPermissions();
+        this.permissionsService.loadPermissions(permissions);
         this.loadDurations();
         this.loadDashboardData();
     }

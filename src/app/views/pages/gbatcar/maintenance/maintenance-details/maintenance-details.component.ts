@@ -8,11 +8,13 @@ import { ApiService } from '../../../../../utils/api.service';
 import { PenaltyService } from '../../../../../core/services/penalty/penalty.service';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-maintenance-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, FeatherIconDirective],
+  imports: [CommonModule, RouterModule, FeatherIconDirective, NgxPermissionsModule],
   templateUrl: './maintenance-details.component.html',
   styleUrl: './maintenance-details.component.scss'
 })
@@ -30,10 +32,14 @@ export class MaintenanceDetailsComponent implements OnInit {
   private apiService = inject(ApiService);
   private penaltyService = inject(PenaltyService);
   private router = inject(Router);
+  private permissionsService = inject(NgxPermissionsService);
+  private authService = inject(AuthService);
 
   constructor(private route: ActivatedRoute) { }
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
     this.maintenanceId = this.route.snapshot.paramMap.get('id');
     if (this.maintenanceId) {
       this.maintenanceService.getSingle(this.maintenanceId).subscribe({

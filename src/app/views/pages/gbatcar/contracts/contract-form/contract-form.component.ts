@@ -376,6 +376,20 @@ export class ContractFormComponent implements OnInit {
       this.contractForm.get('cautionAmount')?.setValue(deposit);
       this.contractForm.get('fraisDossier')?.setValue(fees);
       this.contractForm.get('prixDeVente')?.setValue(price);
+
+      if (vehicle.durationInMonths) {
+        const durationValue = vehicle.durationInMonths;
+        // Ensure duration exists in the dropdown list
+        const exists = this.durations.some(d => d.monthsCount === durationValue);
+        if (!exists) {
+          this.durations = [...this.durations, {
+            name: `${durationValue} mois`,
+            monthsCount: durationValue
+          }];
+        }
+        this.contractForm.get('duration')?.setValue(durationValue);
+      }
+
       this.calculateRedevance();
     }
   }
@@ -435,31 +449,32 @@ export class ContractFormComponent implements OnInit {
     this.isLoadingData = true; // Block auto-recalculation while patching
     this.contractService.getSingle(uuid).subscribe({
       next: (res: any) => {
+        const data = res.contract || res;
         this.contractForm.patchValue({
-          clientId: res.client?.uuid,
-          vehicleId: res.vehicle?.uuid,
-          usageType: res.usageType,
-          startDate: res.startDate ? res.startDate.substring(0, 10) : '',
-          duration: res.durationInMonths,
-          paymentFrequency: res.paymentFrequency,
-          dailyRate: res.dailyRate,
-          cautionAmount: res.caution,
-          fraisDossier: res.fraisDossier,
-          insuranceSplit: res.maintenanceAndInsurance,
-          gracePeriod: res.gracePeriodDays,
-          penaltyRate: res.penaltyRate,
-          prixDeVente: res.prixDeVente,
-          notes: res.observation,
-          hasValidID: res.hasValidID,
-          hasDriverLicense: res.hasDriverLicense,
-          hasProofOfAddress: res.hasProofOfAddress,
-          hasCriminalRecord: res.hasCriminalRecord
+          clientId: data.client?.uuid,
+          vehicleId: data.vehicle?.uuid,
+          usageType: data.usageType,
+          startDate: data.startDate ? data.startDate.substring(0, 10) : '',
+          duration: data.durationInMonths,
+          paymentFrequency: data.paymentFrequency,
+          dailyRate: data.dailyRate,
+          cautionAmount: data.caution,
+          fraisDossier: data.fraisDossier,
+          insuranceSplit: data.maintenanceAndInsurance,
+          gracePeriod: data.gracePeriodDays,
+          penaltyRate: data.penaltyRate,
+          prixDeVente: data.prixDeVente,
+          notes: data.observation,
+          hasValidID: data.hasValidID,
+          hasDriverLicense: data.hasDriverLicense,
+          hasProofOfAddress: data.hasProofOfAddress,
+          hasCriminalRecord: data.hasCriminalRecord
         });
 
         // Charger les lignes de demandes
-        if (res.vehicleDemands && res.vehicleDemands.length > 0) {
+        if (data.vehicleDemands && data.vehicleDemands.length > 0) {
           this.contractForm.get('assignmentType')?.setValue('Fleet');
-          res.vehicleDemands.forEach((demand: any) => {
+          data.vehicleDemands.forEach((demand: any) => {
             if (demand.brand?.id) this.loadModelsForBrand(demand.brand.id);
             this.vehicleDemandsArray.push(this.fb.group({
               brandId: [demand.brand?.id, Validators.required],
@@ -467,7 +482,7 @@ export class ContractFormComponent implements OnInit {
               quantity: [demand.quantity || 1, [Validators.required, Validators.min(1)]]
             }));
           });
-        } else if (!res.vehicle) {
+        } else if (!data.vehicle) {
           this.contractForm.get('assignmentType')?.setValue('Fleet');
           this.addVehicleDemand();
         } else {
@@ -475,7 +490,7 @@ export class ContractFormComponent implements OnInit {
         }
 
         // Restore totalAmount from saved value, not recalculate
-        this.contractForm.get('totalAmount')?.setValue(res.totalAmount, { emitEvent: false });
+        this.contractForm.get('totalAmount')?.setValue(data.totalAmount, { emitEvent: false });
         this.isLoadingData = false; // Allow future user-triggered recalculations
         this.loading = false;
       },

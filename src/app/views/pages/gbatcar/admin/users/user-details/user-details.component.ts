@@ -2,13 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '../../../../../../core/services/user/user.service';
+import { AuthService } from '../../../../../../core/services/auth/auth.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
 import { FeatherIconDirective } from '../../../../../../core/feather-icon/feather-icon.directive';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-user-details',
   standalone: true,
-  imports: [CommonModule, FeatherIconDirective],
+  imports: [CommonModule, FeatherIconDirective, NgxPermissionsModule],
   templateUrl: './user-details.component.html',
   styleUrl: './user-details.component.scss'
 })
@@ -17,9 +19,16 @@ export class UserDetailsComponent implements OnInit {
 
   loading: boolean = false;
 
-  constructor(private route: ActivatedRoute, private router: Router, private userService: UserService) { }
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private userService: UserService,
+    private authService: AuthService,
+    private ngxPermissionsService: NgxPermissionsService
+  ) { }
 
   ngOnInit(): void {
+    this.ngxPermissionsService.loadPermissions(this.authService.getPermissions());
     const uuid = this.route.snapshot.paramMap.get('id');
     if (uuid) {
       this.loadUser(uuid);
@@ -90,7 +99,7 @@ export class UserDetailsComponent implements OnInit {
 
   get allPermissions(): any[] {
     if (!this.user || !this.user.droits) return [];
-    
+
     // Extraire et dédoublonner toutes les permissions (paths) des différents rôles (droits)
     const permsMap = new Map();
     this.user.droits.forEach((role: any) => {
@@ -100,7 +109,7 @@ export class UserDetailsComponent implements OnInit {
         });
       }
     });
-    
+
     return Array.from(permsMap.values());
   }
 

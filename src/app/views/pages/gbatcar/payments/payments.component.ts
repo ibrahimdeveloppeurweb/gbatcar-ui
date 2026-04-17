@@ -7,11 +7,13 @@ import { PaymentService } from '../../../../core/services/payment/payment.servic
 import { VehicleService } from '../../../../core/services/vehicle/vehicle.service';
 import { Payment } from '../../../../core/models/payment.model';
 import Swal from 'sweetalert2';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule],
+  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule, NgxPermissionsModule],
   templateUrl: './payments.component.html',
   styleUrl: './payments.component.scss'
 })
@@ -19,6 +21,8 @@ export class PaymentsComponent implements OnInit {
   private paymentService = inject(PaymentService);
   private vehicleService = inject(VehicleService);
   private route = inject(ActivatedRoute);
+  private permissionsService = inject(NgxPermissionsService);
+  private authService = inject(AuthService);
 
   payments: Payment[] = [];
   loading: boolean = false;
@@ -75,6 +79,9 @@ export class PaymentsComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
+
     this.route.queryParams.subscribe(params => {
       const vehicleParam = params['vehicle'];
       const vehicleIdParam = params['vehicleId'];

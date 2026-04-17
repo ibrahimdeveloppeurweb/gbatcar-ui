@@ -7,11 +7,13 @@ import { PaymentService } from '../../../../../core/services/payment/payment.ser
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import { environment } from '../../../../../../environments/environment';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-maintenance-alert-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, FeatherIconDirective, NgbDropdownModule],
+  imports: [CommonModule, RouterModule, FeatherIconDirective, NgbDropdownModule, NgxPermissionsModule],
   templateUrl: './maintenance-alert-details.component.html',
   styleUrl: './maintenance-alert-details.component.scss'
 })
@@ -21,6 +23,8 @@ export class MaintenanceAlertDetailsComponent implements OnInit {
   private router = inject(Router);
   private alertService = inject(MaintenanceAlertService);
   private paymentService = inject(PaymentService);
+  private permissionsService = inject(NgxPermissionsService);
+  private authService = inject(AuthService);
 
   alertUuid: string | null = null;
   record: any = null;
@@ -31,6 +35,8 @@ export class MaintenanceAlertDetailsComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
     this.alertUuid = this.route.snapshot.paramMap.get('id');
     if (this.alertUuid) {
       this.loadAlert();

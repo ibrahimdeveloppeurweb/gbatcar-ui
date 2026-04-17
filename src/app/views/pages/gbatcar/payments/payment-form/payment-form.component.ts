@@ -8,11 +8,13 @@ import { PaymentService } from '../../../../../core/services/payment/payment.ser
 import { NgSelectModule } from '@ng-select/ng-select';
 import { PaymentScheduleService } from '../../../../../core/services/payment/payment-schedule.service';
 import Swal from 'sweetalert2';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-payment-form',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, FeatherIconDirective, NgSelectModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FeatherIconDirective, NgSelectModule, NgxPermissionsModule],
   templateUrl: './payment-form.component.html',
   styleUrl: './payment-form.component.scss'
 })
@@ -24,6 +26,8 @@ export class PaymentFormComponent implements OnInit {
   private contractService = inject(ContractService);
   private paymentService = inject(PaymentService);
   private scheduleService = inject(PaymentScheduleService);
+  private permissionsService = inject(NgxPermissionsService);
+  private authService = inject(AuthService);
 
   paymentForm: FormGroup;
   contracts: any[] = [];
@@ -80,6 +84,8 @@ export class PaymentFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
     this.loadContracts();
     this.paymentUuid = this.route.snapshot.paramMap.get('id');
     if (this.paymentUuid) {

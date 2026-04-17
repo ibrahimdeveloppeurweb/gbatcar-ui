@@ -1,223 +1,253 @@
-<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
-    <div>
-        <nav class="page-breadcrumb mb-1">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a routerLink="/gbatcar/payments">Encaissements</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ isEditMode ? 'Modification' : 'Nouveau
-                    Paiement' }}</li>
-            </ol>
-        </nav>
-        <h4 class="mb-3 mb-md-0">{{ isEditMode ? 'Modifier l\'encaissement' : 'Saisir un Paiement Manuel' }}</h4>
+<ng-container *ngxPermissionsOnly="isEditMode ? ['PAYMENT:EDIT'] : ['PAYMENT:NEW']">
+    <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+        <div>
+            <nav class="page-breadcrumb mb-1">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a routerLink="/gbatcar/payments">Encaissements</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ isEditMode ? 'Modification' : 'Nouveau
+                        Paiement' }}</li>
+                </ol>
+            </nav>
+            <h4 class="mb-3 mb-md-0">{{ isEditMode ? 'Modifier l\'encaissement' : 'Saisir un Paiement Manuel' }}</h4>
+        </div>
+        <div class="d-flex align-items-center flex-wrap text-nowrap">
+            <button [routerLink]="['/gbatcar/payments']"
+                class="btn btn-outline-secondary btn-icon-text me-2 mb-2 mb-md-0">
+                <i data-feather="x" appFeatherIcon class="btn-icon-prepend"></i>
+                Annuler
+            </button>
+            <button (click)="onConfirme()" [disabled]="submitting || noScheduleError"
+                class="btn btn-primary btn-icon-text mb-2 mb-md-0">
+                <i data-feather="save" appFeatherIcon class="btn-icon-prepend" *ngIf="!submitting"></i>
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"
+                    *ngIf="submitting"></span>
+                {{ submitting ? 'Enregistrement...' : (isEditMode ? 'Enregistrer les modifications' : "Valider
+                l'encaissement") }}
+            </button>
+        </div>
     </div>
-    <div class="d-flex align-items-center flex-wrap text-nowrap">
-        <button [routerLink]="['/gbatcar/payments']" class="btn btn-outline-secondary btn-icon-text me-2 mb-2 mb-md-0">
-            <i data-feather="x" appFeatherIcon class="btn-icon-prepend"></i>
-            Annuler
-        </button>
-        <button (click)="onConfirme()" [disabled]="submitting || noScheduleError"
-            class="btn btn-primary btn-icon-text mb-2 mb-md-0">
-            <i data-feather="save" appFeatherIcon class="btn-icon-prepend" *ngIf="!submitting"></i>
-            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"
-                *ngIf="submitting"></span>
-            {{ submitting ? 'Enregistrement...' : (isEditMode ? 'Enregistrer les modifications' : "Valider
-            l'encaissement") }}
-        </button>
+
+    <div class="alert alert-danger d-flex align-items-center mb-4 shadow-sm" *ngIf="noScheduleError">
+        <i data-feather="alert-octagon" appFeatherIcon class="icon-md me-3"></i>
+        <div>
+            <h5 class="alert-heading fw-bold mb-1 border-bottom pb-1 border-danger">Attention : Aucun calendrier trouvé
+            </h5>
+            <p class="mb-0 tx-13">Ce contrat n'a pas encore de calendrier de paiement généré.
+                <strong>Il est impossible d'enregistrer un paiement tant que l'échéancier n'est pas créé.</strong>
+                <br>
+                <a [routerLink]="['/gbatcar/contracts/details', paymentForm.get('contractId')?.value]"
+                    class="fw-bold text-danger text-decoration-underline mt-1 d-inline-block">
+                    Aller au contrat pour générer l'échéancier →
+                </a>
+            </p>
+        </div>
     </div>
-</div>
 
-<div class="alert alert-danger d-flex align-items-center mb-4 shadow-sm" *ngIf="noScheduleError">
-    <i data-feather="alert-octagon" appFeatherIcon class="icon-md me-3"></i>
-    <div>
-        <h5 class="alert-heading fw-bold mb-1 border-bottom pb-1 border-danger">Attention : Aucun calendrier trouvé</h5>
-        <p class="mb-0 tx-13">Ce contrat n'a pas encore de calendrier de paiement généré.
-            <strong>Il est impossible d'enregistrer un paiement tant que l'échéancier n'est pas créé.</strong>
-            <br>
-            <a [routerLink]="['/gbatcar/contracts/details', paymentForm.get('contractId')?.value]"
-                class="fw-bold text-danger text-decoration-underline mt-1 d-inline-block">
-                Aller au contrat pour générer l'échéancier →
-            </a>
-        </p>
-    </div>
-</div>
+    <div class="row">
+        <div class="col-md-12 stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-primary">Détails de l'opération (Location-Vente)</h6>
+                    <form [formGroup]="paymentForm">
+                        <div class="row">
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">Contrat cible <span
+                                        class="text-danger">*</span></label>
+                                <ng-select [items]="contracts" bindLabel="reference" bindValue="uuid"
+                                    formControlName="contractId" [loading]="loadingContracts"
+                                    [searchFn]="contractSearchFn" placeholder="Sélectionnez un contrat..."
+                                    [ngClass]="{'is-invalid': paymentForm.get('contractId')?.invalid && paymentForm.get('contractId')?.touched}">
+                                    <ng-template ng-label-tmp let-item="item">
+                                        <span class="fw-bold text-primary">{{ item.reference }}</span> - {{
+                                        item.client?.lastName }} {{ item.client?.firstName }}
+                                    </ng-template>
+                                    <ng-template ng-option-tmp let-item="item">
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold">{{ item.reference }} - {{ item.client?.lastName }} {{
+                                                item.client?.firstName }}</span>
+                                            <small class="text-muted">{{ item.vehicleSummary }}</small>
+                                        </div>
+                                    </ng-template>
+                                </ng-select>
+                            </div>
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">
+                                    Type de Paiement <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" formControlName="type" (change)="calculateSimulation()">
+                                    <option value="Mensualité">Loyers / Mensualité</option>
+                                    <option value="Hebdomadaire">Loyer Hebdomadaire</option>
+                                    <option value="Journalier">Recette Journalière</option>
+                                    <option value="Apport Initial">Dépôt / Caution (Apport Initial)</option>
+                                    <option value="Frais de dossier">Frais de dossier / Admin</option>
+                                    <option value="PÉNALITÉ">Pénalités (Retard)</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">
+                                    Période
+                                </label>
 
-<div class="row">
-    <div class="col-md-12 stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title text-primary">Détails de l'opération (Location-Vente)</h6>
-                <form [formGroup]="paymentForm">
-                    <div class="row">
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Contrat cible <span
-                                    class="text-danger">*</span></label>
-                            <ng-select [items]="contracts" bindLabel="reference" bindValue="uuid"
-                                formControlName="contractId" [loading]="loadingContracts" [searchFn]="contractSearchFn"
-                                placeholder="Sélectionnez un contrat..."
-                                [ngClass]="{'is-invalid': paymentForm.get('contractId')?.invalid && paymentForm.get('contractId')?.touched}">
-                                <ng-template ng-label-tmp let-item="item">
-                                    <span class="fw-bold text-primary">{{ item.reference }}</span> - {{
-                                    item.client?.lastName }} {{ item.client?.firstName }}
-                                </ng-template>
-                                <ng-template ng-option-tmp let-item="item">
-                                    <div class="d-flex flex-column">
-                                        <span class="fw-bold">{{ item.reference }} - {{ item.client?.lastName }} {{
-                                            item.client?.firstName }}</span>
-                                        <small class="text-muted">{{ item.vehicleSummary }}</small>
-                                    </div>
-                                </ng-template>
-                            </ng-select>
-                        </div>
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">
-                                Type de Paiement <span class="text-danger">*</span>
-                            </label>
-                            <select class="form-select" formControlName="type" (change)="calculateSimulation()">
-                                <option value="Mensualité">Loyers / Mensualité</option>
-                                <option value="Hebdomadaire">Loyer Hebdomadaire</option>
-                                <option value="Journalier">Recette Journalière</option>
-                                <option value="Apport Initial">Dépôt / Caution (Apport Initial)</option>
-                                <option value="Frais de dossier">Frais de dossier / Admin</option>
-                                <option value="PÉNALITÉ">Pénalités (Retard)</option>
-                            </select>
-                        </div>
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">
-                                Période
-                            </label>
+                                <!-- Monthly/Weekly/Daily (Now Read-only and automated) -->
+                                <input type="text" class="form-control bg-light" formControlName="period"
+                                    [readonly]="['Mensualité', 'Hebdomadaire', 'Journalier', 'Recette Journalière', 'Recette Hebdomadaire'].includes(paymentForm.get('type')?.value)"
+                                    placeholder="Auto-calculé...">
 
-                            <!-- Monthly/Weekly/Daily (Now Read-only and automated) -->
-                            <input type="text" class="form-control bg-light" formControlName="period"
-                                [readonly]="['Mensualité', 'Hebdomadaire', 'Journalier', 'Recette Journalière', 'Recette Hebdomadaire'].includes(paymentForm.get('type')?.value)"
-                                placeholder="Auto-calculé...">
-
-                            <div class="form-text tx-11 text-muted mt-1">
-                                <i data-feather="info" appFeatherIcon class="icon-xs me-1"></i>
-                                Concerne l'imputation au calendrier.
+                                <div class="form-text tx-11 text-muted mt-1">
+                                    <i data-feather="info" appFeatherIcon class="icon-xs me-1"></i>
+                                    Concerne l'imputation au calendrier.
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Financial Summary Card (Only for Installments) -->
-                    <div class="mb-4 p-3 bg-light border rounded shadow-sm"
-                        *ngIf="paymentForm.get('contractId')?.value && !loadingSchedule && ['Mensualité', 'Hebdomadaire', 'Journalier', 'Recette Journalière', 'Recette Hebdomadaire'].includes(paymentForm.get('type')?.value)">
-                        <div class="row align-items-center text-center">
-                            <div class="col-6 border-end">
-                                <p class="text-muted tx-11 mb-1">Reste à payer (Loyer)</p>
-                                <h5 class="fw-bold mb-0 text-danger">{{ remainingBalance | number }} <small
-                                        class="tx-11">FCFA</small></h5>
+                        <!-- Financial Summary Card (Only for Installments) -->
+                        <div class="mb-4 p-3 bg-light border rounded shadow-sm"
+                            *ngIf="paymentForm.get('contractId')?.value && !loadingSchedule && ['Mensualité', 'Hebdomadaire', 'Journalier', 'Recette Journalière', 'Recette Hebdomadaire'].includes(paymentForm.get('type')?.value)">
+                            <div class="row align-items-center text-center">
+                                <div class="col-6 border-end">
+                                    <p class="text-muted tx-11 mb-1">Reste à payer (Loyer)</p>
+                                    <h5 class="fw-bold mb-0 text-danger">{{ remainingBalance | number }} <small
+                                            class="tx-11">FCFA</small></h5>
+                                </div>
+                                <div class="col-6">
+                                    <p class="text-muted tx-11 mb-1">Prochaine échéance</p>
+                                    <h5 class="fw-bold mb-0 text-primary" *ngIf="nextInstallment">
+                                        {{ nextInstallment.expectedDate | date:'dd/MM/yyyy' }}
+                                    </h5>
+                                    <h5 class="fw-bold mb-0 text-success" *ngIf="!nextInstallment">
+                                        À jour
+                                    </h5>
+                                </div>
                             </div>
-                            <div class="col-6">
-                                <p class="text-muted tx-11 mb-1">Prochaine échéance</p>
-                                <h5 class="fw-bold mb-0 text-primary" *ngIf="nextInstallment">
-                                    {{ nextInstallment.expectedDate | date:'dd/MM/yyyy' }}
-                                </h5>
-                                <h5 class="fw-bold mb-0 text-success" *ngIf="!nextInstallment">
-                                    À jour
-                                </h5>
-                            </div>
-                        </div>
-                        <div
-                            class="alert alert-info py-2 px-3 mt-3 mb-0 tx-11 d-flex align-items-center border-0 shadow-none bg-white bg-opacity-50">
-                            <i data-feather="info" appFeatherIcon class="icon-xs me-2 text-info"></i>
-                            <span>L'argent sera automatiquement alloué aux échéances les plus anciennes du
-                                calendrier.</span>
-                        </div>
-                    </div>
-                    <!-- Simulation Table -->
-                    <div class="row mt-2 mb-4" *ngIf="simulatedAllocations.length > 0">
-                        <div class="col-12">
-                            <h6 class="tx-12 fw-bold text-muted mb-1 text-uppercase">Résumé de l'imputation (Simulation)
-                            </h6>
-                            <p class="tx-11 text-info mb-2">
-                                <i data-feather="help-circle" appFeatherIcon class="icon-xs me-1"></i>
-                                Cette répartition sera effective <strong>uniquement après validation</strong> globale du
-                                paiement.
-                            </p>
-                            <div class="table-responsive border rounded bg-white">
-                                <table class="table table-sm mb-0">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th class="tx-11">Échéance</th>
-                                            <th class="tx-11 text-end">Du (FCFA)</th>
-                                            <th class="tx-11 text-end">Déjà Payé</th>
-                                            <th class="tx-11 text-end text-primary">Ce versement</th>
-                                            <th class="tx-11 text-center">Résultat</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr *ngFor="let alloc of simulatedAllocations">
-                                            <td class="tx-12 fw-medium">{{ alloc.date | date:'dd/MM/yyyy' }}</td>
-                                            <td class="tx-12 text-end">{{ alloc.due | number }}</td>
-                                            <td class="tx-12 text-end text-muted">{{ alloc.wasPaid | number }}</td>
-                                            <td class="tx-12 text-end fw-bold text-primary">+{{ alloc.willPay | number
-                                                }}</td>
-                                            <td class="tx-11 text-center">
-                                                <span class="badge"
-                                                    [ngClass]="alloc.isPartial ? 'bg-warning' : 'bg-success'">
-                                                    {{ alloc.status }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Excess Message -->
-                            <div class="alert alert-success py-2 px-3 mt-2 mb-0 tx-12 d-flex align-items-center"
-                                *ngIf="simulatedExcess > 0">
-                                <i data-feather="check-circle" appFeatherIcon class="icon-xs me-2"></i>
-                                <span><strong>Excédent de {{ simulatedExcess | number }} FCFA :</strong> Ce surplus sera
-                                    conservé comme crédit sur le compte du client.</span>
+                            <div
+                                class="alert alert-info py-2 px-3 mt-3 mb-0 tx-11 d-flex align-items-center border-0 shadow-none bg-white bg-opacity-50">
+                                <i data-feather="info" appFeatherIcon class="icon-xs me-2 text-info"></i>
+                                <span>L'argent sera automatiquement alloué aux échéances les plus anciennes du
+                                    calendrier.</span>
                             </div>
                         </div>
-                    </div>
+                        <!-- Simulation Table -->
+                        <div class="row mt-2 mb-4" *ngIf="simulatedAllocations.length > 0">
+                            <div class="col-12">
+                                <h6 class="tx-12 fw-bold text-muted mb-1 text-uppercase">Résumé de l'imputation
+                                    (Simulation)
+                                </h6>
+                                <p class="tx-11 text-info mb-2">
+                                    <i data-feather="help-circle" appFeatherIcon class="icon-xs me-1"></i>
+                                    Cette répartition sera effective <strong>uniquement après validation</strong>
+                                    globale du
+                                    paiement.
+                                </p>
+                                <div class="table-responsive border rounded bg-white">
+                                    <table class="table table-sm mb-0">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th class="tx-11">Échéance</th>
+                                                <th class="tx-11 text-end">Du (FCFA)</th>
+                                                <th class="tx-11 text-end">Déjà Payé</th>
+                                                <th class="tx-11 text-end text-primary">Ce versement</th>
+                                                <th class="tx-11 text-center">Résultat</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr *ngFor="let alloc of simulatedAllocations">
+                                                <td class="tx-12 fw-medium">{{ alloc.date | date:'dd/MM/yyyy' }}</td>
+                                                <td class="tx-12 text-end">{{ alloc.due | number }}</td>
+                                                <td class="tx-12 text-end text-muted">{{ alloc.wasPaid | number }}</td>
+                                                <td class="tx-12 text-end fw-bold text-primary">+{{ alloc.willPay |
+                                                    number
+                                                    }}</td>
+                                                <td class="tx-11 text-center">
+                                                    <span class="badge"
+                                                        [ngClass]="alloc.isPartial ? 'bg-warning' : 'bg-success'">
+                                                        {{ alloc.status }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
 
-                    <div class="row">
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Date d'encaissement <span
-                                    class="text-danger">*</span></label>
-                            <input type="datetime-local" class="form-control" formControlName="date"
-                                [ngClass]="{'is-invalid': paymentForm.get('date')?.invalid && paymentForm.get('date')?.touched}">
+                                <!-- Excess Message -->
+                                <div class="alert alert-success py-2 px-3 mt-2 mb-0 tx-12 d-flex align-items-center"
+                                    *ngIf="simulatedExcess > 0">
+                                    <i data-feather="check-circle" appFeatherIcon class="icon-xs me-2"></i>
+                                    <span><strong>Excédent de {{ simulatedExcess | number }} FCFA :</strong> Ce surplus
+                                        sera
+                                        conservé comme crédit sur le compte du client.</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Montant perçu (FCFA) <span
-                                    class="text-danger">*</span></label>
-                            <input type="number" class="form-control" formControlName="amount"
-                                [ngClass]="{'is-invalid': paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched}"
-                                placeholder="Ex: 15000">
-                        </div>
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Moyen de paiement</label>
-                            <select class="form-select" formControlName="method">
-                                <option value="Mobile Money">Mobile Money (Wave/Orange/MTN)</option>
-                                <option value="Espèces">Espèces (En agence)</option>
-                                <option value="Virement Bancaire">Virement Bancaire</option>
-                            </select>
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Référence de transaction</label>
-                            <input type="text" class="form-control" formControlName="reference"
-                                placeholder="Ex: WV-847294 ou N° de reçu"
-                                [ngClass]="{'is-invalid': paymentForm.get('reference')?.invalid && paymentForm.get('reference')?.touched}">
+                        <div class="row">
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">Date d'encaissement <span
+                                        class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" formControlName="date"
+                                    [ngClass]="{'is-invalid': paymentForm.get('date')?.invalid && paymentForm.get('date')?.touched}">
+                            </div>
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">Montant perçu (FCFA) <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control" formControlName="amount"
+                                    [ngClass]="{'is-invalid': paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched}"
+                                    placeholder="Ex: 15000">
+                            </div>
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">Moyen de paiement</label>
+                                <select class="form-select" formControlName="method">
+                                    <option value="Mobile Money">Mobile Money (Wave/Orange/MTN)</option>
+                                    <option value="Espèces">Espèces (En agence)</option>
+                                    <option value="Virement Bancaire">Virement Bancaire</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-sm-6 mb-3">
-                            <label class="form-label text-dark fw-medium">Preuve numérisée (Bordereau, Capture)</label>
-                            <input type="file" class="form-control" (change)="onFileChange($event)">
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-sm-12 mb-3">
-                            <label class="form-label text-dark fw-medium">Note / Commentaire interne</label>
-                            <textarea class="form-control" formControlName="notes" rows="2"
-                                placeholder="Informations complémentaires..."></textarea>
+                        <div class="row">
+                            <div class="col-sm-6 mb-3">
+                                <label class="form-label text-dark fw-medium">Référence de transaction</label>
+                                <input type="text" class="form-control" formControlName="reference"
+                                    placeholder="Ex: WV-847294 ou N° de reçu"
+                                    [ngClass]="{'is-invalid': paymentForm.get('reference')?.invalid && paymentForm.get('reference')?.touched}">
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <label class="form-label text-dark fw-medium">Preuve numérisée (Bordereau,
+                                    Capture)</label>
+                                <input type="file" class="form-control" (change)="onFileChange($event)">
+                            </div>
                         </div>
-                    </div>
-                </form>
+
+                        <div class="row">
+                            <div class="col-sm-12 mb-3">
+                                <label class="form-label text-dark fw-medium">Note / Commentaire interne</label>
+                                <textarea class="form-control" formControlName="notes" rows="2"
+                                    placeholder="Informations complémentaires..."></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</ng-container>
+
+<ng-container *ngxPermissionsExcept="isEditMode ? ['PAYMENT:EDIT'] : ['PAYMENT:NEW']">
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+        <div class="card shadow-sm border-0 bg-white" style="max-width: 500px; border-radius: 12px;">
+            <div class="card-body text-center p-5">
+                <div class="rounded-circle bg-danger-transparent d-inline-flex p-3 mb-4">
+                    <i data-feather="lock" appFeatherIcon class="text-danger" style="width: 48px; height: 48px;"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Accès Refusé</h4>
+                <p class="text-secondary mb-4">
+                    Vous ne disposez pas des permissions nécessaires pour {{ isEditMode ? 'modifier cet encaissement' :
+                    'saisir un nouvel encaissement' }}.
+                    <br>Veuillez contacter votre administrateur si vous pensez qu'il s'agit d'une erreur.
+                </p>
+                <button class="btn btn-danger px-4" routerLink="/gbatcar/payments">
+                    Retour au journal des paiements
+                </button>
+            </div>
+        </div>
+    </div>
+</ng-container>

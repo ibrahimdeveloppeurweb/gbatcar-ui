@@ -29,9 +29,9 @@ export interface Penalty {
     date?: string;                // Date d'émission / constat
     dueDate?: string;             // Échéance de régularisation
     status?: string;              // 'Payé', 'Non payé', 'En attente', 'Impayé'
-    severity?: 'Faible' | 'Moyenne' | 'Élevée' | 'Critique' | string;
-
+    severity?: string;
     observation?: string;
+    paidAt?: string;
     proofUrl?: string;
     paidAmount?: number;
 

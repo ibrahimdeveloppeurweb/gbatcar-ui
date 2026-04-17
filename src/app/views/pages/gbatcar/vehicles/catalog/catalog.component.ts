@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { VehicleService } from '../../../../../core/services/vehicle/vehicle.service';
 import { AuthService } from '../../../../../core/services/auth/auth.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
 import { environment } from '../../../../../../environments/environment';
 import Swal from 'sweetalert2';
 
@@ -13,7 +14,7 @@ import { Vehicle } from '../../../../../core/models/vehicle.model';
 @Component({
   selector: 'app-catalog',
   standalone: true,
-  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule],
+  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule, NgxPermissionsModule],
   templateUrl: './catalog.component.html',
   styleUrl: './catalog.component.scss'
 })
@@ -21,6 +22,7 @@ export class CatalogComponent implements OnInit {
 
   private vehicleService = inject(VehicleService);
   private authService = inject(AuthService);
+  private ngxPermissionsService = inject(NgxPermissionsService);
 
   catalogItems: Vehicle[] = [];
   loading: boolean = false;
@@ -182,6 +184,7 @@ export class CatalogComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    this.ngxPermissionsService.loadPermissions(this.authService.getPermissions());
     this.loadCatalog();
   }
 

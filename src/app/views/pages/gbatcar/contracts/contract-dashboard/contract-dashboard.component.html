@@ -1,4 +1,4 @@
-<ng-container *ngxPermissionsOnly="['CONTRACT:LIST']">
+<ng-container *ngxPermissionsOnly="['CONTRACT:DASHBOARD']">
     <div class="row mb-4 align-items-center">
         <div class="col-md-8">
             <h4 class="mb-1 text-dark fw-bold">Tableau de Bord : Contrats & Dossiers</h4>
@@ -174,9 +174,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="d-grid mt-3">
-                        <button class="btn btn-outline-secondary btn-sm">Gérer les alertes</button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -184,7 +181,7 @@
 </ng-container>
 
 <!-- FALLBACK FOR UNAUTHORIZED ACCESS -->
-<ng-container *ngxPermissionsExcept="['CONTRACT:LIST']">
+<ng-container *ngxPermissionsExcept="['CONTRACT:DASHBOARD']">
     <div class="row mt-5">
         <div class="col-md-12 text-center">
             <div class="card p-5 border-0 shadow-sm">

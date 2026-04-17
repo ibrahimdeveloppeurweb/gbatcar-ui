@@ -5,11 +5,13 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { PenaltyService } from '../../../../../core/services/penalty/penalty.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-penalties',
   standalone: true,
-  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule],
+  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule, NgxPermissionsModule],
   templateUrl: './penalties.component.html',
   styleUrl: './penalties.component.scss'
 })
@@ -66,10 +68,14 @@ export class PenaltiesComponent implements OnInit {
 
   constructor(
     private penaltyService: PenaltyService,
-    private router: Router
+    private router: Router,
+    private permissionsService: NgxPermissionsService,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
     this.loadPenalties();
   }
 

@@ -1,288 +1,319 @@
-<!-- ==================== HEADER ==================== -->
-<div class="row mb-4 align-items-center">
-    <div class="col-md-6">
-        <h4 class="mb-1 text-dark fw-bold">Tableau de Bord : Maintenance</h4>
-        <p class="text-muted fs-13px mb-0">Suivi des interventions, coûts de maintenance et alertes sinistres.</p>
-    </div>
-    <div class="col-md-6 mt-3 mt-md-0 d-flex justify-content-md-end align-items-center gap-3">
-        <!-- Duration Selector -->
-        <div class="d-flex align-items-center gap-2" style="min-width: 150px;">
-            <label class="mb-0 text-muted fs-12px text-nowrap">Période :</label>
-            <ng-select [items]="monthsList" bindLabel="name" bindValue="monthsCount" [(ngModel)]="selectedMonth"
-                [clearable]="false" [searchable]="true" [addTag]="addDurationTag" (change)="onMonthChange($event)"
-                class="flex-grow-1 custom-select-sm shadow-sm" style="min-width: 130px;">
-            </ng-select>
+<ng-container *ngxPermissionsOnly="['MAINTENANCE:DASHBOARD']">
+    <!-- ==================== HEADER ==================== -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h4 class="mb-1 text-dark fw-bold">Tableau de Bord : Maintenance</h4>
+            <p class="text-muted fs-13px mb-0">Suivi des interventions, coûts de maintenance et alertes sinistres.</p>
         </div>
-
-        <button class="btn btn-warning btn-sm d-flex align-items-center text-dark"
-            (click)="openBudgetModal(budgetModal)">
-            <i data-feather="dollar-sign" appFeatherIcon class="icon-sm me-1"></i> Budget
-        </button>
-        <button class="btn btn-primary btn-sm d-flex align-items-center" routerLink="/gbatcar/maintenance/new">
-            <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Nouvelle Intervention
-        </button>
-        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center bg-white">
-            <i data-feather="download" appFeatherIcon class="icon-sm me-1"></i> Exporter
-        </button>
-    </div>
-</div>
-
-<!-- ... (existing content) ... -->
-
-<!-- ==================== BUDGET MODAL ==================== -->
-<ng-template #budgetModal let-modal>
-    <div class="modal-header bg-warning">
-        <h5 class="modal-title text-dark fw-bold">Configuration du Budget</h5>
-        <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
-    </div>
-    <div class="modal-body">
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label fs-12px text-muted">Mois concerné</label>
-                <input type="month" class="form-control shadow-sm" [(ngModel)]="budgetForm.period">
+        <div class="col-md-6 mt-3 mt-md-0 d-flex justify-content-md-end align-items-center gap-3">
+            <!-- Duration Selector -->
+            <div class="d-flex align-items-center gap-2" style="min-width: 150px;">
+                <label class="mb-0 text-muted fs-12px text-nowrap">Période :</label>
+                <ng-select [items]="monthsList" bindLabel="name" bindValue="monthsCount" [(ngModel)]="selectedMonth"
+                    [clearable]="false" [searchable]="true" [addTag]="addDurationTag" (change)="onMonthChange($event)"
+                    class="flex-grow-1 custom-select-sm shadow-sm" style="min-width: 130px;">
+                </ng-select>
             </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label fs-12px text-muted">Montant (FCFA)</label>
-                <input type="number" class="form-control shadow-sm" [(ngModel)]="budgetForm.amount"
-                    placeholder="200000">
-            </div>
-        </div>
-        <div class="alert alert-info py-2 fs-12px mb-0 border-0 shadow-sm mt-2">
-            <i data-feather="info" appFeatherIcon class="icon-sm me-1"></i>
-            Ce budget sera utilisé pour le calcul des indicateurs et du graphique d'évolution.
-        </div>
-    </div>
-    <div class="modal-footer border-0 pt-0">
-        <button type="button" class="btn btn-light btn-sm" (click)="modal.close('cancel')">Annuler</button>
-        <button type="button" class="btn btn-warning btn-sm text-dark px-4" (click)="saveBudget(modal)"
-            [disabled]="isSavingBudget">
-            <span *ngIf="!isSavingBudget">Enregistrer</span>
-            <span *ngIf="isSavingBudget" class="spinner-border spinner-border-sm me-1"></span>
-        </button>
-    </div>
-</ng-template>
 
-<!-- ==================== KPI CARDS ==================== -->
-<div class="row mb-4 position-relative">
-    <!-- Loading Overlay -->
-    <div *ngIf="loading"
-        class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-        style="z-index: 10; background: rgba(255,255,255,0.5);">
-        <div class="spinner-border text-primary" role="status"></div>
+            <ng-container *ngxPermissionsOnly="'MAINTENANCE:BUDGET:SAVE'">
+                <button class="btn btn-warning btn-sm d-flex align-items-center text-dark"
+                    (click)="openBudgetModal(budgetModal)">
+                    <i data-feather="dollar-sign" appFeatherIcon class="icon-sm me-1"></i> Budget
+                </button>
+            </ng-container>
+            <ng-container *ngxPermissionsOnly="'MAINTENANCE:NEW'">
+                <button class="btn btn-primary btn-sm d-flex align-items-center" routerLink="/gbatcar/maintenance/new">
+                    <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Nouvelle Intervention
+                </button>
+            </ng-container>
+            <button class="btn btn-outline-secondary btn-sm d-flex align-items-center bg-white">
+                <i data-feather="download" appFeatherIcon class="icon-sm me-1"></i> Exporter
+            </button>
+        </div>
     </div>
 
-    <!-- Interventions ce mois -->
-    <div class="col-md-3 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #3498db;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Interventions (Mois)</p>
-                        <h4 class="fw-bold mb-0 text-primary">{{ stats.interventionsThisMonth }}</h4>
-                        <small class="text-muted fs-11px">Total: {{ stats.totalInterventions }} YTD</small>
-                    </div>
-                    <i data-feather="tool" appFeatherIcon class="icon-lg text-primary"></i>
+    <!-- ... (existing content) ... -->
+
+    <!-- ==================== BUDGET MODAL ==================== -->
+    <ng-template #budgetModal let-modal>
+        <div class="modal-header bg-warning">
+            <h5 class="modal-title text-dark fw-bold">Configuration du Budget</h5>
+            <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fs-12px text-muted">Mois concerné</label>
+                    <input type="month" class="form-control shadow-sm" [(ngModel)]="budgetForm.period">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fs-12px text-muted">Montant (FCFA)</label>
+                    <input type="number" class="form-control shadow-sm" [(ngModel)]="budgetForm.amount"
+                        placeholder="200000">
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- En attente -->
-    <div class="col-md-3 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #f39c12;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">En Cours / En Attente</p>
-                        <h4 class="fw-bold mb-0 text-warning">{{ stats.pendingInterventions }}</h4>
-                        <small class="text-muted fs-11px">Délai moyen: {{ formatDelay(stats.avgRepairDays) }}</small>
-                    </div>
-                    <i data-feather="clock" appFeatherIcon class="icon-lg text-warning"></i>
-                </div>
+            <div class="alert alert-info py-2 fs-12px mb-0 border-0 shadow-sm mt-2">
+                <i data-feather="info" appFeatherIcon class="icon-sm me-1"></i>
+                Ce budget sera utilisé pour le calcul des indicateurs et du graphique d'évolution.
             </div>
         </div>
-    </div>
-
-    <!-- Coût Maintenance (Mois) -->
-    <div class="col-md-3 col-6">
-        <div class="card h-100" style="border-left: 4px solid #e74c3c;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Coût Maintenance (Mois)</p>
-                        <h4 class="fw-bold mb-0"
-                            [ngClass]="stats.monthlyCost > stats.budgetMonthly ? 'text-danger' : 'text-dark'">
-                            {{ formatCurrency(stats.monthlyCost) }}
-                        </h4>
-                        <small class="text-muted fs-11px">Budget: {{ formatCurrency(stats.budgetMonthly) }}</small>
-                    </div>
-                    <i data-feather="dollar-sign" appFeatherIcon class="icon-lg text-danger"></i>
-                </div>
-            </div>
+        <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-light btn-sm" (click)="modal.close('cancel')">Annuler</button>
+            <button type="button" class="btn btn-warning btn-sm text-dark px-4" (click)="saveBudget(modal)"
+                [disabled]="isSavingBudget">
+                <span *ngIf="!isSavingBudget">Enregistrer</span>
+                <span *ngIf="isSavingBudget" class="spinner-border spinner-border-sm me-1"></span>
+            </button>
         </div>
-    </div>
+    </ng-template>
 
-    <!-- Alertes Sinistres -->
-    <div class="col-md-3 col-6">
-        <div class="card h-100" style="border-left: 4px solid #e74c3c;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Alertes Sinistres</p>
-                        <h4 class="fw-bold mb-0 text-danger">{{ stats.activeAlerts }}</h4>
-                        <small class="text-danger fw-bold fs-11px">{{ stats.criticalAlerts }} Critiques</small>
-                    </div>
-                    <i data-feather="alert-octagon" appFeatherIcon class="icon-lg text-danger"></i>
-                </div>
-            </div>
+    <!-- ==================== KPI CARDS ==================== -->
+    <div class="row mb-4 position-relative">
+        <!-- Loading Overlay -->
+        <div *ngIf="loading"
+            class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+            style="z-index: 10; background: rgba(255,255,255,0.5);">
+            <div class="spinner-border text-primary" role="status"></div>
         </div>
-    </div>
-</div>
 
-<!-- ==================== CHARTS ==================== -->
-<div class="row">
-    <!-- Chart: Types d'interventions (Donut) -->
-    <div class="col-lg-4 grid-margin stretch-card">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body" *ngIf="interventionTypeChartOptions">
-                <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">Répartition par Type</h6>
-                <apx-chart [series]="interventionTypeChartOptions.series" [chart]="interventionTypeChartOptions.chart"
-                    [labels]="interventionTypeChartOptions.labels" [colors]="interventionTypeChartOptions.colors"
-                    [stroke]="interventionTypeChartOptions.stroke" [legend]="interventionTypeChartOptions.legend"
-                    [dataLabels]="interventionTypeChartOptions.dataLabels"
-                    [plotOptions]="interventionTypeChartOptions.plotOptions">
-                </apx-chart>
-                <div class="d-flex justify-content-around mt-2 pt-2 border-top">
-                    <div class="text-center">
-                        <h6 class="fw-bold mb-0 text-success">{{ stats.completedInterventions }}</h6>
-                        <small class="text-muted fs-11px">Terminées</small>
-                    </div>
-                    <div class="text-center">
-                        <h6 class="fw-bold mb-0 text-primary">{{ stats.pendingInterventions }}</h6>
-                        <small class="text-muted fs-11px">En cours</small>
-                    </div>
-                    <div class="text-center">
-                        <h6 class="fw-bold mb-0 text-dark">{{ stats.vehiclesInShop }}</h6>
-                        <small class="text-muted fs-11px">Véh. en atelier</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Chart: Coûts de Maintenance vs Budget (Line) -->
-    <div class="col-lg-8 grid-margin stretch-card">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body" *ngIf="costTrendChartOptions">
-                <h6 class="card-title mb-3 text-uppercase fs-12px fw-bold text-muted">
-                    Évolution des Coûts vs Budget ({{ selectedMonth }} mois)
-                </h6>
-                <apx-chart [series]="costTrendChartOptions.series" [chart]="costTrendChartOptions.chart"
-                    [colors]="costTrendChartOptions.colors" [stroke]="costTrendChartOptions.stroke"
-                    [xaxis]="costTrendChartOptions.xaxis" [yaxis]="costTrendChartOptions.yaxis"
-                    [grid]="costTrendChartOptions.grid" [legend]="costTrendChartOptions.legend"
-                    [dataLabels]="costTrendChartOptions.dataLabels" [markers]="costTrendChartOptions.markers"
-                    [tooltip]="costTrendChartOptions.tooltip">
-                </apx-chart>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ==================== INTERVENTIONS RÉCENTES ==================== -->
-<div class="row">
-    <div class="col-lg-8 grid-margin stretch-card">
-        <div class="card border-0 shadow-sm border-top border-primary border-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="card-title mb-0 fs-13px fw-bold text-uppercase text-primary">
-                        <i data-feather="tool" appFeatherIcon class="icon-sm me-1"></i>
-                        Interventions Récentes
-                    </h6>
-                    <a routerLink="/gbatcar/maintenance" class="btn btn-sm btn-outline-primary">Voir toutes</a>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Réf.</th>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Véhicule</th>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Type</th>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Coût</th>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Statut</th>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let item of recentInterventions">
-                                <td class="fw-bold text-dark fs-12px">{{ item.reference || '#' + item.id }}</td>
-                                <td>
-                                    <span class="d-block fw-medium text-dark fs-12px">{{ item.vehicle?.immatriculation
-                                        }}</span>
-                                    <span class="text-muted fs-11px">{{ item.vehicle?.marque }} {{ item.vehicle?.modele
-                                        }}</span>
-                                </td>
-                                <td class="fs-12px text-muted">{{ item.type?.name }}</td>
-                                <td class="fw-bold text-dark">{{ formatCurrency(item.cost) }}</td>
-                                <td>
-                                    <span class="badge badge-pill" [ngClass]="getStatusClass(item.status)">
-                                        {{ item.status }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-1">
-                                        <button class="btn btn-icon btn-xs btn-outline-primary"
-                                            [routerLink]="['/gbatcar/maintenance/details', item.uuid]">
-                                            <i data-feather="eye" appFeatherIcon class="icon-xs"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr *ngIf="recentInterventions.length === 0">
-                                <td colspan="6" class="text-center py-4 text-muted">Aucune intervention récente sur
-                                    cette période.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Alertes Sinistres -->
-    <div class="col-lg-4 grid-margin stretch-card">
-        <div class="card border-0 shadow-sm border-top border-danger border-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="card-title text-danger mb-0 fs-13px fw-bold text-uppercase">
-                        <i data-feather="alert-triangle" appFeatherIcon class="icon-sm me-1"></i>
-                        Alertes Sinistres
-                    </h6>
-                    <span class="badge bg-danger rounded-pill">{{ accidents.length }}</span>
-                </div>
-                <div class="d-flex flex-column gap-2 overflow-auto" style="max-height: 400px;">
-                    <div *ngFor="let sin of accidents" class="p-3 rounded border"
-                        [ngClass]="sin.severity === 'danger' ? 'border-danger-subtle bg-danger-subtle' : (sin.severity === 'warning' ? 'border-warning-subtle bg-warning-subtle' : 'bg-light')">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="fw-bold fs-12px text-dark">{{ sin.reference }}</span>
-                            <span class="badge" [ngClass]="getSeverityClass(sin.severity)">{{ sin.severity || 'Normal'
-                                }}</span>
+        <!-- Interventions ce mois -->
+        <div class="col-md-3 col-6 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #3498db;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Interventions (Mois)</p>
+                            <h4 class="fw-bold mb-0 text-primary">{{ stats.interventionsThisMonth }}</h4>
+                            <small class="text-muted fs-11px">Total: {{ stats.totalInterventions }} YTD</small>
                         </div>
-                        <div class="fs-12px text-muted">{{ sin.type }}</div>
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <span class="badge" [ngClass]="getStatusClass(sin.status)">{{ sin.status }}</span>
-                            <span class="text-secondary fs-11px fw-bold">{{ formatCurrency(sin.repair_cost ||
-                                sin.repairCost) }}</span>
+                        <i data-feather="tool" appFeatherIcon class="icon-lg text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- En attente -->
+        <div class="col-md-3 col-6 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #f39c12;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">En Cours / En Attente</p>
+                            <h4 class="fw-bold mb-0 text-warning">{{ stats.pendingInterventions }}</h4>
+                            <small class="text-muted fs-11px">Délai moyen: {{ formatDelay(stats.avgRepairDays)
+                                }}</small>
+                        </div>
+                        <i data-feather="clock" appFeatherIcon class="icon-lg text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coût Maintenance (Mois) -->
+        <div class="col-md-3 col-6">
+            <div class="card h-100" style="border-left: 4px solid #e74c3c;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Coût Maintenance (Mois)</p>
+                            <h4 class="fw-bold mb-0"
+                                [ngClass]="stats.monthlyCost > stats.budgetMonthly ? 'text-danger' : 'text-dark'">
+                                {{ formatCurrency(stats.monthlyCost) }}
+                            </h4>
+                            <small class="text-muted fs-11px">Budget: {{ formatCurrency(stats.budgetMonthly) }}</small>
+                        </div>
+                        <i data-feather="dollar-sign" appFeatherIcon class="icon-lg text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alertes Sinistres -->
+        <div class="col-md-3 col-6">
+            <div class="card h-100" style="border-left: 4px solid #e74c3c;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Alertes Sinistres</p>
+                            <h4 class="fw-bold mb-0 text-danger">{{ stats.activeAlerts }}</h4>
+                            <small class="text-danger fw-bold fs-11px">{{ stats.criticalAlerts }} Critiques</small>
+                        </div>
+                        <i data-feather="alert-octagon" appFeatherIcon class="icon-lg text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CHARTS ==================== -->
+    <div class="row">
+        <!-- Chart: Types d'interventions (Donut) -->
+        <div class="col-lg-4 grid-margin stretch-card">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body" *ngIf="interventionTypeChartOptions">
+                    <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">Répartition par Type</h6>
+                    <apx-chart [series]="interventionTypeChartOptions.series"
+                        [chart]="interventionTypeChartOptions.chart" [labels]="interventionTypeChartOptions.labels"
+                        [colors]="interventionTypeChartOptions.colors" [stroke]="interventionTypeChartOptions.stroke"
+                        [legend]="interventionTypeChartOptions.legend"
+                        [dataLabels]="interventionTypeChartOptions.dataLabels"
+                        [plotOptions]="interventionTypeChartOptions.plotOptions">
+                    </apx-chart>
+                    <div class="d-flex justify-content-around mt-2 pt-2 border-top">
+                        <div class="text-center">
+                            <h6 class="fw-bold mb-0 text-success">{{ stats.completedInterventions }}</h6>
+                            <small class="text-muted fs-11px">Terminées</small>
+                        </div>
+                        <div class="text-center">
+                            <h6 class="fw-bold mb-0 text-primary">{{ stats.pendingInterventions }}</h6>
+                            <small class="text-muted fs-11px">En cours</small>
+                        </div>
+                        <div class="text-center">
+                            <h6 class="fw-bold mb-0 text-dark">{{ stats.vehiclesInShop }}</h6>
+                            <small class="text-muted fs-11px">Véh. en atelier</small>
                         </div>
                     </div>
-                    <div *ngIf="accidents.length === 0" class="text-center py-4 text-muted fs-12px">Aucune alerte
-                        active.</div>
                 </div>
-                <div class="d-grid mt-3">
-                    <a routerLink="/gbatcar/maintenance/alerts" class="btn btn-outline-danger btn-sm">Gérer les
-                        sinistres</a>
+            </div>
+        </div>
+
+        <!-- Chart: Coûts de Maintenance vs Budget (Line) -->
+        <div class="col-lg-8 grid-margin stretch-card">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body" *ngIf="costTrendChartOptions">
+                    <h6 class="card-title mb-3 text-uppercase fs-12px fw-bold text-muted">
+                        Évolution des Coûts vs Budget ({{ selectedMonth }} mois)
+                    </h6>
+                    <apx-chart [series]="costTrendChartOptions.series" [chart]="costTrendChartOptions.chart"
+                        [colors]="costTrendChartOptions.colors" [stroke]="costTrendChartOptions.stroke"
+                        [xaxis]="costTrendChartOptions.xaxis" [yaxis]="costTrendChartOptions.yaxis"
+                        [grid]="costTrendChartOptions.grid" [legend]="costTrendChartOptions.legend"
+                        [dataLabels]="costTrendChartOptions.dataLabels" [markers]="costTrendChartOptions.markers"
+                        [tooltip]="costTrendChartOptions.tooltip">
+                    </apx-chart>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
+    <!-- ==================== INTERVENTIONS RÉCENTES ==================== -->
+    <div class="row">
+        <div class="col-lg-8 grid-margin stretch-card">
+            <div class="card border-0 shadow-sm border-top border-primary border-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="card-title mb-0 fs-13px fw-bold text-uppercase text-primary">
+                            <i data-feather="tool" appFeatherIcon class="icon-sm me-1"></i>
+                            Interventions Récentes
+                        </h6>
+                        <a routerLink="/gbatcar/maintenance" class="btn btn-sm btn-outline-primary">Voir toutes</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Réf.</th>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Véhicule</th>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Type</th>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Coût</th>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Statut</th>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of recentInterventions">
+                                    <td class="fw-bold text-dark fs-12px">{{ item.reference || '#' + item.id }}</td>
+                                    <td>
+                                        <span class="d-block fw-medium text-dark fs-12px">{{
+                                            item.vehicle?.immatriculation
+                                            }}</span>
+                                        <span class="text-muted fs-11px">{{ item.vehicle?.marque }} {{
+                                            item.vehicle?.modele
+                                            }}</span>
+                                    </td>
+                                    <td class="fs-12px text-muted">{{ item.type?.name }}</td>
+                                    <td class="fw-bold text-dark">{{ formatCurrency(item.cost) }}</td>
+                                    <td>
+                                        <span class="badge badge-pill" [ngClass]="getStatusClass(item.status)">
+                                            {{ item.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <button class="btn btn-icon btn-xs btn-outline-primary"
+                                                [routerLink]="['/gbatcar/maintenance/details', item.uuid]">
+                                                <i data-feather="eye" appFeatherIcon class="icon-xs"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="recentInterventions.length === 0">
+                                    <td colspan="6" class="text-center py-4 text-muted">Aucune intervention récente sur
+                                        cette période.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alertes Sinistres -->
+        <div class="col-lg-4 grid-margin stretch-card">
+            <div class="card border-0 shadow-sm border-top border-danger border-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="card-title text-danger mb-0 fs-13px fw-bold text-uppercase">
+                            <i data-feather="alert-triangle" appFeatherIcon class="icon-sm me-1"></i>
+                            Alertes Sinistres
+                        </h6>
+                        <span class="badge bg-danger rounded-pill">{{ accidents.length }}</span>
+                    </div>
+                    <div class="d-flex flex-column gap-2 overflow-auto" style="max-height: 400px;">
+                        <div *ngFor="let sin of accidents" class="p-3 rounded border"
+                            [ngClass]="sin.severity === 'danger' ? 'border-danger-subtle bg-danger-subtle' : (sin.severity === 'warning' ? 'border-warning-subtle bg-warning-subtle' : 'bg-light')">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold fs-12px text-dark">{{ sin.reference }}</span>
+                                <span class="badge" [ngClass]="getSeverityClass(sin.severity)">{{ sin.severity ||
+                                    'Normal'
+                                    }}</span>
+                            </div>
+                            <div class="fs-12px text-muted">{{ sin.type }}</div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span class="badge" [ngClass]="getStatusClass(sin.status)">{{ sin.status }}</span>
+                                <span class="text-secondary fs-11px fw-bold">{{ formatCurrency(sin.repair_cost ||
+                                    sin.repairCost) }}</span>
+                            </div>
+                        </div>
+                        <div *ngIf="accidents.length === 0" class="text-center py-4 text-muted fs-12px">Aucune alerte
+                            active.</div>
+                    </div>
+                    <div class="d-grid mt-3">
+                        <a routerLink="/gbatcar/maintenance/alerts" class="btn btn-outline-danger btn-sm">Gérer les
+                            sinistres</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</ng-container>
+
+<ng-container *ngxPermissionsExcept="['MAINTENANCE:DASHBOARD']">
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+        <div class="card shadow-sm border-0 bg-white" style="max-width: 500px; border-radius: 12px;">
+            <div class="card-body text-center p-5">
+                <div class="rounded-circle bg-danger-transparent d-inline-flex p-3 mb-4">
+                    <i data-feather="lock" appFeatherIcon class="text-danger" style="width: 48px; height: 48px;"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Accès Refusé</h4>
+                <p class="text-secondary mb-4">
+                    Vous ne disposez pas des permissions nécessaires pour accéder au tableau de bord de maintenance.
+                    <br>Veuillez contacter votre administrateur si vous pensez qu'il s'agit d'une erreur.
+                </p>
+                <button class="btn btn-danger px-4" routerLink="/dashboard">
+                    Retour au tableau de bord général
+                </button>
+            </div>
+        </div>
+    </div>
+</ng-container>

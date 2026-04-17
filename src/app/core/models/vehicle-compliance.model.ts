@@ -29,6 +29,7 @@ export interface Penalty {
     status?: string;
     severity?: string;
     observation?: string;
+    paidAt?: string | Date;
 }
 
 export interface VehicleCompliance {

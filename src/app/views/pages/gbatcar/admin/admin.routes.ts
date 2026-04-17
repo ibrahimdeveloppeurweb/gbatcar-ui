@@ -49,5 +49,9 @@ export default [
     {
         path: 'permissions/details/:id',
         loadComponent: () => import('./permissions/permission-details/permission-details.component').then(c => c.PermissionDetailsComponent)
+    },
+    {
+        path: 'audit-log',
+        loadComponent: () => import('./audit-log/audit-log.component').then(c => c.AuditLogComponent)
     }
 ] as Routes;

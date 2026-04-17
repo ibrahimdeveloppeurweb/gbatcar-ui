@@ -4,18 +4,22 @@ import { RouterLink, Router } from '@angular/router';
 import { FeatherIconDirective } from '../../../../../../core/feather-icon/feather-icon.directive';
 import { Role } from '../../../../../../core/models/permission.model';
 import { PermissionService } from '../../../../../../core/services/permission/permission.service';
+import { AuthService } from '../../../../../../core/services/auth/auth.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 
 @Component({
   selector: 'app-permissions-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FeatherIconDirective],
+  imports: [CommonModule, RouterLink, FeatherIconDirective, NgxPermissionsModule],
   templateUrl: './permissions-list.component.html',
   styles: ``
 })
 export class PermissionsListComponent implements OnInit {
   private router = inject(Router);
   private permissionService = inject(PermissionService);
+  private authService = inject(AuthService);
+  private ngxPermissionsService = inject(NgxPermissionsService);
 
   roles: Role[] = [];
   loading: boolean = true;
@@ -23,6 +27,7 @@ export class PermissionsListComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    this.ngxPermissionsService.loadPermissions(this.authService.getPermissions());
     this.loadRoles();
   }
 

@@ -6,6 +6,9 @@ import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon
 import { VehicleService } from '../../../../core/services/vehicle/vehicle.service';
 import { Vehicle } from '../../../../core/models/vehicle.model';
 import { environment } from '../../../../../environments/environment';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../core/services/auth/auth.service';
+import Swal from 'sweetalert2';
 
 /** Refresh to clear compiler cache **/
 
@@ -20,12 +23,14 @@ export class CountWherePipe implements PipeTransform {
 @Component({
   selector: 'app-vehicles',
   standalone: true,
-  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule, CountWherePipe],
+  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule, CountWherePipe, NgxPermissionsModule],
   templateUrl: './vehicles.component.html',
   styleUrl: './vehicles.component.scss'
 })
 export class VehiclesComponent implements OnInit {
   private vehicleService = inject(VehicleService);
+  private permissionsService = inject(NgxPermissionsService);
+  private authService = inject(AuthService);
 
   vehicles: Vehicle[] = [];
   recompileTrigger: number = Date.now();
@@ -71,6 +76,8 @@ export class VehiclesComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
     this.loadDashboardStats();
     this.loadVehicles();
   }
@@ -181,10 +188,10 @@ export class VehiclesComponent implements OnInit {
         this.stats.goodPayers = kpis.good_payers || 0;
         this.stats.soldCount = kpis.sold_count || 0;
 
-        // Map from alerts
-        this.stats.paymentAlert = alerts.filter((a: any) => a.problem === 'Paiement en retard').length;
-        this.stats.maintenanceAlert = alerts.filter((a: any) => a.problem?.includes('Entretien')).length;
-        this.stats.critical = alerts.filter((a: any) => a.niveau === 'Critique').length;
+        // Map from alerts - Count UNIQUE IDs to avoid duplicates for vehicles with multiple reasons
+        this.stats.paymentAlert = new Set(alerts.filter((a: any) => a.problem === 'Paiement en retard').map((a: any) => a.id)).size;
+        this.stats.maintenanceAlert = new Set(alerts.filter((a: any) => a.problem?.includes('Entretien')).map((a: any) => a.id)).size;
+        this.stats.critical = new Set(alerts.filter((a: any) => a.niveau === 'Critique').map((a: any) => a.id)).size;
       }
     });
   }
@@ -234,5 +241,42 @@ export class VehiclesComponent implements OnInit {
     this.quickSearchTerm = '';
     this.quickStatusFilter = '';
     this.loadVehicles();
+  }
+
+  deleteVehicle(uuid: string | undefined, immatriculation: string | undefined) {
+    if (!uuid || !immatriculation) return;
+    Swal.fire({
+      title: 'Supprimer le véhicule ?',
+      text: `Êtes-vous sûr de vouloir supprimer définitivement le véhicule ${immatriculation} ?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Oui, supprimer',
+      cancelButtonText: 'Annuler'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.loading = true;
+        this.vehicleService.getDelete(uuid).subscribe({
+          next: () => {
+            Swal.fire(
+              'Supprimé !',
+              'Le véhicule a été supprimé avec succès.',
+              'success'
+            );
+            this.loadVehicles();
+            this.loadDashboardStats();
+          },
+          error: (err) => {
+            this.loading = false;
+            Swal.fire(
+              'Erreur',
+              'Une erreur est survenue lors de la suppression.',
+              'error'
+            );
+          }
+        });
+      }
+    });
   }
 }

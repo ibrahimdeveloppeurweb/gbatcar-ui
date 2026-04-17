@@ -11,3 +11,4 @@ export * from './setting.model';
 export * from './user.model';
 export * from './vehicle.model';
 export * from './dashboard.model';
+export * from './audit-log.model';

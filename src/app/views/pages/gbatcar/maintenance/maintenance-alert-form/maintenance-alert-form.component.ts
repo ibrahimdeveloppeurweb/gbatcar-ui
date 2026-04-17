@@ -7,11 +7,13 @@ import { MaintenanceAlertService } from '../../../../../core/services/maintenanc
 import { VehicleService } from '../../../../../core/services/vehicle/vehicle.service';
 import { NgSelectModule } from '@ng-select/ng-select';
 import Swal from 'sweetalert2';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-maintenance-alert-form',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, FeatherIconDirective, NgSelectModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FeatherIconDirective, NgSelectModule, NgxPermissionsModule],
   templateUrl: './maintenance-alert-form.component.html',
   styleUrl: './maintenance-alert-form.component.scss'
 })
@@ -22,6 +24,8 @@ export class MaintenanceAlertFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private alertService = inject(MaintenanceAlertService);
   private vehicleService = inject(VehicleService);
+  private permissionsService = inject(NgxPermissionsService);
+  private authService = inject(AuthService);
 
   alertForm!: FormGroup;
   isEditMode = false;
@@ -42,6 +46,8 @@ export class MaintenanceAlertFormComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
     this.initForm();
     this.loadVehicles();
 
@@ -138,7 +144,7 @@ export class MaintenanceAlertFormComponent implements OnInit {
 
   saveData(): void {
     this.isSubmitting = true;
-    
+
     const formData = new FormData();
     const formValue = this.alertForm.value;
 

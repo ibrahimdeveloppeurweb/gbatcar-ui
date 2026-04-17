@@ -9,11 +9,14 @@ import { VehicleService } from '../../../../../core/services/vehicle/vehicle.ser
 import { NgSelectModule } from '@ng-select/ng-select';
 import { ApiService } from '../../../../../utils/api.service';
 import { MaintenanceTypeService } from '../../../../../core/services/maintenance/maintenance-type.service';
+import { MaintenanceProviderService } from '../../../../../core/services/maintenance/maintenance-provider.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
     selector: 'app-maintenance-form',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterModule, FeatherIconDirective, NgSelectModule],
+    imports: [CommonModule, ReactiveFormsModule, RouterModule, FeatherIconDirective, NgSelectModule, NgxPermissionsModule],
     templateUrl: './maintenance-form.component.html',
     styleUrl: './maintenance-form.component.scss'
 })
@@ -26,6 +29,9 @@ export class MaintenanceFormComponent implements OnInit {
     private vehicleService = inject(VehicleService);
     private apiService = inject(ApiService);
     private maintenanceTypeService = inject(MaintenanceTypeService);
+    private maintenanceProviderService = inject(MaintenanceProviderService);
+    private permissionsService = inject(NgxPermissionsService);
+    private authService = inject(AuthService);
 
     customSearchFn = (term: string, item: any) => {
         term = term.toLowerCase();
@@ -66,6 +72,10 @@ export class MaintenanceFormComponent implements OnInit {
     maintenanceTypes: any[] = [];
     loadingTypes = false;
 
+    // Maintenance providers
+    maintenanceProviders: any[] = [];
+    loadingProviders = false;
+
     // Files handling
     selectedFiles: File[] = [];
     existingDocs: any[] = [];
@@ -74,9 +84,12 @@ export class MaintenanceFormComponent implements OnInit {
     constructor() { }
 
     ngOnInit(): void {
+        const permissions = this.authService.getPermissions();
+        this.permissionsService.loadPermissions(permissions);
         this.newForm();
         this.loadVehicles();
         this.loadMaintenanceTypes();
+        this.loadMaintenanceProviders();
 
         this.maintenanceId = this.route.snapshot.paramMap.get('uuid') || this.route.snapshot.paramMap.get('id');
 
@@ -161,6 +174,38 @@ export class MaintenanceFormComponent implements OnInit {
         });
     };
 
+    loadMaintenanceProviders(): void {
+        this.loadingProviders = true;
+        this.maintenanceProviderService.getAll().subscribe({
+            next: (res: any) => {
+                this.maintenanceProviders = res.data || res;
+                this.loadingProviders = false;
+            },
+            error: () => {
+                this.loadingProviders = false;
+                this.toast('Erreur lors du chargement des prestataires', 'Erreur', 'error');
+            }
+        });
+    }
+
+    addProviderTag = (name: string) => {
+        return new Promise((resolve) => {
+            this.loadingProviders = true;
+            this.maintenanceProviderService.create(name).subscribe({
+                next: (res: any) => {
+                    const newProvider = res.data || res;
+                    this.maintenanceProviders = [...this.maintenanceProviders, newProvider];
+                    this.loadingProviders = false;
+                    resolve(newProvider);
+                },
+                error: () => {
+                    this.loadingProviders = false;
+                    resolve(null);
+                }
+            });
+        });
+    };
+
     loadMaintenanceData(uuid: string): void {
         this.loading = true;
         this.maintenanceService.getSingle(uuid).subscribe({
@@ -174,8 +219,9 @@ export class MaintenanceFormComponent implements OnInit {
                 }
                 let p = m.provider || m.prestataire;
                 let pA = '';
-                if (!this.providers.includes(p)) {
-                    pA = p; p = 'Autre prestataire';
+                // Handle legacy providers that might not be in the new dynamic list yet
+                if (p && !this.maintenanceProviders.find(mp => mp.name === p)) {
+                    // We'll trust the value from the database
                 }
 
                 this.form.patchValue({
@@ -245,8 +291,8 @@ export class MaintenanceFormComponent implements OnInit {
         const payload: any = {
             dateIntervention: vals.date,
             vehicle: vals.vehicle,
-            type: typeValue === 'Autre' ? vals.typeAutre : typeValue,
-            prestataire: vals.provider === 'Autre prestataire' ? vals.providerAutre : vals.provider,
+            type: typeof vals.type === 'object' ? vals.type?.name : (vals.type === 'Autre' ? vals.typeAutre : vals.type),
+            prestataire: typeof vals.provider === 'object' ? vals.provider?.name : (vals.provider === 'Autre prestataire' ? vals.providerAutre : vals.provider),
             cost: vals.cost,
             statut: vals.status,
             kilometrage: vals.kilometrage,

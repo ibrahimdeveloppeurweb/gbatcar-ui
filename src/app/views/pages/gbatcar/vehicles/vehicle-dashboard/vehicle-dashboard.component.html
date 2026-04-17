@@ -1,195 +1,225 @@
-<!-- ==================== HEADER ==================== -->
-<div class="row mb-4 align-items-center">
-    <div class="col-md-8">
-        <h4 class="mb-1 text-dark fw-bold">Tableau de Bord : Parc Automobile</h4>
-        <p class="text-muted fs-13px mb-0">Vue opérationnelle de la flotte VTC – utilisation, coûts & conformité.</p>
-    </div>
-    <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end gap-2 align-items-center">
-        <ng-select style="width: 150px; text-align: left;" [items]="monthsList" [clearable]="false" bindLabel="name"
-            bindValue="monthsCount" [addTag]="addDurationTag" [(ngModel)]="selectedMonth"
-            (change)="onMonthChange($event)">
-        </ng-select>
-        <button class="btn btn-primary btn-sm d-flex align-items-center">
-            <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Nouveau Véhicule
-        </button>
-        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center bg-white">
-            <i data-feather="download" appFeatherIcon class="icon-sm me-1"></i> Exporter
-        </button>
-    </div>
-</div>
-
-<!-- ==================== KPI CARDS ==================== -->
-<div class="row mb-4">
-    <!-- Total Véhicules -->
-    <div class="col-md-3 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #6c757d;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Total Flotte</p>
-                        <h4 class="fw-bold mb-0">{{ stats.totalVehicles }}</h4>
-                        <small class="text-muted fs-11px">Valeur: {{ formatCurrency(stats.totalFleetValue) }}</small>
-                    </div>
-                    <i data-feather="truck" appFeatherIcon class="icon-lg text-secondary"></i>
-                </div>
-            </div>
+<ng-container *ngxPermissionsOnly="['VEHICLE:DASHBOARD']">
+    <!-- ==================== HEADER ==================== -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h4 class="mb-1 text-dark fw-bold">Tableau de Bord : Parc Automobile</h4>
+            <p class="text-muted fs-13px mb-0">Vue opérationnelle de la flotte VTC – utilisation, coûts & conformité.
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end gap-2 align-items-center">
+            <ng-select style="width: 150px; text-align: left;" [items]="monthsList" [clearable]="false" bindLabel="name"
+                bindValue="monthsCount" [addTag]="addDurationTag" [(ngModel)]="selectedMonth"
+                (change)="onMonthChange($event)">
+            </ng-select>
+            <ng-container *ngxPermissionsOnly="'VEHICLE:NEW'">
+                <button class="btn btn-primary btn-sm d-flex align-items-center" routerLink="/gbatcar/vehicles/new">
+                    <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Nouveau Véhicule
+                </button>
+            </ng-container>
+            <button class="btn btn-outline-secondary btn-sm d-flex align-items-center bg-white">
+                <i data-feather="download" appFeatherIcon class="icon-sm me-1"></i> Exporter
+            </button>
         </div>
     </div>
 
-    <!-- Taux d'Utilisation -->
-    <div class="col-md-3 col-6 mb-3 mb-md-0">
-        <div class="card h-100" style="border-left: 4px solid #2ecc71;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Taux d'Utilisation</p>
-                        <h4 class="fw-bold mb-0 text-success">{{ stats.utilizationRate }}%</h4>
-                        <small class="text-muted fs-11px">{{ stats.activeVehicles }} / {{ stats.totalVehicles }} véh.
-                            actifs</small>
+    <!-- ==================== KPI CARDS ==================== -->
+    <div class="row mb-4">
+        <!-- Total Véhicules -->
+        <div class="col-md-3 col-6 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #6c757d;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Total Flotte</p>
+                            <h4 class="fw-bold mb-0">{{ stats.totalVehicles }}</h4>
+                            <small class="text-muted fs-11px">Valeur: {{ formatCurrency(stats.totalFleetValue)
+                                }}</small>
+                        </div>
+                        <i data-feather="truck" appFeatherIcon class="icon-lg text-secondary"></i>
                     </div>
-                    <i data-feather="activity" appFeatherIcon class="icon-lg text-success"></i>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- En Maintenance -->
-    <div class="col-md-3 col-6">
-        <div class="card h-100" style="border-left: 4px solid #f39c12;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">En Maintenance</p>
-                        <h4 class="fw-bold mb-0 text-warning">{{ stats.maintenanceVehicles }}</h4>
-                        <small class="text-muted fs-11px">Coût/mois: {{ formatCurrency(stats.monthlyMaintenanceCost)
-                            }}</small>
-                        <br>
-                        <small class="text-muted fs-11px">Budget: {{ formatCurrency(stats.budgetMonthly) }}</small>
+        <!-- Taux d'Utilisation -->
+        <div class="col-md-3 col-6 mb-3 mb-md-0">
+            <div class="card h-100" style="border-left: 4px solid #2ecc71;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Taux d'Utilisation</p>
+                            <h4 class="fw-bold mb-0 text-success">{{ stats.utilizationRate }}%</h4>
+                            <small class="text-muted fs-11px">{{ stats.activeVehicles }} / {{ stats.totalVehicles }}
+                                véh.
+                                actifs</small>
+                        </div>
+                        <i data-feather="activity" appFeatherIcon class="icon-lg text-success"></i>
                     </div>
-                    <i data-feather="tool" appFeatherIcon class="icon-lg text-warning"></i>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Conformité -->
-    <div class="col-md-3 col-6">
-        <div class="card h-100" style="border-left: 4px solid #3498db;">
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-secondary fs-12px mb-1">Conformité Assurance</p>
-                        <h4 class="fw-bold mb-0"
-                            [ngClass]="stats.insuranceCoverage < 90 ? 'text-warning' : 'text-primary'">{{
-                            stats.insuranceCoverage }}%</h4>
-                        <small class="text-muted fs-11px">Seuil cible: 95%</small>
-                        <br>
-                        <small class="text-muted fs-11px">{{ stats.validDocs }} doc(s) valide(s) sur {{
-                            stats.totalExpectedDocs }} attendus</small>
+        <!-- En Maintenance -->
+        <div class="col-md-3 col-6">
+            <div class="card h-100" style="border-left: 4px solid #f39c12;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">En Maintenance</p>
+                            <h4 class="fw-bold mb-0 text-warning">{{ stats.maintenanceVehicles }}</h4>
+                            <small class="text-muted fs-11px">Coût/mois: {{ formatCurrency(stats.monthlyMaintenanceCost)
+                                }}</small>
+                            <br>
+                            <small class="text-muted fs-11px">Budget: {{ formatCurrency(stats.budgetMonthly) }}</small>
+                        </div>
+                        <i data-feather="tool" appFeatherIcon class="icon-lg text-warning"></i>
                     </div>
-                    <i data-feather="shield" appFeatherIcon class="icon-lg text-primary"></i>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- ==================== CHARTS & ALERTS ==================== -->
-<div class="row">
-
-    <!-- Chart: Statut de la Flotte (Donut) -->
-    <div class="col-lg-4 grid-margin stretch-card">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">Répartition de la Flotte</h6>
-                <apx-chart [series]="fleetStatusChartOptions.series" [chart]="fleetStatusChartOptions.chart"
-                    [labels]="fleetStatusChartOptions.labels" [colors]="fleetStatusChartOptions.colors"
-                    [stroke]="fleetStatusChartOptions.stroke" [legend]="fleetStatusChartOptions.legend"
-                    [dataLabels]="fleetStatusChartOptions.dataLabels"
-                    [plotOptions]="fleetStatusChartOptions.plotOptions">
-                </apx-chart>
-                <!-- Status Pills -->
-                <div class="d-flex justify-content-around mt-2">
-                    <div *ngFor="let s of statusBreakdown" class="text-center">
-                        <span class="badge rounded-pill px-3 py-1 fw-bold fs-11px" [style.background-color]="s.color">{{
-                            s.count }}</span>
-                        <p class="text-muted fs-10px mb-0 mt-1">{{ s.label }}</p>
+        <!-- Conformité -->
+        <div class="col-md-3 col-6">
+            <div class="card h-100" style="border-left: 4px solid #3498db;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-secondary fs-12px mb-1">Conformité Assurance</p>
+                            <h4 class="fw-bold mb-0"
+                                [ngClass]="stats.insuranceCoverage < 90 ? 'text-warning' : 'text-primary'">{{
+                                stats.insuranceCoverage }}%</h4>
+                            <small class="text-muted fs-11px">Seuil cible: 95%</small>
+                            <br>
+                            <small class="text-muted fs-11px">{{ stats.validDocs }} doc(s) valide(s) sur {{
+                                stats.totalExpectedDocs }} attendus</small>
+                        </div>
+                        <i data-feather="shield" appFeatherIcon class="icon-lg text-primary"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Chart: Coût de Maintenance (Bar) -->
-    <div class="col-lg-8 grid-margin stretch-card">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <h6 class="card-title mb-3 text-uppercase fs-12px fw-bold text-muted">Coûts de Maintenance vs Budget ({{
-                    selectedMonth }} derniers mois)</h6>
-                <apx-chart [series]="maintenanceCostChartOptions.series" [chart]="maintenanceCostChartOptions.chart"
-                    [colors]="maintenanceCostChartOptions.colors"
-                    [plotOptions]="maintenanceCostChartOptions.plotOptions" [xaxis]="maintenanceCostChartOptions.xaxis"
-                    [yaxis]="maintenanceCostChartOptions.yaxis" [grid]="maintenanceCostChartOptions.grid"
-                    [legend]="maintenanceCostChartOptions.legend" [dataLabels]="maintenanceCostChartOptions.dataLabels"
-                    [tooltip]="maintenanceCostChartOptions.tooltip">
-                </apx-chart>
+    <!-- ==================== CHARTS & ALERTS ==================== -->
+    <div class="row">
+        <!-- Chart: Statut de la Flotte (Donut) -->
+        <div class="col-lg-4 grid-margin stretch-card">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-0 text-uppercase fs-12px fw-bold text-muted">Répartition de la Flotte</h6>
+                    <apx-chart [series]="fleetStatusChartOptions.series" [chart]="fleetStatusChartOptions.chart"
+                        [labels]="fleetStatusChartOptions.labels" [colors]="fleetStatusChartOptions.colors"
+                        [stroke]="fleetStatusChartOptions.stroke" [legend]="fleetStatusChartOptions.legend"
+                        [dataLabels]="fleetStatusChartOptions.dataLabels"
+                        [plotOptions]="fleetStatusChartOptions.plotOptions">
+                    </apx-chart>
+                    <!-- Status Pills -->
+                    <div class="d-flex justify-content-around mt-2">
+                        <div *ngFor="let s of statusBreakdown" class="text-center">
+                            <span class="badge rounded-pill px-3 py-1 fw-bold fs-11px"
+                                [style.background-color]="s.color">{{
+                                s.count }}</span>
+                            <p class="text-muted fs-10px mb-0 mt-1">{{ s.label }}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- ==================== ALERTES CRITIQUES ==================== -->
-<div class="row">
-    <div class="col-12 grid-margin stretch-card">
-        <div class="card border-0 shadow-sm border-top border-danger border-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="card-title text-danger mb-0 fs-13px fw-bold text-uppercase">
-                        <i data-feather="alert-circle" appFeatherIcon class="icon-sm me-1"></i>
-                        Alertes Véhicules à Traiter
-                    </h6>
-                    <span class="badge bg-danger rounded-pill">{{ criticalAlerts.length }} Alertes</span>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Immat.</th>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Modèle</th>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Chauffeur (Locataire)</th>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Problème Détecté</th>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Niveau</th>
-                                <th class="fs-12px text-muted text-uppercase fw-bold">Coût Estimé</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let alert of criticalAlerts">
-                                <td class="fw-bold text-dark">{{ alert.immatriculation || alert.plate }}</td>
-                                <td class="text-muted">{{ alert.marque || alert.model }} {{ alert.modele || '' }}</td>
-                                <td class="text-primary fw-medium">
-                                    {{ alert.client_last_name || alert.client }} {{ alert.client_first_name || '' }}
-                                </td>
-                                <td>
-                                    <span class="d-flex align-items-center">
-                                        <i data-feather="alert-triangle" appFeatherIcon class="icon-xs me-1"
-                                            [ngClass]="'text-' + (alert.niveau?.toLowerCase() === 'critique' ? 'danger' : 'warning')"></i>
-                                        {{ alert.problem || alert.issue }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge"
-                                        [ngClass]="alert.niveau?.toLowerCase() === 'critique' ? 'bg-danger' : 'bg-warning text-dark'">
-                                        {{ getSeverityLabel(alert.niveau || alert.severity) }}
-                                    </span>
-                                </td>
-                                <td class="fw-bold" [ngClass]="alert.cost > 0 ? 'text-dark' : 'text-muted'">
-                                    {{ alert.cost > 0 ? formatCurrency(alert.cost) : '—' }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+        <!-- Chart: Coût de Maintenance (Bar) -->
+        <div class="col-lg-8 grid-margin stretch-card">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-3 text-uppercase fs-12px fw-bold text-muted">Coûts de Maintenance vs Budget
+                        ({{
+                        selectedMonth }} derniers mois)</h6>
+                    <apx-chart [series]="maintenanceCostChartOptions.series" [chart]="maintenanceCostChartOptions.chart"
+                        [colors]="maintenanceCostChartOptions.colors"
+                        [plotOptions]="maintenanceCostChartOptions.plotOptions"
+                        [xaxis]="maintenanceCostChartOptions.xaxis" [yaxis]="maintenanceCostChartOptions.yaxis"
+                        [grid]="maintenanceCostChartOptions.grid" [legend]="maintenanceCostChartOptions.legend"
+                        [dataLabels]="maintenanceCostChartOptions.dataLabels"
+                        [tooltip]="maintenanceCostChartOptions.tooltip">
+                    </apx-chart>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
+    <!-- ==================== ALERTES CRITIQUES ==================== -->
+    <div class="row">
+        <div class="col-12 grid-margin stretch-card">
+            <div class="card border-0 shadow-sm border-top border-danger border-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="card-title text-danger mb-0 fs-13px fw-bold text-uppercase">
+                            <i data-feather="alert-circle" appFeatherIcon class="icon-sm me-1"></i>
+                            Alertes Véhicules à Traiter
+                        </h6>
+                        <span class="badge bg-danger rounded-pill">{{ criticalAlerts.length }} Alertes</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Immat.</th>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Modèle</th>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Chauffeur (Locataire)</th>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Problème Détecté</th>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Niveau</th>
+                                    <th class="fs-12px text-muted text-uppercase fw-bold">Coût Estimé</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let alert of criticalAlerts">
+                                    <td class="fw-bold text-dark">{{ alert.immatriculation || alert.plate }}</td>
+                                    <td class="text-muted">{{ alert.marque || alert.model }} {{ alert.modele || '' }}
+                                    </td>
+                                    <td class="text-primary fw-medium">
+                                        {{ alert.client_last_name || alert.client }} {{ alert.client_first_name || '' }}
+                                    </td>
+                                    <td>
+                                        <span class="d-flex align-items-center">
+                                            <i data-feather="alert-triangle" appFeatherIcon class="icon-xs me-1"
+                                                [ngClass]="'text-' + (alert.niveau?.toLowerCase() === 'critique' ? 'danger' : 'warning')"></i>
+                                            {{ alert.problem || alert.issue }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge"
+                                            [ngClass]="alert.niveau?.toLowerCase() === 'critique' ? 'bg-danger' : 'bg-warning text-dark'">
+                                            {{ getSeverityLabel(alert.niveau || alert.severity) }}
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold" [ngClass]="alert.cost > 0 ? 'text-dark' : 'text-muted'">
+                                        {{ alert.cost > 0 ? formatCurrency(alert.cost) : '—' }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</ng-container>
+
+<ng-container *ngxPermissionsExcept="['VEHICLE:DASHBOARD']">
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+        <div class="card shadow-sm border-0 bg-white" style="max-width: 500px; border-radius: 12px;">
+            <div class="card-body text-center p-5">
+                <div class="rounded-circle bg-danger-transparent d-inline-flex p-3 mb-4">
+                    <i data-feather="lock" appFeatherIcon class="text-danger" style="width: 48px; height: 48px;"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Accès Refusé</h4>
+                <p class="text-secondary mb-4">
+                    Vous ne disposez pas des permissions nécessaires pour accéder au tableau de bord du parc automobile.
+                    <br>Veuillez contacter votre administrateur si vous pensez qu'il s'agit d'une erreur.
+                </p>
+                <button class="btn btn-danger px-4" routerLink="/dashboard">
+                    Retour au tableau de bord général
+                </button>
+            </div>
+        </div>
+    </div>
+</ng-container>

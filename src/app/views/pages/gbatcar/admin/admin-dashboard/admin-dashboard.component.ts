@@ -5,6 +5,8 @@ import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { RouterLink } from '@angular/router';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { ThemeCssVariableService } from '../../../../../core/services/theme-css-variable.service';
+import { DashboardService } from '../../../../../core/services/dashboard/dashboard.service';
+import { AdminDashboardData } from '../../../../../core/models/admin-dashboard.model';
 
 @Component({
     selector: 'app-admin-dashboard',
@@ -16,47 +18,41 @@ import { ThemeCssVariableService } from '../../../../../core/services/theme-css-
 export class AdminDashboardComponent implements OnInit {
 
     themeCssVariables = inject(ThemeCssVariableService).getThemeCssVariables();
+    private dashboardService = inject(DashboardService);
 
-    // ===================== KPI DATA (AUDIT FOCUS) =====================
-    stats = {
-        totalAuditActions: 156,    // Total d'actions tracées aujourd'hui
-        pendingApprovals: 8,       // Validations requises en attente
-        criticalAnomalies: 2,      // Ex: suppressions suspectes, annulations
-        activeCollaborators: 12,   // Nombre d'utilisateurs ayant effectué une action aujourd'hui
-    };
-
-    // ===================== TÂCHES ADMINISTRATIVES & APPROBATIONS =====================
-    pendingTasks = [
-        { id: 'TSK-101', type: 'Validation Contrat', description: 'Remise exceptionnelle de 15% sur CTR-2024-045', requester: 'Jean Dubois', date: 'Il y a 30 min', priority: 'high' },
-        { id: 'TSK-102', type: 'Annulation Paiement', description: 'Annulation reçu PAY-2024-089 (Erreur de saisie)', requester: 'Marie Koné', date: 'Il y a 2h', priority: 'critical' },
-        { id: 'TSK-103', type: 'Nouveau Véhicule', description: 'Approbation ajout flotte: Toyota Yaris (Nouveau)', requester: 'Moussa Traoré', date: 'Aujourd\'hui, 09:15', priority: 'medium' },
-        { id: 'TSK-104', type: 'Frais Maintenance', description: 'Dépassement de budget pour INT-2024-026 (+45k FCFA)', requester: 'Diallo Seydou', date: 'Hier', priority: 'high' },
-    ];
-
-    // ===================== JOURNAL D'AUDIT (ACTIONS RÉCENTES) =====================
-    auditLogs = [
-        { user: 'Koné Moussa', avatar: 'MK', module: 'Contrat', action: 'Création', details: 'Nouveau contrat CTR-2024-098 pour "Soro M."', time: 'Il y a 5 min', status: 'Succès' },
-        { user: 'Fatou Sylla', avatar: 'FS', module: 'Paiement', action: 'Encaissement', details: 'Enregistrement de 150.000 FCFA sur CTR-2023-040', time: 'Il y a 15 min', status: 'Succès' },
-        { user: 'Jean Dubois', avatar: 'JD', module: 'Véhicule', action: 'Modification', details: 'Changement de statut (Actif -> Atelier) véhicule 1234 AB 01', time: 'Il y a 45 min', status: 'Succès' },
-        { user: 'Amadou Coulibaly', avatar: 'AC', module: 'Maintenance', action: 'Suppression', details: 'Suppression de l\'intervention planifiée INT-2024-030', time: 'Il y a 2 heures', status: 'Alerte' },
-        { user: 'Marie Koné', avatar: 'MK', module: 'Paiement', action: 'Annulation', details: 'Demande d\'annulation pour double saisie (Reçu 089)', time: 'Il y a 3 heures', status: 'Alerte' },
-        { user: 'Koné Moussa', avatar: 'MK', module: 'Client', action: 'Création', details: 'Nouveau dossier locataire: "Ouattara B."', time: 'Il y a 4 heures', status: 'Succès' },
-    ];
+    // ===================== DATA =====================
+    dashboardData?: AdminDashboardData;
+    isLoading = true;
 
     // ===================== CHARTS =====================
     public auditActionChartOptions: ApexOptions | any;
     public approvalTrendChartOptions: ApexOptions | any;
 
     ngOnInit(): void {
-        this.auditActionChartOptions = this.buildAuditActionChart();
-        this.approvalTrendChartOptions = this.buildApprovalTrendChart();
+        this.loadDashboardData();
     }
 
-    buildAuditActionChart() {
+    loadDashboardData(): void {
+        this.isLoading = true;
+        this.dashboardService.getAdminDashboardData().subscribe({
+            next: (data) => {
+                this.dashboardData = data;
+                this.auditActionChartOptions = this.buildAuditActionChart(data.auditActionChart);
+                this.approvalTrendChartOptions = this.buildApprovalTrendChart(data.approvalTrendChart);
+                this.isLoading = false;
+            },
+            error: (err) => {
+                console.error('Error loading admin dashboard data:', err);
+                this.isLoading = false;
+            }
+        });
+    }
+
+    buildAuditActionChart(chartData: any) {
         return {
-            series: [45, 15, 20, 10, 10], // Création, Encaissement, Modification, Annulation, Suppression
+            series: chartData.series, // Création, Encaissement, Modification, Annulation, Suppression
             chart: { type: 'donut', height: 270 },
-            labels: ['Création', 'Encaissement', 'Modification', 'Annulation', 'Suppression'],
+            labels: chartData.labels,
             colors: ['#3498db', '#2ecc71', '#f39c12', '#e67e22', '#e74c3c'], // Bleu, Vert, Jaune, Orange, Rouge
             stroke: { colors: ['#fff'] },
             legend: { show: true, position: 'bottom', fontFamily: this.themeCssVariables.fontFamily },
@@ -81,14 +77,14 @@ export class AdminDashboardComponent implements OnInit {
         };
     }
 
-    buildApprovalTrendChart() {
+    buildApprovalTrendChart(chartData: any) {
         return {
             series: [
-                { name: 'Approbations Demandées', data: [12, 5, 8, 4, 7, 2] },
-                { name: 'Approbations Traitées', data: [10, 4, 6, 4, 5, 1] },
-                { name: 'Total Actions Audit', data: [65, 45, 52, 38, 55, 15] },
+                { name: 'Approbations Demandées', data: chartData.requested },
+                { name: 'Approbations Traitées', data: chartData.processed },
+                { name: 'Total Actions Audit', data: chartData.totalActions },
             ],
-            chart: { type: 'bar', height: 270, toolbar: { show: false } }, // Changed to bar for categorical data
+            chart: { type: 'bar', height: 270, toolbar: { show: false } },
             plotOptions: {
                 bar: {
                     horizontal: false,
@@ -100,7 +96,7 @@ export class AdminDashboardComponent implements OnInit {
             stroke: { show: true, width: 2, colors: ['transparent'] },
             colors: ['#f39c12', '#2ecc71', '#3498db'], // Warning for requested, Success for processed, Primary for Total
             xaxis: {
-                categories: ['Koné Moussa', 'Fatou Sylla', 'Jean Dubois', 'Amadou C.', 'Marie Koné', 'Diallo S.'],
+                categories: chartData.collaborators,
                 axisBorder: { color: this.themeCssVariables.gridBorder },
             },
             grid: { borderColor: this.themeCssVariables.gridBorder },
@@ -115,6 +111,7 @@ export class AdminDashboardComponent implements OnInit {
             'Suppression': 'text-danger',
             'Annulation': 'text-danger',
             'Encaissement': 'text-success',
+            'Validation': 'text-success',
         };
         return map[action] || 'text-secondary';
     }

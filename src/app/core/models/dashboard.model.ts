@@ -16,8 +16,9 @@ export interface DashboardStats {
 }
 
 export interface RevenueChartData {
-    date: string;
-    amount: number;
+    month: string;
+    expected: number;
+    paid: number;
 }
 
 export interface RecentOnboarding {

@@ -2,13 +2,15 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { UserService } from '../../../../../core/services/user/user.service';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import Swal from 'sweetalert2';
 
 @Component({
     selector: 'app-gbatcar-admin-users',
     standalone: true,
-    imports: [CommonModule, RouterModule, FeatherIconDirective],
+    imports: [CommonModule, RouterModule, FeatherIconDirective, NgxPermissionsModule],
     templateUrl: './users.component.html',
     styleUrl: './users.component.scss'
 })
@@ -16,9 +18,11 @@ export class GbatcarAdminUsersComponent implements OnInit {
 
     collaborators: any[] = [];
     loading: boolean = false;
-    
+
     private router = inject(Router);
     private userService = inject(UserService);
+    private authService = inject(AuthService);
+    private ngxPermissionsService = inject(NgxPermissionsService);
 
     constructor() { }
 
@@ -27,7 +31,8 @@ export class GbatcarAdminUsersComponent implements OnInit {
         return permissions.length + ' permission' + (permissions.length > 1 ? 's' : '');
     }
 
-    ngOnInit(): void { 
+    ngOnInit(): void {
+        this.ngxPermissionsService.loadPermissions(this.authService.getPermissions());
         this.loadUsers();
     }
 
@@ -62,7 +67,7 @@ export class GbatcarAdminUsersComponent implements OnInit {
         const action = user.isEnabled ? 'désactiver' : 'activer';
         const actionLabel = user.isEnabled ? 'Désactiver' : 'Activer';
         const iconColor = user.isEnabled ? '#d33' : '#28a745';
-        
+
         Swal.fire({
             title: `${actionLabel} ce compte ?`,
             text: `Vous êtes sur le point de ${action} le compte de ${user.prenom || ''} ${user.nom}.`,

@@ -4,17 +4,21 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon.directive';
 import { MaintenanceService } from '../../../../core/services/maintenance/maintenance.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-maintenance',
   standalone: true,
-  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule],
+  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule, NgxPermissionsModule],
   templateUrl: './maintenance.component.html',
   styleUrl: './maintenance.component.scss'
 })
 export class MaintenanceComponent implements OnInit {
 
   private maintenanceService = inject(MaintenanceService);
+  private permissionsService = inject(NgxPermissionsService);
+  private authService = inject(AuthService);
 
   maintenanceItems: any[] = [];
   loading = false;
@@ -44,6 +48,8 @@ export class MaintenanceComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
     this.fetchMetrics();
     this.loadMaintenance();
   }
@@ -53,10 +59,11 @@ export class MaintenanceComponent implements OnInit {
     this.maintenanceService.getDashboardData().subscribe({
       next: (res: any) => {
         const data = res.data || res;
-        this.totalCount = data.total || 0;
-        this.plannedCount = data.planned || 0;
-        this.inProgressCount = data.inProgress || 0;
-        this.totalCost = data.totalCostThisMonth || 0;
+        const s = data.stats || {};
+        this.totalCount = s.totalInterventions || 0;
+        this.plannedCount = s.plannedInterventions || 0;
+        this.inProgressCount = s.inProgressInterventions || 0;
+        this.totalCost = s.monthlyCost || 0;
       },
       error: console.error
     });

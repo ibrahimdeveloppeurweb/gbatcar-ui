@@ -1,4 +1,4 @@
-<ng-container *ngxPermissionsOnly="['CLIENT:LIST']">
+<ng-container *ngxPermissionsOnly="['CLIENT:DASHBOARD']">
     <!-- ==================== HEADER ==================== -->
     <div class="row mb-4 align-items-center">
         <div class="col-md-8">
@@ -267,7 +267,7 @@
 </ng-container>
 
 <!-- FALLBACK FOR UNAUTHORIZED ACCESS -->
-<ng-container *ngxPermissionsExcept="['CLIENT:LIST']">
+<ng-container *ngxPermissionsExcept="['CLIENT:DASHBOARD']">
     <div class="row mt-5">
         <div class="col-md-12 text-center">
             <div class="card p-5 border-0 shadow-sm">

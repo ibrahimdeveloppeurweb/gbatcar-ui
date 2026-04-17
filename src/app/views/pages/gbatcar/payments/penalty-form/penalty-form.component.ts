@@ -8,11 +8,13 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { PenaltyService } from '../../../../../core/services/penalty/penalty.service';
 import { ContractService } from '../../../../../core/services/contract/contract.service';
 import Swal from 'sweetalert2';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-penalty-form',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, FeatherIconDirective, NgSelectModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FeatherIconDirective, NgSelectModule, NgxPermissionsModule],
   templateUrl: './penalty-form.component.html',
   styleUrl: './penalty-form.component.scss'
 })
@@ -23,6 +25,8 @@ export class PenaltyFormComponent implements OnInit {
   private penaltyService = inject(PenaltyService);
   private contractService = inject(ContractService);
   private route = inject(ActivatedRoute);
+  private permissionsService = inject(NgxPermissionsService);
+  private authService = inject(AuthService);
 
   penaltyForm: FormGroup;
   contracts: any[] = [];
@@ -52,6 +56,8 @@ export class PenaltyFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
     this.loadContracts();
   }
 

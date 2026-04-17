@@ -1,285 +1,325 @@
-<div *ngIf="loading" class="text-center py-5">
-    <div class="spinner-border text-warning" role="status"></div>
-    <p class="mt-2 text-muted">Chargement des détails de l'incident...</p>
-</div>
-
-<div *ngIf="!loading && record">
-    <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
-        <div>
-            <nav class="page-breadcrumb mb-1">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a routerLink="/gbatcar/maintenance/alerts">Alertes & Sinistres</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Fiche Incident</li>
-                </ol>
-            </nav>
-            <h4 class="mb-3 mb-md-0 d-flex align-items-center">
-                Détails de l'Alerte <span class="ms-2 badge text-dark bg-warning">{{ record.reference || (record.uuid |
-                    slice:0:8) }}</span>
-            </h4>
-        </div>
-        <div class="d-flex align-items-center flex-wrap text-nowrap gap-2">
-            <button [routerLink]="['/gbatcar/maintenance/alerts']" class="btn btn-secondary btn-icon-text mb-2 mb-md-0">
-                <i data-feather="arrow-left" appFeatherIcon class="btn-icon-prepend"></i> Retour
-            </button>
-            <button [routerLink]="['/gbatcar/maintenance/alerts/edit', record.uuid]"
-                class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0">
-                <i data-feather="edit-2" appFeatherIcon class="btn-icon-prepend"></i> Modifier
-            </button>
-
-            <div class="btn-group mb-2 mb-md-0" ngbDropdown>
-                <button type="button" class="btn btn-warning dropdown-toggle" ngbDropdownToggle>
-                    <i data-feather="check-circle" appFeatherIcon class="btn-icon-prepend icon-sm"></i> Modifier l'état
-                </button>
-                <div class="dropdown-menu" ngbDropdownMenu>
-                    <button ngbDropdownItem (click)="changeStatus('Ouvert')">Ouvert</button>
-                    <button ngbDropdownItem (click)="changeStatus('En traitement')">En traitement</button>
-                    <button ngbDropdownItem (click)="changeStatus('Immobilisé')">Véhicule Immobilisé</button>
-                    <button ngbDropdownItem class="text-success fw-bold"
-                        (click)="changeStatus('Résolu')">Résolu</button>
-                    <div class="dropdown-divider"></div>
-                    <button ngbDropdownItem class="text-danger" (click)="changeStatus('Annulé')">Annuler
-                        l'alerte</button>
-                </div>
+<ng-container *ngxPermissionsOnly="['MAINTENANCE_ALERT:SHOW']">
+    <input type="file" #fileInput (change)="onAddFiles($event)" multiple hidden accept="image/*,application/pdf">
+    <div *ngIf="!loading && record">
+        <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+            <div>
+                <nav class="page-breadcrumb mb-1">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a routerLink="/gbatcar/maintenance/alerts">Alertes & Sinistres</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">Fiche Incident</li>
+                    </ol>
+                </nav>
+                <h4 class="mb-3 mb-md-0 d-flex align-items-center">
+                    Détails de l'Alerte <span class="ms-2 badge text-dark bg-warning">{{ record.reference ||
+                        (record.uuid |
+                        slice:0:8) }}</span>
+                </h4>
             </div>
+            <div class="d-flex align-items-center flex-wrap text-nowrap gap-2">
+                <button [routerLink]="['/gbatcar/maintenance/alerts']"
+                    class="btn btn-secondary btn-icon-text mb-2 mb-md-0">
+                    <i data-feather="arrow-left" appFeatherIcon class="btn-icon-prepend"></i> Retour
+                </button>
+                <ng-container *ngxPermissionsOnly="'MAINTENANCE_ALERT:EDIT'">
+                    <button [routerLink]="['/gbatcar/maintenance/alerts/edit', record.uuid]"
+                        class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0">
+                        <i data-feather="edit-2" appFeatherIcon class="btn-icon-prepend"></i> Modifier
+                    </button>
+                </ng-container>
 
-            <button class="btn btn-outline-danger btn-icon-text mb-2 mb-md-0" title="Émettre une Facture / Paiement"
-                (click)="invoiceAlert()" *ngIf="!record.isInvoiced">
-                <i data-feather="dollar-sign" appFeatherIcon class="btn-icon-prepend"></i> Facturer
-            </button>
-            <button class="btn btn-success btn-icon-text mb-2 mb-md-0 disabled" *ngIf="record.isInvoiced">
-                <i data-feather="check" appFeatherIcon class="btn-icon-prepend"></i> Déjà Facturé
-            </button>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-10 mx-auto grid-margin stretch-card">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                        <div>
-                            <h2 class="text-dark mb-1 d-flex align-items-center">
-                                {{ record.type }}
-                            </h2>
-                            <div class="mt-2 d-flex gap-2 align-items-center">
-                                <span class="badge fs-6" [ngClass]="getStatusClass(record.status)">
-                                    Statut : {{ record.status }}
-                                </span>
-
-                                <span class="badge fs-6 bg-info" *ngIf="record.isInvoiced">
-                                    <i data-feather="check-circle" appFeatherIcon class="icon-sm me-1"></i> Facturé le
-                                    {{ record.invoicedAt | date:'dd/MM/yy' }}
-                                </span>
-
-                                <span class="badge fs-6" [ngClass]="getSeverityClass(record.severity)">
-                                    Gravité : {{ record.severity }}
-                                </span>
-                            </div>
+                <ng-container *ngxPermissionsOnly="'MAINTENANCE_ALERT:CHANGE_STATUS'">
+                    <div class="btn-group mb-2 mb-md-0" ngbDropdown>
+                        <button type="button" class="btn btn-warning dropdown-toggle" ngbDropdownToggle>
+                            <i data-feather="check-circle" appFeatherIcon class="btn-icon-prepend icon-sm"></i> Modifier
+                            l'état
+                        </button>
+                        <div class="dropdown-menu" ngbDropdownMenu>
+                            <button ngbDropdownItem (click)="changeStatus('Ouvert')">Ouvert</button>
+                            <button ngbDropdownItem (click)="changeStatus('En traitement')">En traitement</button>
+                            <button ngbDropdownItem (click)="changeStatus('Immobilisé')">Véhicule Immobilisé</button>
+                            <button ngbDropdownItem class="text-success fw-bold"
+                                (click)="changeStatus('Résolu')">Résolu</button>
+                            <div class="dropdown-divider"></div>
+                            <button ngbDropdownItem class="text-danger" (click)="changeStatus('Annulé')">Annuler
+                                l'alerte</button>
                         </div>
                     </div>
+                </ng-container>
 
-                    <div class="row mt-4">
-                        <div class="col-md-6 mb-4">
-                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Véhicule concerné</label>
-                            <p class="mb-0 fw-medium fs-5 text-dark" *ngIf="record.vehicle">
-                                <a [routerLink]="['/gbatcar/vehicles/details', record.vehicle.uuid]"
-                                    class="text-primary">
-                                    {{ record.vehicle.marque }} {{ record.vehicle.modele }} ({{
-                                    record.vehicle.immatriculation }})
-                                </a>
-                            </p>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Date du Sinistre</label>
-                            <p class="mb-0 fs-5">{{ record.date | date:'longDate':'':'fr-FR' }} à {{ record.date |
-                                date:'HH:mm' }}</p>
+                <ng-container *ngxPermissionsOnly="'MAINTENANCE_ALERT:INVOICE'">
+                    <button class="btn btn-outline-danger btn-icon-text mb-2 mb-md-0"
+                        title="Émettre une Facture / Paiement" (click)="invoiceAlert()" *ngIf="!record.isInvoiced">
+                        <i data-feather="dollar-sign" appFeatherIcon class="btn-icon-prepend"></i> Facturer
+                    </button>
+                    <button class="btn btn-success btn-icon-text mb-2 mb-md-0 disabled" *ngIf="record.isInvoiced">
+                        <i data-feather="check" appFeatherIcon class="btn-icon-prepend"></i> Déjà Facturé
+                    </button>
+                </ng-container>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-10 mx-auto grid-margin stretch-card">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                            <div>
+                                <h2 class="text-dark mb-1 d-flex align-items-center">
+                                    {{ record.type }}
+                                </h2>
+                                <div class="mt-2 d-flex gap-2 align-items-center">
+                                    <span class="badge fs-6" [ngClass]="getStatusClass(record.status)">
+                                        Statut : {{ record.status }}
+                                    </span>
+
+                                    <span class="badge fs-6 bg-info" *ngIf="record.isInvoiced">
+                                        <i data-feather="check-circle" appFeatherIcon class="icon-sm me-1"></i> Facturé
+                                        le
+                                        {{ record.invoicedAt | date:'dd/MM/yy' }}
+                                    </span>
+
+                                    <span class="badge fs-6" [ngClass]="getSeverityClass(record.severity)">
+                                        Gravité : {{ record.severity }}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="col-md-6 mb-4">
-                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Locataire /
-                                Chauffeur</label>
-                            <div class="d-flex align-items-center mt-2">
-                                <i data-feather="user" appFeatherIcon class="icon-md text-secondary me-2"></i>
-                                <span class="fw-medium text-primary">
-                                    <a *ngIf="record.client"
-                                        [routerLink]="['/gbatcar/clients/details', record.client.uuid]">
-                                        {{ record.client.firstName }} {{ record.client.lastName }}
+                        <div class="row mt-4">
+                            <div class="col-md-6 mb-4">
+                                <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Véhicule
+                                    concerné</label>
+                                <p class="mb-0 fw-medium fs-5 text-dark" *ngIf="record.vehicle">
+                                    <a [routerLink]="['/gbatcar/vehicles/details', record.vehicle.uuid]"
+                                        class="text-primary">
+                                        {{ record.vehicle.marque }} {{ record.vehicle.modele }} ({{
+                                        record.vehicle.immatriculation }})
                                     </a>
-                                    <span *ngIf="!record.client">{{ record.driverInfo || 'Inconnu' }}</span>
-                                </span>
+                                </p>
                             </div>
-                        </div>
-
-                        <div class="col-md-6 mb-4">
-                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Coût estimatif des
-                                réparations</label>
-                            <p class="mb-0 fw-bold fs-5 text-danger">{{ record.repairCost | number }} XOF</p>
-                        </div>
-
-                        <div class="col-md-12 mb-4">
-                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Description des Faits
-                                (Constat)</label>
-                            <div class="bg-light p-3 rounded mt-2 border">
-                                <p class="mb-0 text-dark fw-medium lh-base">{{ record.description }}</p>
+                            <div class="col-md-6 mb-4">
+                                <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Date du
+                                    Sinistre</label>
+                                <p class="mb-0 fs-5">{{ record.date | date:'longDate':'':'fr-FR' }} à {{ record.date |
+                                    date:'HH:mm' }}</p>
                             </div>
-                        </div>
 
-                        <div class="col-md-12 mb-4" *ngIf="record.driverInfo && record.client">
-                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Informations Chauffeur /
-                                Tiers</label>
-                            <p class="mb-0 text-secondary">{{ record.driverInfo }}</p>
-                        </div>
-
-                        <div class="col-md-12 mb-4" *ngIf="record.observation">
-                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Observations Internes
-                                (Admin)</label>
-                            <div class="bg-soft-warning p-2 rounded mt-1 border-start border-4 border-warning">
-                                <p class="mb-0 text-dark italic small">{{ record.observation }}</p>
+                            <div class="col-md-6 mb-4">
+                                <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Locataire /
+                                    Chauffeur</label>
+                                <div class="d-flex align-items-center mt-2">
+                                    <i data-feather="user" appFeatherIcon class="icon-md text-secondary me-2"></i>
+                                    <span class="fw-medium text-primary">
+                                        <a *ngIf="record.client"
+                                            [routerLink]="['/gbatcar/clients/details', record.client.uuid]">
+                                            {{ record.client.firstName }} {{ record.client.lastName }}
+                                        </a>
+                                        <span *ngIf="!record.client">{{ record.driverInfo || 'Inconnu' }}</span>
+                                    </span>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- NEW: Billing Information Section -->
-                        <div class="col-md-12 mb-4" *ngIf="record.isInvoiced">
-                            <div class="card bg-soft-info border-info border-opacity-25 shadow-none rounded-3">
-                                <div class="card-body p-3">
-                                    <div class="d-flex align-items-center">
-                                        <div class="flex-shrink-0 bg-white p-2 rounded-circle shadow-sm me-3">
-                                            <i data-feather="dollar-sign" appFeatherIcon class="text-info"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1 fw-bold text-dark">Informations de Facturation</h6>
-                                            <p class="mb-0 text-muted tx-13">
-                                                Cet incident a été pris en charge par :
-                                                <span class="badge"
-                                                    [ngClass]="record.billingPayer === 'SOCIETE' ? 'bg-info' : 'bg-warning text-dark'">
-                                                    {{ record.billingPayer === 'SOCIETE' ? '🏢 LA SOCIÉTÉ' : '👤 LE
-                                                    CLIENT' }}
-                                                </span>
-                                            </p>
-                                        </div>
-                                        <div class="text-end">
-                                            <a routerLink="/gbatcar/payments"
-                                                [queryParams]="{ vehicle: record.vehicle.uuid }"
-                                                class="btn btn-xs btn-outline-info me-2">Voir tous les paiements</a>
-                                            <a *ngIf="record.vehicle && record.billingPayer === 'SOCIETE'"
-                                                [routerLink]="['/gbatcar/vehicles/details', record.vehicle.uuid]"
-                                                class="btn btn-xs btn-outline-secondary">Voir l'Historique</a>
-                                        </div>
-                                    </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Coût estimatif des
+                                    réparations</label>
+                                <p class="mb-0 fw-bold fs-5 text-danger">{{ record.repairCost | number }} XOF</p>
+                            </div>
 
-                                    <!-- Associated Payments List -->
-                                    <div class="mt-3 border rounded bg-white overflow-hidden shadow-sm"
-                                        *ngIf="payments.length > 0">
-                                        <table class="table table-sm table-hover mb-0 tx-11">
-                                            <thead class="bg-light">
-                                                <tr>
-                                                    <th class="ps-3 py-2 border-0">Date</th>
-                                                    <th class="py-2 border-0">Référence</th>
-                                                    <th class="py-2 border-0">Montant</th>
-                                                    <th class="py-2 border-0 text-end pe-3">Statut</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr *ngFor="let p of payments">
-                                                    <td class="ps-3 py-2">{{ p.date | date:'dd/MM/yy' }}</td>
-                                                    <td class="py-2 fw-medium text-dark">{{ p.reference }}</td>
-                                                    <td class="py-2 fw-bold">{{ p.amount | number }} F</td>
-                                                    <td class="py-2 text-end pe-3">
-                                                        <span class="badge py-1" [ngClass]="{
+                            <div class="col-md-12 mb-4">
+                                <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Description des Faits
+                                    (Constat)</label>
+                                <div class="bg-light p-3 rounded mt-2 border">
+                                    <p class="mb-0 text-dark fw-medium lh-base">{{ record.description }}</p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 mb-4" *ngIf="record.driverInfo && record.client">
+                                <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Informations Chauffeur
+                                    /
+                                    Tiers</label>
+                                <p class="mb-0 text-secondary">{{ record.driverInfo }}</p>
+                            </div>
+
+                            <div class="col-md-12 mb-4" *ngIf="record.observation">
+                                <label class="text-muted tx-11 fw-bolder d-block text-uppercase">Observations Internes
+                                    (Admin)</label>
+                                <div class="bg-soft-warning p-2 rounded mt-1 border-start border-4 border-warning">
+                                    <p class="mb-0 text-dark italic small">{{ record.observation }}</p>
+                                </div>
+                            </div>
+
+                            <!-- NEW: Billing Information Section -->
+                            <div class="col-md-12 mb-4" *ngIf="record.isInvoiced">
+                                <div class="card bg-soft-info border-info border-opacity-25 shadow-none rounded-3">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 bg-white p-2 rounded-circle shadow-sm me-3">
+                                                <i data-feather="dollar-sign" appFeatherIcon class="text-info"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1 fw-bold text-dark">Informations de Facturation</h6>
+                                                <p class="mb-0 text-muted tx-13">
+                                                    Cet incident a été pris en charge par :
+                                                    <span class="badge"
+                                                        [ngClass]="record.billingPayer === 'SOCIETE' ? 'bg-info' : 'bg-warning text-dark'">
+                                                        {{ record.billingPayer === 'SOCIETE' ? '🏢 LA SOCIÉTÉ' : '👤 LE
+                                                        CLIENT' }}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            <div class="text-end">
+                                                <a routerLink="/gbatcar/payments"
+                                                    [queryParams]="{ vehicle: record.vehicle.uuid }"
+                                                    class="btn btn-xs btn-outline-info me-2">Voir tous les paiements</a>
+                                                <a *ngIf="record.vehicle && record.billingPayer === 'SOCIETE'"
+                                                    [routerLink]="['/gbatcar/vehicles/details', record.vehicle.uuid]"
+                                                    class="btn btn-xs btn-outline-secondary">Voir l'Historique</a>
+                                            </div>
+                                        </div>
+
+                                        <!-- Associated Payments List -->
+                                        <div class="mt-3 border rounded bg-white overflow-hidden shadow-sm"
+                                            *ngIf="payments.length > 0">
+                                            <table class="table table-sm table-hover mb-0 tx-11">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th class="ps-3 py-2 border-0">Date</th>
+                                                        <th class="py-2 border-0">Référence</th>
+                                                        <th class="py-2 border-0">Montant</th>
+                                                        <th class="py-2 border-0 text-end pe-3">Statut</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr *ngFor="let p of payments">
+                                                        <td class="ps-3 py-2">{{ p.date | date:'dd/MM/yy' }}</td>
+                                                        <td class="py-2 fw-medium text-dark">{{ p.reference }}</td>
+                                                        <td class="py-2 fw-bold">{{ p.amount | number }} F</td>
+                                                        <td class="py-2 text-end pe-3">
+                                                            <span class="badge py-1" [ngClass]="{
                                                             'bg-success': p.status === 'VALIDÉ' || p.status === 'Validé',
                                                             'bg-warning text-dark': p.status === 'ATTENTE' || p.status === 'PENDING',
                                                             'bg-danger': p.status === 'REJETÉ' || p.status === 'REJETE'
                                                         }">{{ p.status }}</span>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <hr>
-                    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
-                        <h6 class="mb-0 fw-bold text-uppercase tx-13 tracking-wider text-muted">Documents & Photos</h6>
-                        <button class="btn btn-xs btn-outline-danger border-0" (click)="deleteAlert()">
-                            <i data-feather="trash-2" appFeatherIcon class="icon-xs me-1"></i> Supprimer
-                        </button>
-                    </div>
-
-                    <div class="file-section d-flex flex-wrap gap-3 align-items-start">
-                        <!-- Police Report Card (PDF) -->
-                        <div class="file-card pdf-card d-flex align-items-center p-3 rounded-3 bg-light border shadow-sm"
-                            *ngIf="record.policeReportUrl" style="min-width: 280px; max-width: 320px;">
-                            <div class="file-icon me-3 bg-white p-2 rounded shadow-sm text-info">
-                                <i data-feather="file-text" appFeatherIcon class="icon-lg"></i>
-                            </div>
-                            <div class="file-info overflow-hidden">
-                                <p class="mb-0 fw-bolder text-dark text-truncate"
-                                    [title]="getFilename(record.policeReportUrl)">
-                                    {{ getFilename(record.policeReportUrl) }}
-                                </p>
-                                <div class="d-flex align-items-center mt-1">
-                                    <span class="text-muted tx-11">Document PDF</span>
-                                    <a [href]="getFileUrl(record.policeReportUrl)" target="_blank"
-                                        class="ms-2 text-primary tx-12 fw-bold text-decoration-none">Voir</a>
-                                </div>
-                            </div>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+                            <h6 class="mb-0 fw-bold text-uppercase tx-13 tracking-wider text-muted">Documents & Photos
+                            </h6>
+                            <ng-container *ngxPermissionsOnly="'MAINTENANCE_ALERT:DELETE'">
+                                <button class="btn btn-xs btn-outline-danger border-0" (click)="deleteAlert()">
+                                    <i data-feather="trash-2" appFeatherIcon class="icon-xs me-1"></i> Supprimer
+                                </button>
+                            </ng-container>
                         </div>
 
-                        <!-- Photos Thumbnails -->
-                        <ng-container *ngIf="record.photosUrls?.length > 0">
-                            <div class="photo-thumbnail position-relative" *ngFor="let photo of record.photosUrls">
-                                <a [href]="getFileUrl(photo)" target="_blank"
-                                    class="d-block card shadow-sm overflow-hidden border-0"
-                                    style="width: 100px; height: 100px;">
-                                    <img [src]="getFileUrl(photo)" class="img-fluid h-100 w-100"
-                                        style="object-fit: cover;">
-                                    <div class="photo-overlay d-flex align-items-center justify-content-center">
-                                        <i data-feather="eye" appFeatherIcon class="text-white icon-sm"></i>
+                        <div class="file-section d-flex flex-wrap gap-3 align-items-start">
+                            <!-- Police Report Card (PDF) -->
+                            <div class="file-card pdf-card d-flex align-items-center p-3 rounded-3 bg-light border shadow-sm"
+                                *ngIf="record.policeReportUrl" style="min-width: 280px; max-width: 320px;">
+                                <div class="file-icon me-3 bg-white p-2 rounded shadow-sm text-info">
+                                    <i data-feather="file-text" appFeatherIcon class="icon-lg"></i>
+                                </div>
+                                <div class="file-info overflow-hidden">
+                                    <p class="mb-0 fw-bolder text-dark text-truncate"
+                                        [title]="getFilename(record.policeReportUrl)">
+                                        {{ getFilename(record.policeReportUrl) }}
+                                    </p>
+                                    <div class="d-flex align-items-center mt-1">
+                                        <span class="text-muted tx-11">Document PDF</span>
+                                        <a [href]="getFileUrl(record.policeReportUrl)" target="_blank"
+                                            class="ms-2 text-primary tx-12 fw-bold text-decoration-none">Voir</a>
                                     </div>
-                                </a>
-                            </div>
-                        </ng-container>
-
-                        <!-- Add Files Button -->
-                        <div class="add-file-wrapper">
-                            <input type="file" #fileInput (change)="onAddFiles($event)" multiple hidden
-                                accept="image/*,application/pdf">
-                            <button
-                                class="btn btn-light border-dashed d-flex flex-column align-items-center justify-content-center rounded-3 bg-gray-100 hover-bg-gray-200"
-                                style="width: 180px; height: 100px; border: 2px dashed #ddd;"
-                                (click)="fileInput.click()" [disabled]="isAddingFiles">
-                                <div *ngIf="!isAddingFiles" class="text-center">
-                                    <i data-feather="plus" appFeatherIcon class="text-muted mb-1"></i>
-                                    <span class="d-block tx-12 fw-medium text-muted">Ajouter d'autres fichiers</span>
                                 </div>
-                                <div *ngIf="isAddingFiles" class="spinner-border spinner-border-sm text-primary"
-                                    role="status"></div>
-                            </button>
-                        </div>
-                    </div>
+                            </div>
 
-                    <div class="mt-4 p-5 text-center bg-light rounded-4 border border-dashed"
-                        *ngIf="!record.photosUrls?.length && !record.policeReportUrl">
-                        <div class="mb-3">
-                            <i data-feather="upload-cloud" appFeatherIcon class="icon-xxl text-muted opacity-50"></i>
-                        </div>
-                        <h6 class="text-dark fw-bold mb-2">Aucun document joint</h6>
-                        <p class="text-muted mb-3 mx-auto" style="max-width: 300px;">
-                            Importez le constat amiable ou des photos du sinistre pour faciliter le traitement.
-                        </p>
-                        <button class="btn btn-primary btn-sm px-4" (click)="fileInput.click()">
-                            Joindre des fichiers
-                        </button>
-                    </div>
+                            <!-- Photos Thumbnails -->
+                            <ng-container *ngIf="record.photosUrls?.length > 0">
+                                <div class="photo-thumbnail position-relative" *ngFor="let photo of record.photosUrls">
+                                    <a [href]="getFileUrl(photo)" target="_blank"
+                                        class="d-block card shadow-sm overflow-hidden border-0"
+                                        style="width: 100px; height: 100px;">
+                                        <img [src]="getFileUrl(photo)" class="img-fluid h-100 w-100"
+                                            style="object-fit: cover;">
+                                        <div class="photo-overlay d-flex align-items-center justify-content-center">
+                                            <i data-feather="eye" appFeatherIcon class="text-white icon-sm"></i>
+                                        </div>
+                                    </a>
+                                </div>
+                            </ng-container>
 
+                            <!-- Add Files Button -->
+                            <ng-container *ngxPermissionsOnly="'MAINTENANCE_ALERT:EDIT'">
+                                <div class="add-file-wrapper">
+
+                                    <button
+                                        class="btn btn-light border-dashed d-flex flex-column align-items-center justify-content-center rounded-3 bg-gray-100 hover-bg-gray-200"
+                                        style="width: 180px; height: 100px; border: 2px dashed #ddd;"
+                                        (click)="fileInput.click()" [disabled]="isAddingFiles">
+                                        <div *ngIf="!isAddingFiles" class="text-center">
+                                            <i data-feather="plus" appFeatherIcon class="text-muted mb-1"></i>
+                                            <span class="d-block tx-12 fw-medium text-muted">Ajouter d'autres
+                                                fichiers</span>
+                                        </div>
+                                        <div *ngIf="isAddingFiles" class="spinner-border spinner-border-sm text-primary"
+                                            role="status"></div>
+                                    </button>
+                                </div>
+                            </ng-container>
+                        </div>
+
+                        <div class="mt-4 p-5 text-center bg-light rounded-4 border border-dashed"
+                            *ngIf="!record.photosUrls?.length && !record.policeReportUrl">
+                            <div class="mb-3">
+                                <i data-feather="upload-cloud" appFeatherIcon
+                                    class="icon-xxl text-muted opacity-50"></i>
+                            </div>
+                            <h6 class="text-dark fw-bold mb-2">Aucun document joint</h6>
+                            <p class="text-muted mb-3 mx-auto" style="max-width: 300px;">
+                                Importez le constat amiable ou des photos du sinistre pour faciliter le traitement.
+                            </p>
+                            <ng-container *ngxPermissionsOnly="'MAINTENANCE_ALERT:EDIT'">
+                                <button class="btn btn-primary btn-sm px-4" (click)="fileInput.click()">
+                                    Joindre des fichiers
+                                </button>
+                            </ng-container>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</ng-container>
+
+<ng-container *ngxPermissionsExcept="['MAINTENANCE_ALERT:SHOW']">
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+        <div class="card shadow-sm border-0 bg-white" style="max-width: 500px; border-radius: 12px;">
+            <div class="card-body text-center p-5">
+                <div class="rounded-circle bg-danger-transparent d-inline-flex p-3 mb-4">
+                    <i data-feather="lock" appFeatherIcon class="text-danger" style="width: 48px; height: 48px;"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Accès Refusé</h4>
+                <p class="text-secondary mb-4">
+                    Vous ne disposez pas des permissions nécessaires pour afficher les détails de ce sinistre.
+                    <br>Veuillez contacter votre administrateur si vous pensez qu'il s'agit d'une erreur.
+                </p>
+                <button class="btn btn-danger px-4" routerLink="/gbatcar/maintenance/alerts">
+                    Retour aux alertes
+                </button>
+            </div>
+        </div>
+    </div>
+</ng-container>
 
 <style>
     .photo-thumbnail .photo-overlay {

@@ -1,302 +1,333 @@
-<!-- ==================== HEADER ==================== -->
-<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
-    <div>
-        <h4 class="mb-1 fw-bold">{{ pageTitle }}</h4>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a routerLink="/gbatcar/maintenance">Interventions</a></li>
-                <li class="breadcrumb-item active">{{ pageTitle }}</li>
-            </ol>
-        </nav>
+<ng-container *ngxPermissionsOnly="isEditMode ? 'MAINTENANCE:EDIT' : 'MAINTENANCE:NEW'">
+    <!-- ==================== HEADER ==================== -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+        <div>
+            <h4 class="mb-1 fw-bold">{{ pageTitle }}</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a routerLink="/gbatcar/maintenance">Interventions</a></li>
+                    <li class="breadcrumb-item active">{{ pageTitle }}</li>
+                </ol>
+            </nav>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center mt-3 mt-md-0" (click)="onCancel()">
+            <i data-feather="arrow-left" appFeatherIcon class="icon-sm me-1"></i> Retour
+        </button>
     </div>
-    <button class="btn btn-outline-secondary btn-sm d-flex align-items-center mt-3 mt-md-0" (click)="onCancel()">
-        <i data-feather="arrow-left" appFeatherIcon class="icon-sm me-1"></i> Retour
-    </button>
-</div>
 
-<!-- ==================== FORM ==================== -->
-<div class="row">
-    <div class="col-12">
-        <form [formGroup]="form">
+    <!-- ==================== FORM ==================== -->
+    <div class="row">
+        <div class="col-12">
+            <form [formGroup]="form">
 
-            <!-- SECTION 1 : Informations Générales -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-bottom py-3">
-                    <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
-                        <i data-feather="info" appFeatherIcon class="icon-sm me-2 text-primary"></i>
-                        Informations Générales
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
+                <!-- SECTION 1 : Informations Générales -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
+                            <i data-feather="info" appFeatherIcon class="icon-sm me-2 text-primary"></i>
+                            Informations Générales
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
 
-                        <!-- Date d'intervention -->
-                        <div class="col-md-4">
-                            <label class="form-label fw-medium">Date d'Intervention <span
-                                    class="text-danger">*</span></label>
-                            <input type="date" class="form-control" [class.is-invalid]="isInvalid('date')"
-                                formControlName="date">
-                            <div class="invalid-feedback">La date est requise.</div>
-                        </div>
+                            <!-- Date d'intervention -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-medium">Date d'Intervention <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" class="form-control" [class.is-invalid]="isInvalid('date')"
+                                    formControlName="date">
+                                <div class="invalid-feedback">La date est requise.</div>
+                            </div>
 
-                        <!-- Véhicule -->
-                        <div class="col-md-4">
-                            <label class="form-label fw-medium">Véhicule <span class="text-danger">*</span></label>
-                            <ng-select [items]="vehicles" bindLabel="immatriculation" bindValue="uuid"
-                                placeholder="-- Sélectionner un véhicule --" formControlName="vehicle"
-                                [loading]="loadingVehicles" [searchFn]="customSearchFn"
-                                [ngClass]="{'is-invalid': isInvalid('vehicle')}">
-                                <ng-template ng-option-tmp let-item="item">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <span class="fw-bold text-dark">{{item.marque}} {{item.modele}}</span>
-                                            <br>
-                                            <small class="text-muted">{{item.immatriculation}}</small>
+                            <!-- Véhicule -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-medium">Véhicule <span class="text-danger">*</span></label>
+                                <ng-select [items]="vehicles" bindLabel="immatriculation" bindValue="uuid"
+                                    placeholder="-- Sélectionner un véhicule --" formControlName="vehicle"
+                                    [loading]="loadingVehicles" [searchFn]="customSearchFn"
+                                    [ngClass]="{'is-invalid': isInvalid('vehicle')}">
+                                    <ng-template ng-option-tmp let-item="item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="fw-bold text-dark">{{item.marque}} {{item.modele}}</span>
+                                                <br>
+                                                <small class="text-muted">{{item.immatriculation}}</small>
+                                            </div>
+                                            <span class="badge bg-light text-dark border ms-2">{{item.annee}}</span>
                                         </div>
-                                        <span class="badge bg-light text-dark border ms-2">{{item.annee}}</span>
-                                    </div>
-                                </ng-template>
-                                <!-- Custom template for the selected item box (what shows after picking) -->
-                                <ng-template ng-label-tmp let-item="item">
-                                    <ng-container *ngIf="item.marque">
-                                        <span class="fw-bold">{{item.marque}} {{item.modele}}</span>
-                                        <small class="text-muted ms-1">({{item.immatriculation}})</small>
-                                    </ng-container>
-                                </ng-template>
-                            </ng-select>
-                            <div *ngIf="isInvalid('vehicle')" class="invalid-feedback d-block">
-                                Le véhicule est requis.
+                                    </ng-template>
+                                    <!-- Custom template for the selected item box (what shows after picking) -->
+                                    <ng-template ng-label-tmp let-item="item">
+                                        <ng-container *ngIf="item.marque">
+                                            <span class="fw-bold">{{item.marque}} {{item.modele}}</span>
+                                            <small class="text-muted ms-1">({{item.immatriculation}})</small>
+                                        </ng-container>
+                                    </ng-template>
+                                </ng-select>
+                                <div *ngIf="isInvalid('vehicle')" class="invalid-feedback d-block">
+                                    Le véhicule est requis.
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Kilométrage actuel -->
-                        <div class="col-md-4">
-                            <label class="form-label fw-medium">Kilométrage actuel (km)</label>
-                            <input type="number" class="form-control" placeholder="Ex: 45000"
-                                formControlName="kilometrage" min="0">
-                        </div>
-
-                        <!-- Type d'Intervention -->
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">Type d'Intervention <span
-                                    class="text-danger">*</span></label>
-                            <ng-select [items]="maintenanceTypes" bindLabel="name" bindValue="name"
-                                [addTag]="addTypeTag" addTagText="Ajouter ce type"
-                                placeholder="Sélectionnez ou ajoutez..." formControlName="type" [loading]="loadingTypes"
-                                [ngClass]="{'is-invalid': isInvalid('type')}">
-                            </ng-select>
-                            <div class="invalid-feedback d-block" *ngIf="isInvalid('type')">Le type est requis.</div>
-                        </div>
-
-                        <!-- Type personnalisé si détecté comme nouveau ou "Autre" -->
-                        <div class="col-md-6" *ngIf="isTypeAutre || form.get('type')?.value?.isNew">
-                            <label class="form-label fw-medium">Préciser le type <span
-                                    class="text-danger">*</span></label>
-                            <input type="text" class="form-control" placeholder="Décrivez le type d'intervention..."
-                                formControlName="typeAutre">
-                        </div>
-
-                        <!-- Statut -->
-                        <div class="col-md-6" [class.col-md-6]="!isTypeAutre">
-                            <label class="form-label fw-medium">Statut <span class="text-danger">*</span></label>
-                            <select class="form-select" formControlName="status"
-                                [class.is-invalid]="isInvalid('status')">
-                                <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
-                            </select>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <!-- SECTION 2 : Prestataire & Coût -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-bottom py-3">
-                    <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
-                        <i data-feather="tool" appFeatherIcon class="icon-sm me-2 text-warning"></i>
-                        Prestataire & Coût
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-
-                        <!-- Prestataire -->
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">Prestataire / Garage <span
-                                    class="text-danger">*</span></label>
-                            <select class="form-select" formControlName="provider"
-                                [class.is-invalid]="isInvalid('provider')">
-                                <option value="">-- Sélectionner le prestataire --</option>
-                                <option *ngFor="let p of providers" [value]="p">{{ p }}</option>
-                            </select>
-                            <div class="invalid-feedback">Le prestataire est requis.</div>
-                        </div>
-
-                        <!-- Prestataire personnalisé -->
-                        <div class="col-md-6" *ngIf="isProviderAutre">
-                            <label class="form-label fw-medium">Nom du prestataire <span
-                                    class="text-danger">*</span></label>
-                            <input type="text" class="form-control" placeholder="Nom du garage / prestataire..."
-                                formControlName="providerAutre">
-                        </div>
-
-                        <!-- Technicien -->
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">Technicien responsable</label>
-                            <input type="text" class="form-control" placeholder="Nom du technicien..."
-                                formControlName="technicien">
-                        </div>
-
-                        <!-- Coût -->
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">Coût Total (FCFA) <span
-                                    class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" [class.is-invalid]="isInvalid('cost')"
-                                    placeholder="Ex: 45000" formControlName="cost" min="0">
-                                <span class="input-group-text">FCFA</span>
-                                <div class="invalid-feedback">Le coût est requis et doit être positif.</div>
+                            <!-- Kilométrage actuel -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-medium">Kilométrage actuel (km)</label>
+                                <input type="number" class="form-control" placeholder="Ex: 45000"
+                                    formControlName="kilometrage" min="0">
                             </div>
-                        </div>
 
-                    </div>
-                </div>
-            </div>
-
-            <!-- SECTION 3 : Prochaine Maintenance -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-bottom py-3">
-                    <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
-                        <i data-feather="calendar" appFeatherIcon class="icon-sm me-2 text-success"></i>
-                        Prochaine Maintenance (Optionnel)
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">Date de la prochaine maintenance</label>
-                            <input type="date" class="form-control" formControlName="nextMaintenanceDate">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">Prochaine maintenance (km)</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" placeholder="Ex: 50000"
-                                    formControlName="nextMaintenanceKm" min="0">
-                                <span class="input-group-text">km</span>
+                            <!-- Type d'Intervention -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Type d'Intervention <span
+                                        class="text-danger">*</span></label>
+                                <ng-select [items]="maintenanceTypes" bindLabel="name" bindValue="name"
+                                    [addTag]="addTypeTag" addTagText="Ajouter ce type"
+                                    placeholder="Sélectionnez ou ajoutez..." formControlName="type"
+                                    [loading]="loadingTypes" [ngClass]="{'is-invalid': isInvalid('type')}">
+                                </ng-select>
+                                <div class="invalid-feedback d-block" *ngIf="isInvalid('type')">Le type est requis.
+                                </div>
                             </div>
+
+                            <!-- Type personnalisé si détecté comme nouveau ou "Autre" -->
+                            <div class="col-md-6" *ngIf="isTypeAutre || form.get('type')?.value?.isNew">
+                                <label class="form-label fw-medium">Préciser le type <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" placeholder="Décrivez le type d'intervention..."
+                                    formControlName="typeAutre">
+                            </div>
+
+                            <!-- Statut -->
+                            <div class="col-md-6" [class.col-md-6]="!isTypeAutre">
+                                <label class="form-label fw-medium">Statut <span class="text-danger">*</span></label>
+                                <select class="form-select" formControlName="status"
+                                    [class.is-invalid]="isInvalid('status')">
+                                    <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+                                </select>
+                            </div>
+
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- SECTION 4 : Documents Joints -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div
-                    class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fw-bold text-uppercase tx-12 text-muted">
-                        <i data-feather="paperclip" appFeatherIcon class="icon-sm me-2 text-info"></i>
-                        Documents Joints
-                        <span class="badge bg-light text-dark ms-1"
-                            *ngIf="existingDocs.length + selectedFiles.length > 0">
-                            {{ existingDocs.length + selectedFiles.length }}
-                        </span>
-                    </h6>
-                    <div *ngIf="uploading" class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                </div>
-                <div class="card-body">
+                <!-- SECTION 2 : Prestataire & Coût -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
+                            <i data-feather="tool" appFeatherIcon class="icon-sm me-2 text-warning"></i>
+                            Prestataire & Coût
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
 
-                    <!-- Liste des fichiers existants (Mode Edition) -->
-                    <div *ngIf="isEditMode && existingDocs.length > 0" class="mb-3">
-                        <p class="tx-11 text-uppercase fw-bold text-muted mb-2 ls-1">Fichiers enregistrés</p>
-                        <div *ngFor="let doc of existingDocs"
-                            class="bg-light p-2 rounded d-flex align-items-center border mb-2">
-                            <i data-feather="file" appFeatherIcon class="icon-sm text-secondary me-2"></i>
-                            <div class="flex-grow-1 overflow-hidden">
-                                <p class="mb-0 tx-13 fw-medium text-truncate" [title]="doc.originalName">{{
-                                    doc.originalName }}</p>
-                                <span class="tx-11 text-muted">{{ formatSize(doc.size) }}</span>
+                            <!-- Prestataire -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Prestataire / Garage <span
+                                        class="text-danger">*</span></label>
+                                <ng-select [items]="maintenanceProviders" bindLabel="name" bindValue="name"
+                                    [addTag]="addProviderTag" addTagText="Ajouter ce prestataire"
+                                    placeholder="Sélectionnez ou ajoutez le garage..." formControlName="provider"
+                                    [loading]="loadingProviders" [ngClass]="{'is-invalid': isInvalid('provider')}">
+                                </ng-select>
+                                <div class="invalid-feedback d-block" *ngIf="isInvalid('provider')">Le prestataire est
+                                    requis.</div>
                             </div>
-                            <div class="d-flex align-items-center ms-2 gap-1">
-                                <button type="button" (click)="downloadDoc(doc)" class="btn btn-xs btn-outline-primary"
-                                    title="Télécharger">
-                                    <i data-feather="download" appFeatherIcon class="icon-xs"></i>
+
+                            <!-- Prestataire personnalisé si détecté comme nouveau ou "Autre" -->
+                            <div class="col-md-6" *ngIf="isProviderAutre || form.get('provider')?.value?.isNew">
+                                <label class="form-label fw-medium">Nom du prestataire <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" placeholder="Nom du garage / prestataire..."
+                                    formControlName="providerAutre">
+                            </div>
+
+                            <!-- Technicien -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Technicien responsable</label>
+                                <input type="text" class="form-control" placeholder="Nom du technicien..."
+                                    formControlName="technicien">
+                            </div>
+
+                            <!-- Coût -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Coût Total (FCFA) <span
+                                        class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" [class.is-invalid]="isInvalid('cost')"
+                                        placeholder="Ex: 45000" formControlName="cost" min="0">
+                                    <span class="input-group-text">FCFA</span>
+                                    <div class="invalid-feedback">Le coût est requis et doit être positif.</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 3 : Prochaine Maintenance -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
+                            <i data-feather="calendar" appFeatherIcon class="icon-sm me-2 text-success"></i>
+                            Prochaine Maintenance (Optionnel)
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Date de la prochaine maintenance</label>
+                                <input type="date" class="form-control" formControlName="nextMaintenanceDate">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Prochaine maintenance (km)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" placeholder="Ex: 50000"
+                                        formControlName="nextMaintenanceKm" min="0">
+                                    <span class="input-group-text">km</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 4 : Documents Joints -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div
+                        class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold text-uppercase tx-12 text-muted">
+                            <i data-feather="paperclip" appFeatherIcon class="icon-sm me-2 text-info"></i>
+                            Documents Joints
+                            <span class="badge bg-light text-dark ms-1"
+                                *ngIf="existingDocs.length + selectedFiles.length > 0">
+                                {{ existingDocs.length + selectedFiles.length }}
+                            </span>
+                        </h6>
+                        <div *ngIf="uploading" class="spinner-border spinner-border-sm text-primary" role="status">
+                        </div>
+                    </div>
+                    <div class="card-body">
+
+                        <!-- Liste des fichiers existants (Mode Edition) -->
+                        <div *ngIf="isEditMode && existingDocs.length > 0" class="mb-3">
+                            <p class="tx-11 text-uppercase fw-bold text-muted mb-2 ls-1">Fichiers enregistrés</p>
+                            <div *ngFor="let doc of existingDocs"
+                                class="bg-light p-2 rounded d-flex align-items-center border mb-2">
+                                <i data-feather="file" appFeatherIcon class="icon-sm text-secondary me-2"></i>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <p class="mb-0 tx-13 fw-medium text-truncate" [title]="doc.originalName">{{
+                                        doc.originalName }}</p>
+                                    <span class="tx-11 text-muted">{{ formatSize(doc.size) }}</span>
+                                </div>
+                                <div class="d-flex align-items-center ms-2 gap-1">
+                                    <button type="button" (click)="downloadDoc(doc)"
+                                        class="btn btn-xs btn-outline-primary" title="Télécharger">
+                                        <i data-feather="download" appFeatherIcon class="icon-xs"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-xs btn-outline-danger" (click)="deleteDoc(doc)"
+                                        title="Supprimer">
+                                        <i data-feather="trash-2" appFeatherIcon class="icon-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Liste des fichiers sélectionnés (nouveaux) -->
+                        <div *ngIf="selectedFiles.length > 0" class="mb-3">
+                            <p class="tx-11 text-uppercase fw-bold text-muted mb-2 ls-1">Nouveaux fichiers à ajouter</p>
+                            <div *ngFor="let file of selectedFiles; let i = index"
+                                class="bg-soft-primary p-2 rounded d-flex align-items-center border border-primary border-opacity-25 mb-2">
+                                <i data-feather="upload-cloud" appFeatherIcon class="icon-sm text-primary me-2"></i>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <p class="mb-0 tx-13 fw-medium text-truncate" [title]="file.name">{{ file.name }}
+                                    </p>
+                                    <span class="tx-11 text-muted">{{ formatSize(file.size) }}</span>
+                                </div>
+                                <button type="button" class="btn btn-link text-danger p-0 ms-2"
+                                    (click)="removeSelectedFile(i)" title="Retirer">
+                                    <i data-feather="x-circle" appFeatherIcon class="icon-sm"></i>
                                 </button>
-                                <button type="button" class="btn btn-xs btn-outline-danger" (click)="deleteDoc(doc)"
-                                    title="Supprimer">
-                                    <i data-feather="trash-2" appFeatherIcon class="icon-xs"></i>
-                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Bouton Ajouter -->
+                        <ng-container *ngxPermissionsOnly="'MAINTENANCE:DOCUMENT'">
+                            <div class="text-center">
+                                <label
+                                    class="btn btn-outline-light border text-dark tx-13 w-100 py-2 cursor-pointer mb-0">
+                                    <input type="file" hidden multiple (change)="onFilesSelected($event)"
+                                        accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg">
+                                    <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i>
+                                    {{ (isEditMode && existingDocs.length > 0) || selectedFiles.length > 0 ? 'Ajouter
+                                    d\'autres
+                                    fichiers' : 'Ajouter un fichier' }}
+                                </label>
+                                <p class="tx-11 text-muted mt-2">PDF, Word, Excel ou Images (Max 10 Mo par fichier)</p>
+                            </div>
+                        </ng-container>
+
+                    </div>
+                </div>
+
+                <!-- SECTION 5 : Notes & Observations -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
+                            <i data-feather="file-text" appFeatherIcon class="icon-sm me-2 text-secondary"></i>
+                            Notes & Observations
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-medium">Description / Travaux effectués</label>
+                                <textarea class="form-control" rows="4"
+                                    placeholder="Décrivez les travaux effectués, les pièces remplacées, les observations techniques..."
+                                    formControlName="description"></textarea>
+                                <div class="form-text text-muted">Optionnel — informations complémentaires sur
+                                    l'intervention.</div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Liste des fichiers sélectionnés (nouveaux) -->
-                    <div *ngIf="selectedFiles.length > 0" class="mb-3">
-                        <p class="tx-11 text-uppercase fw-bold text-muted mb-2 ls-1">Nouveaux fichiers à ajouter</p>
-                        <div *ngFor="let file of selectedFiles; let i = index"
-                            class="bg-soft-primary p-2 rounded d-flex align-items-center border border-primary border-opacity-25 mb-2">
-                            <i data-feather="upload-cloud" appFeatherIcon class="icon-sm text-primary me-2"></i>
-                            <div class="flex-grow-1 overflow-hidden">
-                                <p class="mb-0 tx-13 fw-medium text-truncate" [title]="file.name">{{ file.name }}</p>
-                                <span class="tx-11 text-muted">{{ formatSize(file.size) }}</span>
-                            </div>
-                            <button type="button" class="btn btn-link text-danger p-0 ms-2"
-                                (click)="removeSelectedFile(i)" title="Retirer">
-                                <i data-feather="x-circle" appFeatherIcon class="icon-sm"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Bouton Ajouter -->
-                    <div class="text-center">
-                        <label class="btn btn-outline-light border text-dark tx-13 w-100 py-2 cursor-pointer mb-0">
-                            <input type="file" hidden multiple (change)="onFilesSelected($event)"
-                                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg">
-                            <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i>
-                            {{ (isEditMode && existingDocs.length > 0) || selectedFiles.length > 0 ? 'Ajouter d\'autres
-                            fichiers' : 'Ajouter un fichier' }}
-                        </label>
-                        <p class="tx-11 text-muted mt-2">PDF, Word, Excel ou Images (Max 10 Mo par fichier)</p>
-                    </div>
-
                 </div>
-            </div>
 
-            <!-- SECTION 5 : Notes & Observations -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-bottom py-3">
-                    <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
-                        <i data-feather="file-text" appFeatherIcon class="icon-sm me-2 text-secondary"></i>
-                        Notes & Observations
-                    </h6>
+                <!-- ==================== ACTIONS ==================== -->
+                <div class="d-flex justify-content-end gap-2 mb-5">
+                    <button type="button" class="btn btn-outline-secondary px-4" (click)="onCancel()"
+                        [disabled]="isSubmitting">
+                        <i data-feather="x" appFeatherIcon class="icon-sm me-1"></i> Annuler
+                    </button>
+                    <button type="button" class="btn btn-primary px-5" (click)="onConfirme()" [disabled]="isSubmitting">
+                        <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <i *ngIf="!isSubmitting" data-feather="save" appFeatherIcon class="icon-sm me-1"></i>
+                        {{ isSubmitting ? 'Enregistrement...' : (isEditMode ? 'Modifier l\'Intervention' : 'Enregistrer
+                        l\'Intervention') }}
+                    </button>
                 </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="form-label fw-medium">Description / Travaux effectués</label>
-                            <textarea class="form-control" rows="4"
-                                placeholder="Décrivez les travaux effectués, les pièces remplacées, les observations techniques..."
-                                formControlName="description"></textarea>
-                            <div class="form-text text-muted">Optionnel — informations complémentaires sur
-                                l'intervention.</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- ==================== ACTIONS ==================== -->
-            <div class="d-flex justify-content-end gap-2 mb-5">
-                <button type="button" class="btn btn-outline-secondary px-4" (click)="onCancel()"
-                    [disabled]="isSubmitting">
-                    <i data-feather="x" appFeatherIcon class="icon-sm me-1"></i> Annuler
-                </button>
-                <button type="button" class="btn btn-primary px-5" (click)="onConfirme()" [disabled]="isSubmitting">
-                    <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                    <i *ngIf="!isSubmitting" data-feather="save" appFeatherIcon class="icon-sm me-1"></i>
-                    {{ isSubmitting ? 'Enregistrement...' : (isEditMode ? 'Modifier l\'Intervention' : 'Enregistrer
-                    l\'Intervention') }}
-                </button>
-            </div>
-
-        </form>
+            </form>
+        </div>
     </div>
-</div>
+</ng-container>
+
+<ng-container *ngxPermissionsExcept="isEditMode ? 'MAINTENANCE:EDIT' : 'MAINTENANCE:NEW'">
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+        <div class="card shadow-sm border-0 bg-white" style="max-width: 500px; border-radius: 12px;">
+            <div class="card-body text-center p-5">
+                <div class="rounded-circle bg-danger-transparent d-inline-flex p-3 mb-4">
+                    <i data-feather="lock" appFeatherIcon class="text-danger" style="width: 48px; height: 48px;"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Accès Refusé</h4>
+                <p class="text-secondary mb-4">
+                    Vous ne disposez pas des permissions nécessaires pour {{ isEditMode ? 'modifier cette intervention'
+                    : 'enregistrer une nouvelle intervention' }}.
+                    <br>Veuillez contacter votre administrateur si vous pensez qu'il s'agit d'une erreur.
+                </p>
+                <button class="btn btn-danger px-4" routerLink="/gbatcar/maintenance">
+                    Retour au journal des interventions
+                </button>
+            </div>
+        </div>
+    </div>
+</ng-container>

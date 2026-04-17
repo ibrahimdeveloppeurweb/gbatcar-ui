@@ -56,6 +56,7 @@ export interface Vehicle {
     // Un Véhicule a UN Contrat actif
     contract?: Contract;
     activeContractId?: string;
+    recoveryReason?: string;
     vehicleDemands?: any[];   // Fleet demands this vehicle is assigned to
 
     // ===================== STATUT & PAIEMENT =====================

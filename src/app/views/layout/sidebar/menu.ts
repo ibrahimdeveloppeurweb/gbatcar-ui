@@ -166,6 +166,11 @@ export const MENU: MenuItem[] = [
         link: '/gbatcar/admin/notifications',
         nom: 'MENU_ADMIN_NOTIFICATIONS'
       },
+      {
+        label: 'Journal des Opérations',
+        link: '/gbatcar/admin/audit-log',
+        nom: 'MENU_ADMIN_AUDIT_LOG'
+      },
     ]
   },
   {
@@ -184,12 +189,12 @@ export const MENU: MenuItem[] = [
       }
     ]
   },
-  {
-    label: 'Chat',
-    icon: 'message-square',
-    link: '/gbatcar/apps/chat',
-    nom: 'MENU_APPS_CHAT'
-  },
+  // {
+  //   label: 'Chat',
+  //   icon: 'message-square',
+  //   link: '/gbatcar/apps/chat',
+  //   nom: 'MENU_APPS_CHAT'
+  // },
   {
     label: 'Calendrier',
     icon: 'calendar',

@@ -10,11 +10,13 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { FormsModule } from '@angular/forms';
 import { PaymentService } from '../../../../../core/services/payment/payment.service';
 import { ContractDurationService } from '../../../../../core/services/contract/contract-duration.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
     selector: 'app-payment-dashboard',
     standalone: true,
-    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, FeatherIconDirective, NgSelectModule, FormsModule, RouterModule],
+    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, FeatherIconDirective, NgSelectModule, FormsModule, RouterModule, NgxPermissionsModule],
     templateUrl: './payment-dashboard.component.html',
     styleUrl: './payment-dashboard.component.scss'
 })
@@ -23,6 +25,8 @@ export class PaymentDashboardComponent implements OnInit {
     themeCssVariables = inject(ThemeCssVariableService).getThemeCssVariables();
     private paymentService = inject(PaymentService);
     private durationService = inject(ContractDurationService);
+    private authService = inject(AuthService);
+    private permissionsService = inject(NgxPermissionsService);
 
     loading = false;
     loadingDurations = false;
@@ -75,6 +79,8 @@ export class PaymentDashboardComponent implements OnInit {
     public paymentMethodChartOptions: ApexOptions | any;
 
     ngOnInit(): void {
+        const permissions = this.authService.getPermissions();
+        this.permissionsService.loadPermissions(permissions);
         this.loadDurations();
         this.loadDashboardData();
     }

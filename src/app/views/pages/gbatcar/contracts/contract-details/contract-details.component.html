@@ -897,12 +897,24 @@
                                         </div>
                                         <ng-container *ngxPermissionsOnly="'CONTRACT:PROMISE'">
                                             <button class="btn btn-sm btn-primary btn-icon-text"
-                                                (click)="openPromiseModal(promiseModalTemplate)">
+                                                (click)="openPromiseModal(promiseModalTemplate)"
+                                                [disabled]="schedules.length === 0">
                                                 <i data-feather="plus-circle" appFeatherIcon
                                                     class="btn-icon-prepend"></i>
                                                 Enregistrer une promesse
                                             </button>
                                         </ng-container>
+                                    </div>
+
+                                    <div class="alert alert-warning d-flex align-items-center mb-4 mt-2"
+                                        *ngIf="schedules.length === 0">
+                                        <i data-feather="alert-circle" appFeatherIcon class="icon-sm me-2"></i>
+                                        <div>
+                                            <strong>Action requise :</strong> Vous devez d'abord générer un échéancier
+                                            de
+                                            paiement (onglet précédent) avant de pouvoir enregistrer une promesse de
+                                            paiement.
+                                        </div>
                                     </div>
 
                                     <div class="table-responsive">
@@ -1008,6 +1020,9 @@
                                                             *ngIf="(penalty.paidAmount || 0) > 0">Payé: {{
                                                             (penalty.paidAmount || 0) |
                                                             number }}</small>
+                                                        <small class="d-block text-muted tx-9" *ngIf="penalty.paidAt">
+                                                            le {{ penalty.paidAt | date:'dd/MM/yyyy à HH:mm' }}
+                                                        </small>
                                                     </td>
                                                     <td>
                                                         <span class="badge"

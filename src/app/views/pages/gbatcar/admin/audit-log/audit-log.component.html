@@ -1,0 +1,106 @@
+<div class="row">
+    <div class="col-12 stretch-card">
+        <div class="card border-top border-danger border-3">
+            <div class="card-body px-0 px-md-4">
+
+                <!-- HEADER -->
+                <div class="d-flex justify-content-between align-items-center mb-4 px-3 px-md-0 border-bottom pb-3">
+                    <h6 class="card-title text-danger mb-0 text-uppercase fw-bold d-flex align-items-center">
+                        <i data-feather="list" appFeatherIcon class="icon-sm me-2"></i>
+                        Journal d'Audit des Opérations
+                    </h6>
+                    <button class="btn btn-outline-danger btn-sm d-flex align-items-center bg-white"
+                        (click)="exportCSV()">
+                        <i data-feather="download" appFeatherIcon class="icon-sm me-1"></i> CSV
+                    </button>
+                </div>
+
+                <!-- TABLE -->
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="fs-12px text-muted text-uppercase fw-bold border-bottom pb-3">Collaborateur
+                                </th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold border-bottom pb-3">Module</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold border-bottom pb-3">Action</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold border-bottom pb-3">Détails</th>
+                                <th class="fs-12px text-muted text-uppercase fw-bold border-bottom pb-3">Heure</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let log of logs">
+                                <!-- Collaborateur -->
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span
+                                            class="badge rounded-circle bg-danger-subtle text-danger d-flex justify-content-center align-items-center"
+                                            style="width: 32px; height: 32px; font-size: 11px;">
+                                            {{ log.userInitials }}
+                                        </span>
+                                        <span class="fw-bold fs-13px text-dark">{{ log.userFullName }}</span>
+                                    </div>
+                                </td>
+
+                                <!-- Module -->
+                                <td>
+                                    <div class="d-flex align-items-center text-muted fs-13px">
+                                        <i [attr.data-feather]="getModuleIcon(log.module)" appFeatherIcon
+                                            class="icon-xs me-2"></i>
+                                        {{ log.module }}
+                                    </div>
+                                </td>
+
+                                <!-- Action -->
+                                <td>
+                                    <span [ngClass]="getActionClass(log.action)">
+                                        {{ log.action }}
+                                    </span>
+                                </td>
+
+                                <!-- Détails -->
+                                <td>
+                                    <span class="text-secondary fs-13px">{{ log.details }}</span>
+                                </td>
+
+                                <!-- Heure -->
+                                <td>
+                                    <span class="text-secondary fs-12px">{{ timeAgo(log.createdAt) }}</span>
+                                </td>
+                            </tr>
+
+                            <!-- Empty state -->
+                            <tr *ngIf="logs.length === 0 && !loading">
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Aucune opération trouvée dans le journal.
+                                </td>
+                            </tr>
+
+                            <!-- Loading -->
+                            <tr *ngIf="loading && logs.length === 0">
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>
+                                    Chargement de l'historique...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- FOOTER / PAGINATION -->
+                <div class="text-center mt-3 pt-3">
+                    <button class="btn btn-light btn-block text-danger fw-bold w-100"
+                        style="background-color: #f1f2f5; border: none;" (click)="loadMore()"
+                        [disabled]="loading || (logs.length > 0 && logs.length >= total)">
+                        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"
+                            aria-hidden="true"></span>
+                        Charger plus d'historique
+                    </button>
+                    <div class="text-muted fs-11px mt-2" *ngIf="logs.length > 0">Affichage de {{ logs.length }} sur {{
+                        total }} correspondances</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

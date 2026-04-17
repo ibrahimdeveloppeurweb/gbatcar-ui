@@ -1,141 +1,167 @@
-<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
-    <div>
-        <h4 class="mb-3 mb-md-0">Paramètres Généraux</h4>
+<ng-container *ngxPermissionsOnly="['SETTING:LIST']">
+    <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+        <div>
+            <h4 class="mb-3 mb-md-0">Paramètres Généraux</h4>
+        </div>
     </div>
-</div>
 
-<form [formGroup]="settingsForm" (ngSubmit)="saveSettings()">
-    <div class="row">
-        <!-- Section: Frais & Tarifs -->
-        <div class="col-md-6 grid-margin stretch-card">
-            <div class="card">
+    <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()">
+        <div class="row">
+            <!-- Section: Frais & Tarifs -->
+            <div class="col-md-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title fw-bolder mb-4">FRAIS ET PÉNALITÉS</h6>
+
+                        <div class="mb-4">
+                            <label class="form-label">Normes Frais de Dossier (FCFA)</label>
+                            <input type="number" class="form-control" formControlName="fraisDossier"
+                                [ngClass]="{'is-invalid': settingsForm.get('fraisDossier')?.invalid && settingsForm.get('fraisDossier')?.touched}">
+                            <div *ngIf="settingsForm.get('fraisDossier')?.invalid && settingsForm.get('fraisDossier')?.touched"
+                                class="invalid-feedback">
+                                Valeur invalide.
+                            </div>
+                            <small class="form-text text-muted mt-2 d-block">Ce montant sera proposé par défaut lors de
+                                la
+                                création d'un nouveau contrat.</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Pénalité de retard journalière (%)</label>
+                            <div class="input-group">
+                                <input type="number" step="0.1" class="form-control"
+                                    formControlName="penaliteRetardJournaliere"
+                                    [ngClass]="{'is-invalid': settingsForm.get('penaliteRetardJournaliere')?.invalid && settingsForm.get('penaliteRetardJournaliere')?.touched}">
+                                <span class="input-group-text bg-light">%</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Délai de grâce avant pénalités (Jours)</label>
+                            <input type="number" class="form-control" formControlName="delaiGracePenalite"
+                                [ngClass]="{'is-invalid': settingsForm.get('delaiGracePenalite')?.invalid && settingsForm.get('delaiGracePenalite')?.touched}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: Contrats par défaut -->
+            <div class="col-md-6 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title fw-bolder mb-4">MODÈLE ÉCONOMIQUE</h6>
+
+                        <div class="mb-4">
+                            <label class="form-label">Durée de Contrat par défaut (Mois)</label>
+                            <input type="number" class="form-control" formControlName="dureeContratDefautMois"
+                                [ngClass]="{'is-invalid': settingsForm.get('dureeContratDefautMois')?.invalid && settingsForm.get('dureeContratDefautMois')?.touched}">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Apport Initial / Dépôt de Garantie (%)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" formControlName="apportInitialPourcentage"
+                                    [ngClass]="{'is-invalid': settingsForm.get('apportInitialPourcentage')?.invalid && settingsForm.get('apportInitialPourcentage')?.touched}">
+                                <span class="input-group-text bg-light">%</span>
+                            </div>
+                            <small class="form-text text-muted mt-2 d-block">Pourcentage de la valeur totale du véhicule
+                                requis à la signature.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="col-12 mb-5 mt-3">
+                <ng-container *ngxPermissionsOnly="'SETTING:EDIT'">
+                    <button type="submit" class="btn btn-primary d-inline-flex align-items-center">
+                        <i data-feather="save" appFeatherIcon class="icon-sm me-2"></i>
+                        Enregistrer les modifications
+                    </button>
+                </ng-container>
+            </div>
+        </div>
+    </form>
+
+    <div class="row" *ngIf="history && history.length > 0">
+        <div class="col-md-12 grid-margin stretch-card">
+            <div class="card shadow-sm border-0">
                 <div class="card-body">
-                    <h6 class="card-title fw-bolder mb-4">FRAIS ET PÉNALITÉS</h6>
-
-                    <div class="mb-4">
-                        <label class="form-label">Normes Frais de Dossier (FCFA)</label>
-                        <input type="number" class="form-control" formControlName="fraisDossier"
-                            [ngClass]="{'is-invalid': settingsForm.get('fraisDossier')?.invalid && settingsForm.get('fraisDossier')?.touched}">
-                        <div *ngIf="settingsForm.get('fraisDossier')?.invalid && settingsForm.get('fraisDossier')?.touched"
-                            class="invalid-feedback">
-                            Valeur invalide.
-                        </div>
-                        <small class="form-text text-muted mt-2 d-block">Ce montant sera proposé par défaut lors de la
-                            création d'un nouveau contrat.</small>
+                    <h6 class="card-title fw-bolder mb-4 text-primary d-flex align-items-center text-uppercase">
+                        <i data-feather="clock" appFeatherIcon class="icon-sm me-2"></i>
+                        Historique des modifications
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr class="text-uppercase tx-12 fw-bold text-muted bg-light">
+                                    <th class="ps-3 border-0">Date</th>
+                                    <th class="border-0">Justification / Motif</th>
+                                    <th class="border-0">Frais (FCFA)</th>
+                                    <th class="border-0">Pén. (%)</th>
+                                    <th class="border-0">Grâce (J)</th>
+                                    <th class="border-0">Durée (M)</th>
+                                    <th class="border-0 px-3 text-end">Apport (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of history" class="align-middle">
+                                    <td class="ps-3 border-start border-3 border-info">
+                                        <div class="fw-bold">{{ item.createdAt | date:'dd/MM/yyyy' }}</div>
+                                        <small class="text-muted">{{ item.createdAt | date:'HH:mm' }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="text-wrap"
+                                            style="max-width: 250px; display: block; font-size: 13px;">
+                                            {{ item.description }}
+                                        </span>
+                                    </td>
+                                    <td
+                                        [ngClass]="{'text-primary fw-bold': item.previousValues.fraisDossier !== item.newValues.fraisDossier}">
+                                        {{ item.newValues.fraisDossier | number }}
+                                    </td>
+                                    <td
+                                        [ngClass]="{'text-primary fw-bold': item.previousValues.penaliteRetardJournaliere !== item.newValues.penaliteRetardJournaliere}">
+                                        {{ item.newValues.penaliteRetardJournaliere }}%
+                                    </td>
+                                    <td
+                                        [ngClass]="{'text-primary fw-bold': item.previousValues.delaiGracePenalite !== item.newValues.delaiGracePenalite}">
+                                        {{ item.newValues.delaiGracePenalite }}
+                                    </td>
+                                    <td
+                                        [ngClass]="{'text-primary fw-bold': item.previousValues.dureeContratDefautMois !== item.newValues.dureeContratDefautMois}">
+                                        {{ item.newValues.dureeContratDefautMois }}
+                                    </td>
+                                    <td class="px-3 text-end"
+                                        [ngClass]="{'text-primary fw-bold': item.previousValues.apportInitialPourcentage !== item.newValues.apportInitialPourcentage}">
+                                        {{ item.newValues.apportInitialPourcentage }}%
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <div class="mb-4">
-                        <label class="form-label">Pénalité de retard journalière (%)</label>
-                        <div class="input-group">
-                            <input type="number" step="0.1" class="form-control"
-                                formControlName="penaliteRetardJournaliere"
-                                [ngClass]="{'is-invalid': settingsForm.get('penaliteRetardJournaliere')?.invalid && settingsForm.get('penaliteRetardJournaliere')?.touched}">
-                            <span class="input-group-text bg-light">%</span>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label">Délai de grâce avant pénalités (Jours)</label>
-                        <input type="number" class="form-control" formControlName="delaiGracePenalite"
-                            [ngClass]="{'is-invalid': settingsForm.get('delaiGracePenalite')?.invalid && settingsForm.get('delaiGracePenalite')?.touched}">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section: Contrats par défaut -->
-        <div class="col-md-6 grid-margin stretch-card">
-            <div class="card">
-                <div class="card-body">
-                    <h6 class="card-title fw-bolder mb-4">MODÈLE ÉCONOMIQUE</h6>
-
-                    <div class="mb-4">
-                        <label class="form-label">Durée de Contrat par défaut (Mois)</label>
-                        <input type="number" class="form-control" formControlName="dureeContratDefautMois"
-                            [ngClass]="{'is-invalid': settingsForm.get('dureeContratDefautMois')?.invalid && settingsForm.get('dureeContratDefautMois')?.touched}">
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label">Apport Initial / Dépôt de Garantie (%)</label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" formControlName="apportInitialPourcentage"
-                                [ngClass]="{'is-invalid': settingsForm.get('apportInitialPourcentage')?.invalid && settingsForm.get('apportInitialPourcentage')?.touched}">
-                            <span class="input-group-text bg-light">%</span>
-                        </div>
-                        <small class="form-text text-muted mt-2 d-block">Pourcentage de la valeur totale du véhicule
-                            requis à la signature.</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="col-12 mb-5 mt-3">
-            <button type="submit" class="btn btn-primary d-inline-flex align-items-center">
-                <i data-feather="save" appFeatherIcon class="icon-sm me-2"></i>
-                Enregistrer les modifications
-            </button>
-        </div>
-    </div>
-</form>
-
-<div class="row" *ngIf="history && history.length > 0">
-    <div class="col-md-12 grid-margin stretch-card">
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
-                <h6 class="card-title fw-bolder mb-4 text-primary d-flex align-items-center text-uppercase">
-                    <i data-feather="clock" appFeatherIcon class="icon-sm me-2"></i>
-                    Historique des modifications
-                </h6>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr class="text-uppercase tx-12 fw-bold text-muted bg-light">
-                                <th class="ps-3 border-0">Date</th>
-                                <th class="border-0">Justification / Motif</th>
-                                <th class="border-0">Frais (FCFA)</th>
-                                <th class="border-0">Pén. (%)</th>
-                                <th class="border-0">Grâce (J)</th>
-                                <th class="border-0">Durée (M)</th>
-                                <th class="border-0 px-3 text-end">Apport (%)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let item of history" class="align-middle">
-                                <td class="ps-3 border-start border-3 border-info">
-                                    <div class="fw-bold">{{ item.createdAt | date:'dd/MM/yyyy' }}</div>
-                                    <small class="text-muted">{{ item.createdAt | date:'HH:mm' }}</small>
-                                </td>
-                                <td>
-                                    <span class="text-wrap" style="max-width: 250px; display: block; font-size: 13px;">
-                                        {{ item.description }}
-                                    </span>
-                                </td>
-                                <td
-                                    [ngClass]="{'text-primary fw-bold': item.previousValues.fraisDossier !== item.newValues.fraisDossier}">
-                                    {{ item.newValues.fraisDossier | number }}
-                                </td>
-                                <td
-                                    [ngClass]="{'text-primary fw-bold': item.previousValues.penaliteRetardJournaliere !== item.newValues.penaliteRetardJournaliere}">
-                                    {{ item.newValues.penaliteRetardJournaliere }}%
-                                </td>
-                                <td
-                                    [ngClass]="{'text-primary fw-bold': item.previousValues.delaiGracePenalite !== item.newValues.delaiGracePenalite}">
-                                    {{ item.newValues.delaiGracePenalite }}
-                                </td>
-                                <td
-                                    [ngClass]="{'text-primary fw-bold': item.previousValues.dureeContratDefautMois !== item.newValues.dureeContratDefautMois}">
-                                    {{ item.newValues.dureeContratDefautMois }}
-                                </td>
-                                <td class="px-3 text-end"
-                                    [ngClass]="{'text-primary fw-bold': item.previousValues.apportInitialPourcentage !== item.newValues.apportInitialPourcentage}">
-                                    {{ item.newValues.apportInitialPourcentage }}%
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</ng-container>
+
+<ng-container *ngxPermissionsExcept="['SETTING:LIST']">
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+        <div class="card shadow-sm border-0 bg-white" style="max-width: 500px; border-radius: 12px;">
+            <div class="card-body text-center p-5">
+                <div class="rounded-circle bg-danger-transparent d-inline-flex p-3 mb-4">
+                    <i data-feather="lock" appFeatherIcon class="text-danger" style="width: 48px; height: 48px;"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Accès Refusé</h4>
+                <p class="text-secondary mb-4">
+                    Vous ne disposez pas des permissions nécessaires pour accéder aux paramètres généraux.
+                    <br>Veuillez contacter votre administrateur si vous pensez qu'il s'agit d'une erreur.
+                </p>
+                <button class="btn btn-danger px-4" routerLink="/dashboard">
+                    Retour au tableau de bord
+                </button>
+            </div>
+        </div>
+    </div>
+</ng-container>

@@ -6,11 +6,13 @@ import { PaymentService } from '../../../../../core/services/payment/payment.ser
 import { ContractService } from '../../../../../core/services/contract/contract.service';
 import Swal from 'sweetalert2';
 import { environment } from '../../../../../../environments/environment';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-payment-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, FeatherIconDirective],
+  imports: [CommonModule, RouterModule, FeatherIconDirective, NgxPermissionsModule],
   templateUrl: './payment-details.component.html',
   styleUrl: './payment-details.component.scss'
 })
@@ -20,6 +22,8 @@ export class PaymentDetailsComponent implements OnInit {
   private router = inject(Router);
   private paymentService = inject(PaymentService);
   private contractService = inject(ContractService);
+  private permissionsService = inject(NgxPermissionsService);
+  private authService = inject(AuthService);
 
   paymentUuid: string | null = null;
   payment: any = null;
@@ -28,6 +32,9 @@ export class PaymentDetailsComponent implements OnInit {
   serverUrl = environment.serverUrl.replace('/api', '');
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
+
     this.paymentUuid = this.route.snapshot.paramMap.get('id');
     if (this.paymentUuid) {
       this.loadPaymentDetails(this.paymentUuid);

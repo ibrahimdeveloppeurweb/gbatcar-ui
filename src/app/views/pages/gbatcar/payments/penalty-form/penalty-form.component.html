@@ -1,112 +1,139 @@
-<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
-    <div>
-        <nav class="page-breadcrumb mb-1">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a routerLink="/gbatcar/payments/penalties">Gestion des Pénalités</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Émettre une Amende</li>
-            </ol>
-        </nav>
-        <h4 class="mb-3 mb-md-0 text-danger">Émettre une Amende / Pénalité</h4>
+<ng-container *ngxPermissionsOnly="['PENALTY:NEW']">
+    <div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+        <div>
+            <nav class="page-breadcrumb mb-1">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a routerLink="/gbatcar/payments/penalties">Gestion des Pénalités</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">Émettre une Amende</li>
+                </ol>
+            </nav>
+            <h4 class="mb-3 mb-md-0 text-danger">Émettre une Amende / Pénalité</h4>
+        </div>
+        <div class="d-flex align-items-center flex-wrap text-nowrap">
+            <button [routerLink]="['/gbatcar/payments/penalties']"
+                class="btn btn-outline-secondary btn-icon-text me-2 mb-2 mb-md-0">
+                <i data-feather="x" appFeatherIcon class="btn-icon-prepend"></i>
+                Annuler
+            </button>
+            <button class="btn btn-danger btn-icon-text mb-2 mb-md-0" (click)="onConfirme()" [disabled]="submitting">
+                <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1" role="status"
+                    aria-hidden="true"></span>
+                <i *ngIf="!submitting" data-feather="save" appFeatherIcon class="btn-icon-prepend"></i>
+                {{ submitting ? 'Enregistrement...' : 'Valider la Pénalité' }}
+            </button>
+        </div>
     </div>
-    <div class="d-flex align-items-center flex-wrap text-nowrap">
-        <button [routerLink]="['/gbatcar/payments/penalties']"
-            class="btn btn-outline-secondary btn-icon-text me-2 mb-2 mb-md-0">
-            <i data-feather="x" appFeatherIcon class="btn-icon-prepend"></i>
-            Annuler
-        </button>
-        <button class="btn btn-danger btn-icon-text mb-2 mb-md-0" (click)="onConfirme()" [disabled]="submitting">
-            <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1" role="status"
-                aria-hidden="true"></span>
-            <i *ngIf="!submitting" data-feather="save" appFeatherIcon class="btn-icon-prepend"></i>
-            {{ submitting ? 'Enregistrement...' : 'Valider la Pénalité' }}
-        </button>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col-md-12 stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title text-danger">Détails de l'infraction ou du manquement</h6>
-                <form [formGroup]="penaltyForm">
-                    <div class="row">
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Contrat cible <span
-                                    class="text-danger">*</span></label>
-                            <ng-select [items]="contracts" bindLabel="reference" bindValue="uuid"
-                                formControlName="contractId" [loading]="loadingContracts" [searchFn]="contractSearchFn"
-                                placeholder="Sélectionnez le contrat lié (Locataire)..."
-                                [ngClass]="{'is-invalid': penaltyForm.get('contractId')?.invalid && (penaltyForm.get('contractId')?.touched || submitting)}">
-                                <ng-template ng-label-tmp let-item="item">
-                                    <span class="fw-bold text-primary">{{ item.reference }}</span> - {{
-                                    item.client?.libelle || item.client?.name || (item.client?.lastName + ' ' +
-                                    item.client?.firstName) }}
-                                </ng-template>
-                                <ng-template ng-option-tmp let-item="item">
-                                    <div class="d-flex flex-column">
-                                        <span class="fw-bold">{{ item.reference }} - {{ item.client?.libelle ||
-                                            item.client?.name || (item.client?.lastName + ' ' + item.client?.firstName)
-                                            }}</span>
-                                        <small class="text-muted">{{ item.vehicleSummary || 'Aucun véhicule' }}</small>
-                                    </div>
-                                </ng-template>
-                            </ng-select>
+    <div class="row">
+        <div class="col-md-12 stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-danger">Détails de l'infraction ou du manquement</h6>
+                    <form [formGroup]="penaltyForm">
+                        <div class="row">
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">Contrat cible <span
+                                        class="text-danger">*</span></label>
+                                <ng-select [items]="contracts" bindLabel="reference" bindValue="uuid"
+                                    formControlName="contractId" [loading]="loadingContracts"
+                                    [searchFn]="contractSearchFn"
+                                    placeholder="Sélectionnez le contrat lié (Locataire)..."
+                                    [ngClass]="{'is-invalid': penaltyForm.get('contractId')?.invalid && (penaltyForm.get('contractId')?.touched || submitting)}">
+                                    <ng-template ng-label-tmp let-item="item">
+                                        <span class="fw-bold text-primary">{{ item.reference }}</span> - {{
+                                        item.client?.libelle || item.client?.name || (item.client?.lastName + ' ' +
+                                        item.client?.firstName) }}
+                                    </ng-template>
+                                    <ng-template ng-option-tmp let-item="item">
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold">{{ item.reference }} - {{ item.client?.libelle ||
+                                                item.client?.name || (item.client?.lastName + ' ' +
+                                                item.client?.firstName)
+                                                }}</span>
+                                            <small class="text-muted">{{ item.vehicleSummary || 'Aucun véhicule'
+                                                }}</small>
+                                        </div>
+                                    </ng-template>
+                                </ng-select>
+                            </div>
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">Date d'émission <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" class="form-control" formControlName="date"
+                                    [ngClass]="{'is-invalid': penaltyForm.get('date')?.invalid && (penaltyForm.get('date')?.touched || submitting)}">
+                            </div>
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">Motif & Justification <span
+                                        class="text-danger">*</span></label>
+                                <input class="form-control" formControlName="reason"
+                                    placeholder="Ex: Retard paiement mensuel, Excès de vitesse..."
+                                    [ngClass]="{'is-invalid': penaltyForm.get('reason')?.invalid && (penaltyForm.get('reason')?.touched || submitting)}">
+                            </div>
                         </div>
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Date d'émission <span
-                                    class="text-danger">*</span></label>
-                            <input type="date" class="form-control" formControlName="date"
-                                [ngClass]="{'is-invalid': penaltyForm.get('date')?.invalid && (penaltyForm.get('date')?.touched || submitting)}">
-                        </div>
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Motif & Justification <span
-                                    class="text-danger">*</span></label>
-                            <input class="form-control" formControlName="reason"
-                                placeholder="Ex: Retard paiement mensuel, Excès de vitesse..."
-                                [ngClass]="{'is-invalid': penaltyForm.get('reason')?.invalid && (penaltyForm.get('reason')?.touched || submitting)}">
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Gravité de l'acte</label>
-                            <select class="form-select" formControlName="severity">
-                                <option value="Faible">Faible (Avertissement financier)</option>
-                                <option value="Moyenne">Moyenne (Infraction routière simple)</option>
-                                <option value="Élevée">Élevée (Mise en danger, Dégradation)</option>
-                            </select>
+                        <div class="row">
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">Gravité de l'acte</label>
+                                <select class="form-select" formControlName="severity">
+                                    <option value="Faible">Faible (Avertissement financier)</option>
+                                    <option value="Moyenne">Moyenne (Infraction routière simple)</option>
+                                    <option value="Élevée">Élevée (Mise en danger, Dégradation)</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">Montant Exigé (FCFA) <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control font-weight-bold text-danger"
+                                    formControlName="amount"
+                                    [ngClass]="{'is-invalid': penaltyForm.get('amount')?.invalid && (penaltyForm.get('amount')?.touched || submitting)}"
+                                    placeholder="Ex: 5000">
+                            </div>
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">Échéance de régularisation <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" class="form-control" formControlName="dueDate"
+                                    [ngClass]="{'is-invalid': penaltyForm.get('dueDate')?.invalid && (penaltyForm.get('dueDate')?.touched || submitting)}">
+                            </div>
                         </div>
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Montant Exigé (FCFA) <span
-                                    class="text-danger">*</span></label>
-                            <input type="number" class="form-control font-weight-bold text-danger"
-                                formControlName="amount"
-                                [ngClass]="{'is-invalid': penaltyForm.get('amount')?.invalid && (penaltyForm.get('amount')?.touched || submitting)}"
-                                placeholder="Ex: 5000">
-                        </div>
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Échéance de régularisation <span
-                                    class="text-danger">*</span></label>
-                            <input type="date" class="form-control" formControlName="dueDate"
-                                [ngClass]="{'is-invalid': penaltyForm.get('dueDate')?.invalid && (penaltyForm.get('dueDate')?.touched || submitting)}">
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-sm-8 mb-3">
-                            <label class="form-label text-dark fw-medium">Rapport circonstancié / Commentaire</label>
-                            <textarea class="form-control" formControlName="observation" rows="3"
-                                placeholder="Informations complémentaires, lien du constat de police..."></textarea>
+                        <div class="row">
+                            <div class="col-sm-8 mb-3">
+                                <label class="form-label text-dark fw-medium">Rapport circonstancié /
+                                    Commentaire</label>
+                                <textarea class="form-control" formControlName="observation" rows="3"
+                                    placeholder="Informations complémentaires, lien du constat de police..."></textarea>
+                            </div>
+                            <div class="col-sm-4 mb-3">
+                                <label class="form-label text-dark fw-medium">Preuve justificative (PDF/Image)</label>
+                                <input type="file" class="form-control" (change)="onFileSelected($event)"
+                                    accept="image/*,application/pdf">
+                                <small class="text-muted">Procès-verbal, photo de l'infraction, etc.</small>
+                            </div>
                         </div>
-                        <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">Preuve justificative (PDF/Image)</label>
-                            <input type="file" class="form-control" (change)="onFileSelected($event)"
-                                accept="image/*,application/pdf">
-                            <small class="text-muted">Procès-verbal, photo de l'infraction, etc.</small>
-                        </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</ng-container>
+
+<ng-container *ngxPermissionsExcept="['PENALTY:NEW']">
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+        <div class="card shadow-sm border-0 bg-white" style="max-width: 500px; border-radius: 12px;">
+            <div class="card-body text-center p-5">
+                <div class="rounded-circle bg-danger-transparent d-inline-flex p-3 mb-4">
+                    <i data-feather="lock" appFeatherIcon class="text-danger" style="width: 48px; height: 48px;"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Accès Refusé</h4>
+                <p class="text-secondary mb-4">
+                    Vous ne disposez pas des permissions nécessaires pour émettre une pénalité.
+                    <br>Veuillez contacter votre administrateur si vous pensez qu'il s'agit d'une erreur.
+                </p>
+                <button class="btn btn-danger px-4" routerLink="/gbatcar/payments/penalties">
+                    Retour à la liste des pénalités
+                </button>
+            </div>
+        </div>
+    </div>
+</ng-container>

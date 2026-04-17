@@ -4,17 +4,21 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { MaintenanceAlertService } from '../../../../../core/services/maintenance/maintenance-alert.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-maintenance-alerts',
   standalone: true,
-  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule],
+  imports: [CommonModule, RouterModule, FeatherIconDirective, FormsModule, NgxPermissionsModule],
   templateUrl: './maintenance-alerts.component.html',
   styleUrl: './maintenance-alerts.component.scss'
 })
 export class MaintenanceAlertsComponent implements OnInit {
 
   private alertService = inject(MaintenanceAlertService);
+  private permissionsService = inject(NgxPermissionsService);
+  private authService = inject(AuthService);
 
   alerts: any[] = [];
   loading: boolean = false;
@@ -48,6 +52,8 @@ export class MaintenanceAlertsComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
     this.loadAlerts();
   }
 

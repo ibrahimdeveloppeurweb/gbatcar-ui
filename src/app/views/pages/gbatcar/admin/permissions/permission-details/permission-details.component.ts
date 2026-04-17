@@ -5,11 +5,13 @@ import { FeatherIconDirective } from '../../../../../../core/feather-icon/feathe
 import { Role } from '../../../../../../core/models/permission.model';
 import { PathService } from '../../../../../../core/services/path/path.service';
 import { PermissionService } from '../../../../../../core/services/permission/permission.service';
+import { AuthService } from '../../../../../../core/services/auth/auth.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
 
 @Component({
   selector: 'app-permission-details',
   standalone: true,
-  imports: [CommonModule, RouterLink, FeatherIconDirective],
+  imports: [CommonModule, RouterLink, FeatherIconDirective, NgxPermissionsModule],
   templateUrl: './permission-details.component.html',
   styles: ``
 })
@@ -18,6 +20,8 @@ export class PermissionDetailsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private pathService = inject(PathService);
   private permissionService = inject(PermissionService);
+  private authService = inject(AuthService);
+  private ngxPermissionsService = inject(NgxPermissionsService);
 
   roleName: string = '';
   roleDescription: string = '';
@@ -27,6 +31,7 @@ export class PermissionDetailsComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    this.ngxPermissionsService.loadPermissions(this.authService.getPermissions());
     const uuid = this.route.snapshot.paramMap.get('id'); // this is actually a UUID now
     if (uuid) {
       this.loadRoleData(uuid);
@@ -197,20 +202,20 @@ export class PermissionDetailsComponent implements OnInit {
           if (module.subItems) {
             module.subItems.forEach((sub: any) => {
               if (sub.actions) {
-                 sub.actions = sub.actions.filter((act: any) => act.checked);
+                sub.actions = sub.actions.filter((act: any) => act.checked);
               }
             });
             // Garder les sous-menus qui ont au moins une action coché
             module.subItems = module.subItems.filter((sub: any) => sub.actions && sub.actions.length > 0);
           }
           if (module.actions) {
-             module.actions = module.actions.filter((act: any) => act.checked);
+            module.actions = module.actions.filter((act: any) => act.checked);
           }
         });
 
         // Garder les modules qui ont des sous-menus (avec des actions) ou des actions directes
-        groupedModules = groupedModules.filter(module => 
-          (module.subItems && module.subItems.length > 0) || 
+        groupedModules = groupedModules.filter(module =>
+          (module.subItems && module.subItems.length > 0) ||
           (module.actions && module.actions.length > 0)
         );
 

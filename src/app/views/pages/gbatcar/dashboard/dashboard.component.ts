@@ -6,12 +6,14 @@ import { NgApexchartsModule, ApexOptions } from 'ng-apexcharts';
 import { FeatherIconDirective } from '../../../../core/feather-icon/feather-icon.directive';
 import { ThemeCssVariableService, ThemeCssVariablesType } from '../../../../core/services/theme-css-variable.service';
 import { DashboardService } from '../../../../core/services';
+import { ContractDurationService } from '../../../../core/services/contract/contract-duration.service';
 import {
     DashboardStats, RecentOnboarding, DashboardMaintenanceAlert,
     ExpiringContract, RecentActivity, RiskDistribution,
     UrgentAction, MonthlySalesData, RevenueChartData
 } from '../../../../core/models';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgSelectModule } from '@ng-select/ng-select';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -23,7 +25,8 @@ import Swal from 'sweetalert2';
         FormsModule,
         NgApexchartsModule,
         FeatherIconDirective,
-        NgbDropdownModule
+        NgbDropdownModule,
+        NgSelectModule
     ],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.scss'
@@ -31,6 +34,7 @@ import Swal from 'sweetalert2';
 export class GbatcarDashboardComponent implements OnInit {
 
     private dashboardService = inject(DashboardService);
+    private durationService = inject(ContractDurationService);
 
     stats: DashboardStats = {
         activeClients: 0, activeClientsGrowth: 0, totalVehicles: 0, availableVehicles: 0,
@@ -46,9 +50,41 @@ export class GbatcarDashboardComponent implements OnInit {
     urgentActions: UrgentAction[] = [];
     monthlySalesData: MonthlySalesData[] = [];
     revenueChartData: RevenueChartData[] = [];
+    fleetTotal: number = 0;
 
-    // Advanced Filters 
-    showAdvancedFilters: boolean = true;
+    // Month selector
+    monthsList: any[] = [];
+    selectedMonth: any = null;
+    loadingDurations = false;
+
+    addDurationTag = (name: string) => {
+        return new Promise((resolve) => {
+            const formattedName = name.toLowerCase().includes('mois') ? name : `${name} mois`;
+            this.loadingDurations = true;
+            this.durationService.create(formattedName).subscribe({
+                next: (res: any) => {
+                    const newDuration = res?.data || res;
+                    this.monthsList = [...this.monthsList, newDuration];
+                    this.loadingDurations = false;
+                    resolve(newDuration);
+                },
+                error: () => {
+                    this.loadingDurations = false;
+                    resolve(null);
+                }
+            });
+        });
+    };
+
+    onMonthChange(item: any) {
+        if (item && item.monthsCount) {
+            this.selectedMonth = item;
+        }
+        this.fetchDashboardData();
+    }
+
+    // Advanced Filters
+    showAdvancedFilters: boolean = false;
 
     advPeriod: string = 'Ce Mois';
     advDateMin: string = '';
@@ -97,17 +133,29 @@ export class GbatcarDashboardComponent implements OnInit {
     constructor() { }
 
     ngOnInit(): void {
-        this.updateCharts(); // Initialize with empty values to avoid HTML errors
-        this.fetchDashboardData();
+        this.updateCharts();
+        this.loadDurations();
+    }
+
+    loadDurations() {
+        this.durationService.getAll().subscribe({
+            next: (data: any) => {
+                this.monthsList = data;
+                if (data && data.length > 0) {
+                    this.selectedMonth = data.find((d: any) => d.monthsCount === 6) || data[0];
+                }
+                this.fetchDashboardData();
+            },
+            error: () => {
+                this.fetchDashboardData();
+            }
+        });
     }
 
     fetchDashboardData() {
+        const monthFilter = this.selectedMonth ? this.selectedMonth.monthsCount : 6;
         const filters = {
-            period: this.advPeriod,
-            dateMin: this.advDateMin,
-            dateMax: this.advDateMax,
-            category: this.advVehicleCategory,
-            contractType: this.advContractType
+            month: monthFilter
         };
 
         this.dashboardService.getDashboardData(filters).subscribe({
@@ -122,6 +170,7 @@ export class GbatcarDashboardComponent implements OnInit {
                     this.urgentActions = res.urgentActions || [];
                     this.monthlySalesData = res.monthlySalesData || [];
                     this.revenueChartData = res.revenueChartData || [];
+                    this.fleetTotal = (res as any).totalVehiclesFleet || this.stats.totalVehicles || 0;
 
                     this.updateCharts();
                 }
@@ -195,62 +244,84 @@ export class GbatcarDashboardComponent implements OnInit {
     }
 
     getRevenueChartOptions(themeVariables: ThemeCssVariablesType) {
-        const dates = this.revenueChartData.map(d => d.date);
-        const amounts = this.revenueChartData.map(d => d.amount);
+        const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+        const months = this.selectedMonth?.monthsCount ?? 6;
+        const groupByYear = months > 36;
+
+        const categories: string[] = [];
+        const paidData: number[] = [];
+
+        if (groupByYear) {
+            // Regroupement annuel
+            const startYear = new Date().getFullYear() - Math.ceil(months / 12) + 1;
+            const endYear = new Date().getFullYear();
+            for (let year = startYear; year <= endYear; year++) {
+                categories.push(year.toString());
+                const key = year.toString();
+                const item = this.revenueChartData.find(x => x.month === key);
+                paidData.push(item ? parseFloat(item.paid as any) : 0);
+            }
+        } else {
+            // Regroupement mensuel
+            for (let i = months - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(1);
+                d.setMonth(d.getMonth() - i);
+                let label = monthNames[d.getMonth()];
+                if (months > 12) label += ' ' + d.getFullYear().toString().substring(2);
+                categories.push(label);
+
+                const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+                const item = this.revenueChartData.find(x => x.month === key);
+                paidData.push(item ? parseFloat(item.paid as any) : 0);
+            }
+        }
 
         return {
-            series: [{
-                name: 'Encaissements',
-                data: amounts
-            }],
+            series: [{ name: 'Encaissements', data: paidData }],
             chart: {
-                type: "line",
+                type: 'line',
                 height: 350,
                 parentHeightOffset: 0,
                 foreColor: themeVariables.secondary,
                 toolbar: { show: false },
                 zoom: { enabled: false }
             },
-            colors: [themeVariables.primary],
+            colors: ['#e74c3c'],
+            stroke: { width: 2, curve: 'straight' },
             grid: {
                 padding: { bottom: -4 },
                 borderColor: themeVariables.gridBorder,
-                xaxis: { lines: { show: true } }
+                xaxis: { lines: { show: false } }
             },
             xaxis: {
-                type: 'datetime',
-                categories: dates,
+                type: 'category',
+                categories: categories,
                 axisBorder: { color: themeVariables.gridBorder },
                 axisTicks: { color: themeVariables.gridBorder },
-                crosshairs: {
-                    stroke: { color: themeVariables.secondary }
-                },
+                crosshairs: { stroke: { color: '#e74c3c' } },
             },
             yaxis: {
                 title: {
                     text: 'Montant (FCFA)',
-                    style: { size: 10, color: themeVariables.secondary }
+                    style: { fontSize: '10px', color: themeVariables.secondary }
                 },
                 labels: {
-                    formatter: function (val: number) {
+                    formatter: (val: number) => {
+                        if (val >= 1_000_000) return (val / 1_000_000).toFixed(1) + 'M';
+                        if (val >= 1_000) return (val / 1_000).toFixed(0) + 'K';
                         return new Intl.NumberFormat('fr-FR').format(val);
                     }
                 },
-                crosshairs: {
-                    stroke: { color: themeVariables.secondary }
-                },
-            },
-            stroke: {
-                width: 2,
-                curve: "straight"
+                crosshairs: { stroke: { color: themeVariables.secondary } }
             },
             dataLabels: { enabled: false },
             markers: { size: 0 },
+            legend: { show: false },
             tooltip: {
                 y: {
-                    formatter: function (val: number) {
-                        return new Intl.NumberFormat('fr-FR').format(val) + ' FCFA';
-                    }
+                    formatter: (val: number) =>
+                        new Intl.NumberFormat('fr-FR').format(val) + ' FCFA'
                 }
             }
         };
@@ -261,125 +332,118 @@ export class GbatcarDashboardComponent implements OnInit {
     }
 
     getVehicleSalesChartOptions(themeVariables: ThemeCssVariablesType) {
-        const categories = this.monthlySalesData.map(d => d.month);
-        const data = this.monthlySalesData.map(d => d.sales);
+        const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+        const months = this.selectedMonth?.monthsCount ?? 6;
+        const groupByYear = months > 36;
+
+        const categories: string[] = [];
+        const data: number[] = [];
+
+        if (groupByYear) {
+            const startYear = new Date().getFullYear() - Math.ceil(months / 12) + 1;
+            const endYear = new Date().getFullYear();
+            for (let year = startYear; year <= endYear; year++) {
+                categories.push(year.toString());
+                const key = year.toString();
+                const item = this.monthlySalesData.find(x => x.month === key);
+                data.push(item ? item.sales : 0);
+            }
+        } else {
+            for (let i = months - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(1);
+                d.setMonth(d.getMonth() - i);
+                let label = monthNames[d.getMonth()];
+                if (months > 12) label += " '" + d.getFullYear().toString().substring(2);
+                categories.push(label);
+
+                const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+                const item = this.monthlySalesData.find(x => x.month === key);
+                data.push(item ? item.sales : 0);
+            }
+        }
 
         return {
-            series: [{
-                name: 'Ventes',
-                data: data
-            }],
+            series: [{ name: 'Véhicules', data: data }],
             chart: {
-                type: 'bar',
-                height: '330',
-                parentHeightOffset: 0,
+                type: 'bar', height: 330, parentHeightOffset: 0,
                 foreColor: themeVariables.secondary,
-                toolbar: { show: false },
-                zoom: { enabled: false }
+                toolbar: { show: false }, zoom: { enabled: false }
             },
-            colors: [themeVariables.primary],
-            fill: {
-                opacity: .9
-            },
+            colors: ['#e74c3c'],
+            fill: { opacity: 1 },
             grid: {
-                padding: { bottom: -4 },
                 borderColor: themeVariables.gridBorder,
-                xaxis: { lines: { show: true } }
+                xaxis: { lines: { show: false } }
             },
             xaxis: {
-                type: 'datetime',
+                type: 'category',
                 categories: categories,
                 axisBorder: { color: themeVariables.gridBorder },
                 axisTicks: { color: themeVariables.gridBorder },
             },
             yaxis: {
-                title: {
-                    text: 'Nombre de Ventes',
-                    style: { size: 9, color: themeVariables.secondary }
-                },
+                title: { text: 'Nombre de Ventes', style: { color: themeVariables.secondary } },
                 labels: { offsetX: 0 },
             },
-            legend: {
-                show: true,
-                position: "top",
-                horizontalAlign: 'center',
-                fontFamily: themeVariables.fontFamily,
-                itemMargin: { horizontal: 8, vertical: 0 },
-            },
+            legend: { show: false },
             stroke: { width: 0 },
             dataLabels: {
                 enabled: true,
-                style: {
-                    fontSize: '10px',
-                    fontFamily: themeVariables.fontFamily,
-                },
-                offsetY: -27
+                style: { fontSize: '10px', colors: ['#fff'], fontWeight: 'bold' },
+                offsetY: 5
             },
             plotOptions: {
                 bar: {
-                    columnWidth: "50%",
-                    borderRadius: 4,
-                    dataLabels: {
-                        position: 'top',
-                        orientation: 'vertical',
-                    }
-                },
+                    columnWidth: '55%', borderRadius: 4,
+                    dataLabels: { position: 'center' }
+                }
+            },
+            tooltip: {
+                y: { formatter: (val: number) => val + ' véhicule(s)' }
             }
-        }
+        };
     }
 
+    statusBreakdown: any[] = [];
+
     getRiskDistributionChartOptions(themeVariables: ThemeCssVariablesType) {
+        const enLocation = this.riskDistribution.find(s => s.label === 'En Location')?.value || 0;
+        const dispo = this.riskDistribution.find(s => s.label === 'Au Parking (Dispo)')?.value || 0;
+        const maint = this.riskDistribution.find(s => s.label === 'En Panne/Maintenance')?.value || 0;
+        const sold = this.riskDistribution.find(s => s.label === 'Vendu')?.value || 0;
+
+        this.statusBreakdown = [
+            { label: 'En Location-Vente', count: enLocation, color: '#2ecc71', icon: 'truck' },
+            { label: 'Disponible', count: dispo, color: '#3498db', icon: 'check-circle' },
+            { label: 'En Maintenance', count: maint, color: '#f39c12', icon: 'tool' },
+            { label: 'Vendu', count: sold, color: '#9b59b6', icon: 'shopping-cart' },
+        ];
+
         return {
-            series: this.riskDistribution.map(s => s.value),
-            chart: {
-                height: 300,
-                type: 'donut',
-            },
-            labels: this.riskDistribution.map(s => s.label),
-            colors: [themeVariables.success, themeVariables.warning, themeVariables.danger],
-            stroke: {
-                colors: ['#fff']
-            },
+            series: this.statusBreakdown.map(s => s.count),
+            chart: { height: 280, type: 'donut' },
+            labels: this.statusBreakdown.map(s => s.label),
+            colors: this.statusBreakdown.map(s => s.color),
+            stroke: { colors: ['#fff'] },
             legend: {
-                show: true,
-                position: 'bottom',
+                show: true, position: 'bottom',
                 fontFamily: themeVariables.fontFamily,
                 labels: { colors: themeVariables.secondary }
             },
-            dataLabels: {
-                enabled: false
-            },
+            dataLabels: { enabled: false },
             plotOptions: {
                 pie: {
                     donut: {
-                        size: '75%',
+                        size: '70%',
                         labels: {
                             show: true,
-                            name: {
-                                fontSize: '14px',
-                                fontFamily: themeVariables.fontFamily,
-                                color: themeVariables.secondary
-                            },
-                            value: {
-                                fontSize: '24px',
-                                fontFamily: themeVariables.fontFamily,
-                                color: themeVariables.dark,
-                                formatter: function (val: string) {
-                                    return val + ' Vhls';
-                                }
-                            },
                             total: {
-                                show: true,
-                                showAlways: true,
-                                label: 'Total',
+                                show: true, showAlways: true,
+                                label: 'Véhicules',
                                 color: themeVariables.secondary,
-                                fontSize: '14px',
-                                fontFamily: themeVariables.fontFamily,
-                                formatter: function (w: any) {
-                                    return w.globals.seriesTotals.reduce((a: any, b: any) => {
-                                        return a + b;
-                                    }, 0) + ' Vhls'
-                                }
+                                fontSize: '13px',
+                                formatter: (w: any) => this.fleetTotal
                             }
                         }
                     }
@@ -388,3 +452,4 @@ export class GbatcarDashboardComponent implements OnInit {
         };
     }
 }
+

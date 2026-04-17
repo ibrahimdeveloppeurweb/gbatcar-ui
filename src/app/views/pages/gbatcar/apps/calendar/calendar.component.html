@@ -4,69 +4,82 @@
       <div class="col-12 grid-margin">
         <div class="card">
           <div class="card-body">
-            <full-calendar
-              [options]='calendarOptions'
-            ></full-calendar>
-          </div>
-          </div>
-      </div>
-      <div class="col-12 d-none d-md-block">
-        <div class="card">
-          <div class="card-body">
-            <h6 class="mb-2 text-secondary">Draggable Events</h6>
-            <div class='d-flex' #externalEvents>
-              <div class='fc-event' [ngStyle]="{'background-color': 'rgba(253,126,20,.25)', 'border-color': '#fd7e14'}" [attr.bgColor]="'rgba(253,126,20,.25)'" [attr.bdcolor]="'#fd7e14'">Birth Day</div>
-              <div class='fc-event' [ngStyle]="{'background-color': 'rgba(241,0,117,.25)', 'border-color': '#f10075'}" [attr.bgColor]="'rgba(241,0,117,.25)'" [attr.bdColor]="'#f10075'">New Project</div>
-              <div class='fc-event' [ngStyle]="{'background-color': 'rgba(0,204,204,.25)', 'border-color': '#00cccc'}" [attr.bgColor]="'rgba(0,204,204,.25)'" [attr.bdColor]="'#00cccc'">Anniversary</div>
-              <div class='fc-event' [ngStyle]="{'background-color': 'rgb(18,182,89,.25)', 'border-color': '#10b759'}" [attr.bgColor]="'rgb(18,182,89,.25)'" [attr.bdColor]="'#10b759'">Clent Meeting</div>
-              <div class='fc-event' [ngStyle]="{'background-color': 'rgba(91,71,251,.2)', 'border-color': '#5b47fb'}" [attr.bgColor]="'rgba(91,71,251,.2)'" [attr.bdColor]="'#5b47fb'">Office Trip</div>
-            </div>
+            <full-calendar [options]='calendarOptions'></full-calendar>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </div>
 
-<div id="fullCalModal" class="modal fade">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 id="modalTitle1" class="modal-title"></h4>
-        <button type="button" class="btn-close" data-dismiss="modal"><span class="visually-hidden">close</span></button>
-      </div>
-      <div id="modalBody1" class="modal-body"></div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button class="btn btn-primary">Event Page</button>
-      </div>
-    </div>
+<!-- Modal Creation Evenement -->
+<ng-template #eventModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Nouvel Événement</h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
   </div>
-</div>
+  <div class="modal-body">
+    <form>
+      <div class="mb-3">
+        <label class="form-label font-weight-bold">Date sélectionnée</label>
+        <div class="form-control bg-light text-muted" style="cursor: not-allowed;">
+          {{ eventStartDate | date:'EEEE dd MMMM yyyy' }}
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="eventTitle" class="form-label font-weight-bold">Titre / Motif de l'événement</label>
+        <textarea id="eventTitle" class="form-control" name="eventTitle" [(ngModel)]="eventTitle"
+          placeholder="Ex: Réunion d'équipe..." rows="3" required></textarea>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.close('cancel')">Annuler</button>
+    <button type="button" class="btn btn-primary" (click)="modal.close('save')"
+      [disabled]="!eventTitle">Enregistrer</button>
+  </div>
+</ng-template>
 
-<div id="createEventModal" class="modal fade">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 id="modalTitle2" class="modal-title">Add event</h4>
-        <button type="button" class="btn-close" data-dismiss="modal"><span class="visually-hidden">close</span></button>
-      </div>
-      <div id="modalBody2" class="modal-body">
-        <form>
-          <div class="mb-3">
-            <label for="formGroupExampleInput" class="form-label">Example label</label>
-            <input type="text" class="form-control" id="formGroupExampleInput" placeholder="Example input">
-          </div>
-          <div class="mb-3">
-            <label for="formGroupExampleInput2" class="form-label">Another label</label>
-            <input type="text" class="form-control" id="formGroupExampleInput2" placeholder="Another input">
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button class="btn btn-primary">Add</button>
-      </div>
+<!-- Modal Détail Evenement -->
+<ng-template #eventDetailModal let-modal>
+  <div class="modal-header" [style.border-left]="'5px solid ' + (selectedEvent?.borderColor || '#00cccc')">
+    <h5 class="modal-title">
+      <i class="mdi mdi-calendar-check mr-2"></i> Détail de l'événement
+    </h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <div class="mb-3">
+      <label class="form-label text-muted small">DATE</label>
+      <div class="fw-bold">{{ selectedEvent?.start | date:'EEEE dd MMMM yyyy' }}</div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label text-muted small">MOTIF / TITRE</label>
+      <ng-container *ngIf="!isEditingEvent; else editForm">
+        <div class="p-2 border rounded bg-light">{{ selectedEvent?.title }}</div>
+      </ng-container>
+      <ng-template #editForm>
+        <textarea class="form-control" name="editTitle" [(ngModel)]="editEventTitle" rows="3"></textarea>
+      </ng-template>
     </div>
   </div>
-</div>
+  <div class="modal-footer d-flex justify-content-between">
+    <button type="button" class="btn btn-danger" (click)="confirmDeleteEvent(modal)">
+      <i class="mdi mdi-delete"></i> Supprimer
+    </button>
+    <div>
+      <button type="button" class="btn btn-secondary me-2" (click)="modal.dismiss()">Fermer</button>
+      <ng-container *ngIf="!isEditingEvent; else saveBtn">
+        <button type="button" class="btn btn-warning" (click)="startEditEvent()">
+          <i class="mdi mdi-pencil"></i> Modifier
+        </button>
+      </ng-container>
+      <ng-template #saveBtn>
+        <button type="button" class="btn btn-primary" (click)="saveEditedEvent(modal)">
+          <i class="mdi mdi-check"></i> Enregistrer
+        </button>
+      </ng-template>
+    </div>
+  </div>
+</ng-template>

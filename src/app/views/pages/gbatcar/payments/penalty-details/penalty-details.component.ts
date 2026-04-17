@@ -4,11 +4,13 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { PenaltyService } from '../../../../../core/services/penalty/penalty.service';
 import { Penalty } from '../../../../../core/models/penalty.model';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-penalty-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, FeatherIconDirective],
+  imports: [CommonModule, RouterModule, FeatherIconDirective, NgxPermissionsModule],
   templateUrl: './penalty-details.component.html',
   styleUrl: './penalty-details.component.scss'
 })
@@ -22,10 +24,15 @@ export class PenaltyDetailsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private penaltyService: PenaltyService,
-    private router: Router
+    private router: Router,
+    private permissionsService: NgxPermissionsService,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
+    const permissions = this.authService.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
+
     this.penaltyUuid = this.route.snapshot.paramMap.get('id');
     if (this.penaltyUuid) {
       this.loadPenalty();

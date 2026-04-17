@@ -12,3 +12,4 @@ export * from './setting/setting.service';
 export * from './user/user.service';
 export * from './vehicle/vehicle.service';
 export * from './dashboard/dashboard.service';
+export * from './audit/audit-log.service';

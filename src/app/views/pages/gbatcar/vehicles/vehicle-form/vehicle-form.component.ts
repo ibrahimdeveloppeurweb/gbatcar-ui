@@ -394,7 +394,8 @@ export class VehicleFormComponent implements OnInit {
           preparationCost: v.preparationCost,
           gpsInstallationCost: v.gpsInstallationCost,
           otherCosts: v.otherCosts,
-          durationInMonths: v.durationInMonths
+          durationInMonths: v.durationInMonths,
+          depositPercentage: v.depositPercentage
         });
         this.isPatchingForm = false;
 

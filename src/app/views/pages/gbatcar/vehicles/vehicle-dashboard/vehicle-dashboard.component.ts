@@ -8,12 +8,14 @@ import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-i
 import { ThemeCssVariableService } from '../../../../../core/services/theme-css-variable.service';
 import { VehicleService } from '../../../../../core/services/vehicle/vehicle.service';
 import { ContractDurationService } from '../../../../../core/services/contract/contract-duration.service';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
+import { AuthService } from '../../../../../core/services/auth/auth.service';
 
 @Component({
     selector: 'app-vehicle-dashboard',
     standalone: true,
-    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, FeatherIconDirective, FormsModule, NgSelectModule],
+    imports: [CommonModule, NgApexchartsModule, NgbDropdownModule, FeatherIconDirective, FormsModule, NgSelectModule, NgxPermissionsModule, RouterLink],
     templateUrl: './vehicle-dashboard.component.html',
     styleUrl: './vehicle-dashboard.component.scss'
 })
@@ -23,6 +25,8 @@ export class VehicleDashboardComponent implements OnInit {
     private vehicleService = inject(VehicleService);
     private durationService = inject(ContractDurationService);
     private router = inject(Router);
+    private authService = inject(AuthService);
+    private permissionsService = inject(NgxPermissionsService);
     loading = false;
     loadingDurations = false;
 
@@ -80,6 +84,8 @@ export class VehicleDashboardComponent implements OnInit {
     public maintenanceCostChartOptions: ApexOptions | any;
 
     ngOnInit(): void {
+        const permissions = this.authService.getPermissions();
+        this.permissionsService.loadPermissions(permissions);
         this.loadDurations();
         this.loadDashboardData();
     }
@@ -142,6 +148,7 @@ export class VehicleDashboardComponent implements OnInit {
             { label: 'En Location-Vente', count: dist['En Location-Vente'] || 0, color: '#2ecc71', icon: 'truck' },
             { label: 'Disponible', count: dist['Disponible'] || 0, color: '#3498db', icon: 'check-circle' },
             { label: 'En Maintenance', count: dist['En Maintenance'] || 0, color: '#f39c12', icon: 'tool' },
+            { label: 'Vendu', count: dist['Vendu'] || 0, color: '#9b59b6', icon: 'shopping-cart' },
         ];
 
         return {

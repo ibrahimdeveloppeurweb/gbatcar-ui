@@ -6,13 +6,15 @@ import { FeatherIconDirective } from '../../../../../../core/feather-icon/feathe
 import { Role } from '../../../../../../core/models/permission.model';
 import { PathService } from '../../../../../../core/services/path/path.service';
 import { PermissionService } from '../../../../../../core/services/permission/permission.service';
+import { AuthService } from '../../../../../../core/services/auth/auth.service';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
 import { MENU } from '../../../../../layout/sidebar/menu';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-permission-form',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule, FeatherIconDirective],
+  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule, FeatherIconDirective, NgxPermissionsModule],
   templateUrl: './permission-form.component.html',
   styles: ``
 })
@@ -22,6 +24,8 @@ export class PermissionFormComponent implements OnInit {
   private pathService = inject(PathService);
   private permissionService = inject(PermissionService);
   private formBuild = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private ngxPermissionsService = inject(NgxPermissionsService);
 
   form!: FormGroup;
   isEditMode: boolean = false;
@@ -36,6 +40,7 @@ export class PermissionFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.ngxPermissionsService.loadPermissions(this.authService.getPermissions());
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode = true;
@@ -106,6 +111,15 @@ export class PermissionFormComponent implements OnInit {
         }));
 
         let groupedModules: any[] = [];
+        const orphansModule = {
+          id: -1,
+          uuid: 'orphans',
+          name: 'Autres / Non-catégorisés',
+          nomMachine: 'MENU_OTHERS',
+          checked: false,
+          actions: [] as any[],
+          subItems: []
+        };
 
         // 1. Isoler les parents explicites
         const parents = allItems.filter((p: any) => p.nomMachine && p.nomMachine.includes('PARENT_'));
@@ -233,11 +247,9 @@ export class PermissionFormComponent implements OnInit {
           if (bestMatch) {
             bestMatch.actions.push(act);
           } else {
-            // Orphelins: les lier au premier module par défaut ou les ignorer
-            if (groupedModules.length > 0) {
-              // Non-affiché pour le moment
-              // groupedModules[0].actions.push(act);
-            }
+            // Orphelins: les lier au module "Autres"
+            orphansModule.actions.push(act);
+            if (act.checked) orphansModule.checked = true;
           }
         });
 
@@ -273,6 +285,10 @@ export class PermissionFormComponent implements OnInit {
             });
           }
         });
+        // 5. Ajouter le module des orphelins à la fin s'il contient des actions
+        if (orphansModule.actions.length > 0) {
+          groupedModules.push(orphansModule);
+        }
 
         this.modules = groupedModules;
         console.log(this.modules);
@@ -333,7 +349,9 @@ export class PermissionFormComponent implements OnInit {
     });
 
     // Construire le payload sous forme de tableau de {uuid: "..."}
-    const payloadPaths = selectedUuids.map(uuid => ({ uuid: uuid }));
+    const payloadPaths = selectedUuids
+      .filter(uuid => uuid !== 'orphans') // Supprimer l'UUID virtuel "orphans"
+      .map(uuid => ({ uuid: uuid }));
 
     let payload: any = {
       ...this.form.getRawValue(),
@@ -367,7 +385,7 @@ export class PermissionFormComponent implements OnInit {
       timerProgressBar: true,
     });
 
-    const iconType = (type === 'error' || type === 'success' || type === 'warning' || type === 'info' || type === 'question') 
+    const iconType = (type === 'error' || type === 'success' || type === 'warning' || type === 'info' || type === 'question')
       ? type : 'info';
 
     Toast.fire({

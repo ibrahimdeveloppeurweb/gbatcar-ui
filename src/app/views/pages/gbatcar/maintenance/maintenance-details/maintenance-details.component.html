@@ -1,334 +1,373 @@
-<!-- Loading state -->
-<div *ngIf="loading" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
+<ng-container *ngxPermissionsOnly="['MAINTENANCE:SHOW']">
+    <!-- Loading state -->
+    <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
     </div>
-</div>
 
-<!-- Header -->
-<div *ngIf="!loading && record" class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
-    <div>
-        <nav class="page-breadcrumb mb-1">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a routerLink="/gbatcar/maintenance">Journal des Interventions</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ record.reference }}</li>
-            </ol>
-        </nav>
-        <h4 class="mb-1 fw-bold">Fiche d'Intervention <span class="text-primary">{{ record.reference }}</span>
-        </h4>
-        <p class="text-muted fs-12px mb-3 mb-md-0">Enregistré par <span class="fw-medium text-dark">{{ record.create ||
-                'Inconnu' }}</span> le {{ record.createdAt | date:'dd/MM/yyyy' }}</p>
+    <!-- Header -->
+    <div *ngIf="!loading && record" class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+        <div>
+            <nav class="page-breadcrumb mb-1">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a routerLink="/gbatcar/maintenance">Journal des Interventions</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ record.reference }}</li>
+                </ol>
+            </nav>
+            <h4 class="mb-1 fw-bold">Fiche d'Intervention <span class="text-primary">{{ record.reference }}</span>
+            </h4>
+            <p class="text-muted fs-12px mb-3 mb-md-0">Enregistré par <span class="fw-medium text-dark">{{ record.create
+                    ||
+                    'Inconnu' }}</span> le {{ record.createdAt | date:'dd/MM/yyyy' }}</p>
+        </div>
+        <div class="d-flex align-items-center flex-wrap text-nowrap gap-2">
+            <button [routerLink]="['/gbatcar/maintenance']" class="btn btn-secondary btn-icon-text mb-2 mb-md-0">
+                <i data-feather="arrow-left" appFeatherIcon class="btn-icon-prepend"></i> Retour
+            </button>
+            <!-- Edit button -->
+            <ng-container *ngxPermissionsOnly="'MAINTENANCE:EDIT'">
+                <button [routerLink]="['/gbatcar/maintenance/edit', record.uuid]"
+                    *ngIf="record.status !== 'Terminé' && record.status !== 'Annulé'"
+                    class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0">
+                    <i data-feather="edit-2" appFeatherIcon class="btn-icon-prepend"></i> Modifier
+                </button>
+            </ng-container>
+            <ng-container *ngxPermissionsOnly="'PENALTY:NEW'">
+                <button class="btn btn-outline-warning btn-icon-text mb-2 mb-md-0" title="Refacturer au client"
+                    (click)="refactureClient()"
+                    *ngIf="record.cost > 0 && record.status !== 'Terminé' && record.status !== 'Annulé'">
+                    <i data-feather="dollar-sign" appFeatherIcon class="btn-icon-prepend"></i> Refacturer
+                </button>
+            </ng-container>
+            <button class="btn btn-outline-secondary btn-icon-text mb-2 mb-md-0"
+                title="Imprimer l'ordre de réparation (PDF)" (click)="printWorkOrder()">
+                <i data-feather="printer" appFeatherIcon class="btn-icon-prepend"></i> Générer l'Ordre
+            </button>
+            <ng-container *ngxPermissionsOnly="'MAINTENANCE:CHANGE_STATUS'">
+                <button class="btn btn-primary btn-icon-text mb-2 mb-md-0" title="Démarrer l'intervention"
+                    *ngIf="record.status === 'Planifié'" (click)="changeStatus('En cours')">
+                    <i data-feather="play" appFeatherIcon class="btn-icon-prepend"></i> Démarrer
+                </button>
+                <button class="btn btn-success btn-icon-text mb-2 mb-md-0" title="Marquer l'intervention comme terminée"
+                    *ngIf="record.status === 'En cours' || record.status === 'Planifié'"
+                    (click)="changeStatus('Terminé')">
+                    <i data-feather="check-square" appFeatherIcon class="btn-icon-prepend"></i> Clôturer
+                </button>
+                <button class="btn btn-danger btn-icon-text mb-2 mb-md-0" title="Annuler l'intervention"
+                    *ngIf="record.status !== 'Terminé' && record.status !== 'Annulé'" (click)="changeStatus('Annulé')">
+                    <i data-feather="x-circle" appFeatherIcon class="btn-icon-prepend"></i> Annuler
+                </button>
+            </ng-container>
+        </div>
     </div>
-    <div class="d-flex align-items-center flex-wrap text-nowrap gap-2">
-        <button [routerLink]="['/gbatcar/maintenance']" class="btn btn-secondary btn-icon-text mb-2 mb-md-0">
-            <i data-feather="arrow-left" appFeatherIcon class="btn-icon-prepend"></i> Retour
-        </button>
-        <!-- Edit button -->
-        <button [routerLink]="['/gbatcar/maintenance/edit', record.uuid]"
-            *ngIf="record.status !== 'Terminé' && record.status !== 'Annulé'"
-            class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0">
-            <i data-feather="edit-2" appFeatherIcon class="btn-icon-prepend"></i> Modifier
-        </button>
-        <button class="btn btn-outline-warning btn-icon-text mb-2 mb-md-0" title="Refacturer au client"
-            (click)="refactureClient()"
-            *ngIf="record.cost > 0 && record.status !== 'Terminé' && record.status !== 'Annulé'">
-            <i data-feather="dollar-sign" appFeatherIcon class="btn-icon-prepend"></i> Refacturer
-        </button>
-        <button class="btn btn-outline-secondary btn-icon-text mb-2 mb-md-0"
-            title="Imprimer l'ordre de réparation (PDF)" (click)="printWorkOrder()">
-            <i data-feather="printer" appFeatherIcon class="btn-icon-prepend"></i> Générer l'Ordre
-        </button>
-        <button class="btn btn-primary btn-icon-text mb-2 mb-md-0" title="Démarrer l'intervention"
-            *ngIf="record.status === 'Planifié'" (click)="changeStatus('En cours')">
-            <i data-feather="play" appFeatherIcon class="btn-icon-prepend"></i> Démarrer
-        </button>
-        <button class="btn btn-success btn-icon-text mb-2 mb-md-0" title="Marquer l'intervention comme terminée"
-            *ngIf="record.status === 'En cours' || record.status === 'Planifié'" (click)="changeStatus('Terminé')">
-            <i data-feather="check-square" appFeatherIcon class="btn-icon-prepend"></i> Clôturer
-        </button>
-        <button class="btn btn-danger btn-icon-text mb-2 mb-md-0" title="Annuler l'intervention"
-            *ngIf="record.status !== 'Terminé' && record.status !== 'Annulé'" (click)="changeStatus('Annulé')">
-            <i data-feather="x-circle" appFeatherIcon class="btn-icon-prepend"></i> Annuler
-        </button>
-    </div>
-</div>
 
-<!-- Content -->
-<div *ngIf="!loading && record" class="row">
-    <div class="col-lg-8">
+    <!-- Content -->
+    <div *ngIf="!loading && record" class="row">
+        <div class="col-lg-8">
 
-        <!-- Card 1: Informations générales -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div
-                class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
-                    <i data-feather="info" appFeatherIcon class="icon-sm me-2 text-primary"></i>Informations Générales
-                </h6>
-                <span class="badge fs-13px" [ngClass]="{
+            <!-- Card 1: Informations générales -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div
+                    class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
+                        <i data-feather="info" appFeatherIcon class="icon-sm me-2 text-primary"></i>Informations
+                        Générales
+                    </h6>
+                    <span class="badge fs-13px" [ngClass]="{
                     'bg-info': record.status === 'Planifié',
                     'bg-warning text-dark': record.status === 'En cours',
                     'bg-success': record.status === 'Terminé',
                     'bg-danger': record.status === 'Annulé'
                 }">{{ record.status }}</span>
-            </div>
-            <div class="card-body">
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Véhicule concerné</label>
-                        <p class="mb-0 fw-medium" *ngIf="record.vehicle">
-                            <a [routerLink]="['/gbatcar/vehicles/details', record.vehicle.uuid]"
-                                class="text-primary fw-bold">
-                                {{ record.vehicle.marque }} {{ record.vehicle.modele }}
-                            </a>
-                            <small class="text-muted ms-1">({{ record.vehicle.immatriculation }})</small>
-                        </p>
-                        <span *ngIf="!record.vehicle" class="text-muted">—</span>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Date
-                            d'Intervention</label>
-                        <p class="mb-0 fw-medium">
-                            {{ record.dateIntervention ? (record.dateIntervention | date:'dd MMMM yyyy':'':'fr-FR') :
-                            '—' }}
-                        </p>
-                    </div>
-                    <div class="col-md-6" *ngIf="record.startDate">
-                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Date de Démarrage</label>
-                        <p class="mb-0 fw-medium">
-                            {{ record.startDate | date:'dd MMMM yyyy':'':'fr-FR' }}
-                        </p>
-                    </div>
-                    <div class="col-md-6" *ngIf="record.endDate">
-                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Date de Clôture</label>
-                        <p class="mb-0 fw-medium text-success">
-                            {{ record.endDate | date:'dd MMMM yyyy':'':'fr-FR' }}
-                        </p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Motif / Type
-                            d'intervention</label>
-                        <div class="bg-light p-3 rounded mt-1">
-                            <p class="mb-0 text-dark fw-medium">{{ record.type || '—' }}</p>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Véhicule
+                                concerné</label>
+                            <p class="mb-0 fw-medium" *ngIf="record.vehicle">
+                                <a [routerLink]="['/gbatcar/vehicles/details', record.vehicle.uuid]"
+                                    class="text-primary fw-bold">
+                                    {{ record.vehicle.marque }} {{ record.vehicle.modele }}
+                                </a>
+                                <small class="text-muted ms-1">({{ record.vehicle.immatriculation }})</small>
+                            </p>
+                            <span *ngIf="!record.vehicle" class="text-muted">—</span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Date
+                                d'Intervention</label>
+                            <p class="mb-0 fw-medium">
+                                {{ record.dateIntervention ? (record.dateIntervention | date:'dd MMMM yyyy':'':'fr-FR')
+                                :
+                                '—' }}
+                            </p>
+                        </div>
+                        <div class="col-md-6" *ngIf="record.startDate">
+                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Date de
+                                Démarrage</label>
+                            <p class="mb-0 fw-medium">
+                                {{ record.startDate | date:'dd MMMM yyyy':'':'fr-FR' }}
+                            </p>
+                        </div>
+                        <div class="col-md-6" *ngIf="record.endDate">
+                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Date de
+                                Clôture</label>
+                            <p class="mb-0 fw-medium text-success">
+                                {{ record.endDate | date:'dd MMMM yyyy':'':'fr-FR' }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Motif / Type
+                                d'intervention</label>
+                            <div class="bg-light p-3 rounded mt-1">
+                                <p class="mb-0 text-dark fw-medium">{{ record.type || '—' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Kilométrage
+                                (km)</label>
+                            <p class="mb-0 fw-medium">{{ record.kilometrage ? (record.kilometrage | number) + ' km' :
+                                '—' }}
+                            </p>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Kilométrage (km)</label>
-                        <p class="mb-0 fw-medium">{{ record.kilometrage ? (record.kilometrage | number) + ' km' : '—' }}
-                        </p>
-                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Card 2: Prestataire & Coût -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent border-bottom py-3">
-                <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
-                    <i data-feather="tool" appFeatherIcon class="icon-sm me-2 text-warning"></i>Prestataire & Coût
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Garagiste /
-                            Prestataire</label>
-                        <div class="d-flex align-items-center mt-1">
-                            <i data-feather="tool" appFeatherIcon class="icon-md text-secondary me-2"></i>
-                            <span class="fw-medium">{{ record.provider || '—' }}</span>
+            <!-- Card 2: Prestataire & Coût -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
+                        <i data-feather="tool" appFeatherIcon class="icon-sm me-2 text-warning"></i>Prestataire & Coût
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Garagiste /
+                                Prestataire</label>
+                            <div class="d-flex align-items-center mt-1">
+                                <i data-feather="tool" appFeatherIcon class="icon-md text-secondary me-2"></i>
+                                <span class="fw-medium">{{ record.provider || '—' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Technicien
+                                responsable</label>
+                            <p class="mb-0 fw-medium">{{ record.technician || '—' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Coût Total</label>
+                            <h4 class="text-dark fw-bold mb-0">{{ record.cost | number }} <span
+                                    class="tx-14 text-muted fw-normal">FCFA</span></h4>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Durée en
+                                atelier</label>
+                            <p class="mb-0 fw-medium">{{ record.daysInShop ? record.daysInShop + ' jour(s)' : '—' }}</p>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Technicien
-                            responsable</label>
-                        <p class="mb-0 fw-medium">{{ record.technician || '—' }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Coût Total</label>
-                        <h4 class="text-dark fw-bold mb-0">{{ record.cost | number }} <span
-                                class="tx-14 text-muted fw-normal">FCFA</span></h4>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Durée en atelier</label>
-                        <p class="mb-0 fw-medium">{{ record.daysInShop ? record.daysInShop + ' jour(s)' : '—' }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card 3: Notes & Observations -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent border-bottom py-3">
-                <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
-                    <i data-feather="file-text" appFeatherIcon class="icon-sm me-2 text-secondary"></i>Description /
-                    Travaux effectués
-                </h6>
-            </div>
-            <div class="card-body">
-                <p class="mb-2 text-secondary border p-3 rounded" style="white-space: pre-wrap;">
-                    {{ record.description || record.observation || 'Aucune description renseignée.' }}
-                </p>
-                <div *ngIf="record.observation && record.description" class="mt-3">
-                    <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Observations
-                        complémentaires</label>
-                    <p class="mb-0 text-secondary border p-3 rounded" style="white-space: pre-wrap;">{{
-                        record.observation }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card 4: Informations de Facturation -->
-        <div class="card border-0 shadow-sm mb-4 border-start border-info border-4 shadow-sm"
-            style="background: rgba(102, 209, 209, 0.05);">
-            <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
-                <div class="d-flex align-items-center">
-                    <div class="bg-white shadow-sm rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
-                        style="width: 50px; height: 50px;">
-                        <i data-feather="dollar-sign" appFeatherIcon class="text-info icon-md"></i>
-                    </div>
-                    <div>
-                        <h6 class="mb-1 fw-bold text-dark tx-14">Informations de Facturation</h6>
-                        <p class="mb-0 text-muted tx-12">
-                            Cet incident a été pris en charge par :
-                            <span class="badge bg-info bg-opacity-75 ms-1 text-white py-1 px-2"
-                                style="font-size: 10px;">🏢 LA SOCIÉTÉ</span>
-                        </p>
-                    </div>
-                </div>
-                <div class="d-flex gap-2">
-                    <a *ngIf="record.vehicle?.uuid" [routerLink]="['/gbatcar/vehicles/details', record.vehicle.uuid]"
-                        class="btn btn-outline-secondary btn-sm px-3 tx-12">
-                        Voir l'Historique
-                    </a>
                 </div>
             </div>
 
-            <!-- Associated Payments (Direct display) -->
-            <div class="card-footer bg-transparent border-top p-0" *ngIf="payments.length > 0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0 tx-11">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="py-2 border-0 ps-3">Date</th>
-                                <th class="py-2 border-0">Référence & Note</th>
-                                <th class="py-2 border-0">Méthode</th>
-                                <th class="py-2 border-0">Montant</th>
-                                <th class="py-2 border-0 text-end pe-3">Statut</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let p of payments">
-                                <td class="py-2 ps-3">{{ p.date | date:'dd/MM/yyyy' }}</td>
-                                <td class="py-2">
-                                    <span class="fw-bold text-dark">{{ p.reference }}</span><br>
-                                    <small class="text-muted fst-italic">{{ p.observation }}</small>
-                                </td>
-                                <td class="py-2">{{ p.method }}</td>
-                                <td class="py-2 fw-bold text-primary">{{ p.amount | number }} F</td>
-                                <td class="py-2 text-end pe-3">
-                                    <span class="badge py-1" [ngClass]="{
+            <!-- Card 3: Notes & Observations -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
+                        <i data-feather="file-text" appFeatherIcon class="icon-sm me-2 text-secondary"></i>Description /
+                        Travaux effectués
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2 text-secondary border p-3 rounded" style="white-space: pre-wrap;">
+                        {{ record.description || record.observation || 'Aucune description renseignée.' }}
+                    </p>
+                    <div *ngIf="record.observation && record.description" class="mt-3">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Observations
+                            complémentaires</label>
+                        <p class="mb-0 text-secondary border p-3 rounded" style="white-space: pre-wrap;">{{
+                            record.observation }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: Informations de Facturation -->
+            <div class="card border-0 shadow-sm mb-4 border-start border-info border-4 shadow-sm"
+                style="background: rgba(102, 209, 209, 0.05);">
+                <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white shadow-sm rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 50px; height: 50px;">
+                            <i data-feather="dollar-sign" appFeatherIcon class="text-info icon-md"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1 fw-bold text-dark tx-14">Informations de Facturation</h6>
+                            <p class="mb-0 text-muted tx-12">
+                                Cet incident a été pris en charge par :
+                                <span class="badge bg-info bg-opacity-75 ms-1 text-white py-1 px-2"
+                                    style="font-size: 10px;">🏢 LA SOCIÉTÉ</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a *ngIf="record.vehicle?.uuid"
+                            [routerLink]="['/gbatcar/vehicles/details', record.vehicle.uuid]"
+                            class="btn btn-outline-secondary btn-sm px-3 tx-12">
+                            Voir l'Historique
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Associated Payments (Direct display) -->
+                <div class="card-footer bg-transparent border-top p-0" *ngIf="payments.length > 0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 tx-11">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="py-2 border-0 ps-3">Date</th>
+                                    <th class="py-2 border-0">Référence & Note</th>
+                                    <th class="py-2 border-0">Méthode</th>
+                                    <th class="py-2 border-0">Montant</th>
+                                    <th class="py-2 border-0 text-end pe-3">Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let p of payments">
+                                    <td class="py-2 ps-3">{{ p.date | date:'dd/MM/yyyy' }}</td>
+                                    <td class="py-2">
+                                        <span class="fw-bold text-dark">{{ p.reference }}</span><br>
+                                        <small class="text-muted fst-italic">{{ p.observation }}</small>
+                                    </td>
+                                    <td class="py-2">{{ p.method }}</td>
+                                    <td class="py-2 fw-bold text-primary">{{ p.amount | number }} F</td>
+                                    <td class="py-2 text-end pe-3">
+                                        <span class="badge py-1" [ngClass]="{
                                         'bg-success': p.status === 'VALIDÉ' || p.status === 'Validé',
                                         'bg-warning text-dark': p.status === 'En attente' || p.status === 'PENDING',
                                         'bg-danger': p.status === 'REJETE' || p.status === 'REJETÉ'
                                     }">{{ p.status }}</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
+
         </div>
 
-    </div>
+        <div class="col-lg-4">
 
-    <div class="col-lg-4">
-
-        <!-- Card: Prochaine Maintenance -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent border-bottom py-3">
-                <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
-                    <i data-feather="calendar" appFeatherIcon class="icon-sm me-2 text-success"></i>Prochaine
-                    Maintenance
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Date prévisionnelle</label>
-                    <p class="mb-0 fw-medium">
-                        {{ record.nextMaintenanceDate ? (record.nextMaintenanceDate | date:'dd/MM/yyyy') : '—' }}
-                    </p>
+            <!-- Card: Prochaine Maintenance -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
+                        <i data-feather="calendar" appFeatherIcon class="icon-sm me-2 text-success"></i>Prochaine
+                        Maintenance
+                    </h6>
                 </div>
-                <div>
-                    <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Kilométrage cible (km)</label>
-                    <p class="mb-0 fw-medium">
-                        {{ record.nextMaintenanceMileage ? (record.nextMaintenanceMileage | number) + ' km' : '—' }}
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card: Documents joints -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div
-                class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
-                    <i data-feather="paperclip" appFeatherIcon class="icon-sm me-2"></i>Documents joints
-                    <span class="badge bg-secondary ms-1">{{ docs.length }}</span>
-                </h6>
-            </div>
-            <div class="card-body">
-
-                <!-- Loading overlay during upload -->
-                <div *ngIf="uploading" class="text-center py-3">
-                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                    <span class="text-muted tx-12">Envoi en cours...</span>
-                </div>
-
-                <!-- Empty state -->
-                <p *ngIf="!uploading && docs.length === 0" class="text-muted tx-12 mb-3">
-                    Aucun document joint. Cliquez sur "Ajouter" pour uploader des fichiers.
-                </p>
-
-                <!-- File list -->
-                <div *ngFor="let doc of docs" class="bg-light p-2 rounded d-flex align-items-center border mb-2">
-                    <i [attr.data-feather]="fileIcon(doc.mimeType)" appFeatherIcon
-                        class="text-secondary me-2 flex-shrink-0 icon-sm"></i>
-                    <div class="flex-grow-1 overflow-hidden">
-                        <p class="mb-0 tx-13 fw-medium text-truncate" [title]="doc.originalName">{{ doc.originalName }}
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Date
+                            prévisionnelle</label>
+                        <p class="mb-0 fw-medium">
+                            {{ record.nextMaintenanceDate ? (record.nextMaintenanceDate | date:'dd/MM/yyyy') : '—' }}
                         </p>
-                        <span class="tx-11 text-muted">{{ formatSize(doc.size) }}</span>
                     </div>
-                    <div class="d-flex align-items-center ms-2 gap-1">
-                        <!-- Download (Blob based for auth) -->
-                        <button type="button" (click)="downloadDoc(doc)" class="btn btn-xs btn-outline-primary"
-                            title="Voir le document">
-                            <i data-feather="eye" appFeatherIcon class="icon-xs"></i>
-                        </button>
-                        <!-- Delete -->
-                        <button class="btn btn-xs btn-outline-danger" title="Supprimer" (click)="deleteDoc(doc)"
-                            *ngIf="record.status !== 'Terminé' && record.status !== 'Annulé'">
-                            <i data-feather="trash-2" appFeatherIcon class="icon-xs"></i>
-                        </button>
+                    <div>
+                        <label class="text-muted tx-11 fw-bolder d-block text-uppercase mb-1">Kilométrage cible
+                            (km)</label>
+                        <p class="mb-0 fw-medium">
+                            {{ record.nextMaintenanceMileage ? (record.nextMaintenanceMileage | number) + ' km' : '—' }}
+                        </p>
                     </div>
                 </div>
+            </div>
 
-                <!-- Upload button (hidden input) -->
-                <label *ngIf="record.status !== 'Terminé' && record.status !== 'Annulé'"
-                    class="btn btn-sm btn-light w-100 mt-2 cursor-pointer" style="cursor:pointer">
-                    <input type="file" hidden multiple (change)="onFilesSelected($event)"
-                        accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg">
-                    <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Ajouter un fichier
-                </label>
+            <!-- Card: Documents joints -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div
+                    class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-uppercase fs-12px text-muted">
+                        <i data-feather="paperclip" appFeatherIcon class="icon-sm me-2"></i>Documents joints
+                        <span class="badge bg-secondary ms-1">{{ docs.length }}</span>
+                    </h6>
+                </div>
+                <div class="card-body">
 
+                    <!-- Loading overlay during upload -->
+                    <div *ngIf="uploading" class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        <span class="text-muted tx-12">Envoi en cours...</span>
+                    </div>
+
+                    <!-- Empty state -->
+                    <p *ngIf="!uploading && docs.length === 0" class="text-muted tx-12 mb-3">
+                        Aucun document joint. Cliquez sur "Ajouter" pour uploader des fichiers.
+                    </p>
+
+                    <!-- File list -->
+                    <div *ngFor="let doc of docs" class="bg-light p-2 rounded d-flex align-items-center border mb-2">
+                        <i [attr.data-feather]="fileIcon(doc.mimeType)" appFeatherIcon
+                            class="text-secondary me-2 flex-shrink-0 icon-sm"></i>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <p class="mb-0 tx-13 fw-medium text-truncate" [title]="doc.originalName">{{ doc.originalName
+                                }}
+                            </p>
+                            <span class="tx-11 text-muted">{{ formatSize(doc.size) }}</span>
+                        </div>
+                        <div class="d-flex align-items-center ms-2 gap-1">
+                            <!-- Download (Blob based for auth) -->
+                            <ng-container *ngxPermissionsOnly="'MAINTENANCE:DOCUMENT'">
+                                <button type="button" (click)="downloadDoc(doc)" class="btn btn-xs btn-outline-primary"
+                                    title="Voir le document">
+                                    <i data-feather="eye" appFeatherIcon class="icon-xs"></i>
+                                </button>
+                                <!-- Delete -->
+                                <button class="btn btn-xs btn-outline-danger" title="Supprimer" (click)="deleteDoc(doc)"
+                                    *ngIf="record.status !== 'Terminé' && record.status !== 'Annulé'">
+                                    <i data-feather="trash-2" appFeatherIcon class="icon-xs"></i>
+                                </button>
+                            </ng-container>
+                        </div>
+                    </div>
+
+                    <!-- Upload button (hidden input) -->
+                    <ng-container *ngxPermissionsOnly="'MAINTENANCE:DOCUMENT'">
+                        <label *ngIf="record.status !== 'Terminé' && record.status !== 'Annulé'"
+                            class="btn btn-sm btn-light w-100 mt-2 cursor-pointer" style="cursor:pointer">
+                            <input type="file" hidden multiple (change)="onFilesSelected($event)"
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg">
+                            <i data-feather="plus" appFeatherIcon class="icon-sm me-1"></i> Ajouter un fichier
+                        </label>
+                    </ng-container>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</ng-container>
+
+<ng-container *ngxPermissionsExcept="['MAINTENANCE:SHOW']">
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+        <div class="card shadow-sm border-0 bg-white" style="max-width: 500px; border-radius: 12px;">
+            <div class="card-body text-center p-5">
+                <div class="rounded-circle bg-danger-transparent d-inline-flex p-3 mb-4">
+                    <i data-feather="lock" appFeatherIcon class="text-danger" style="width: 48px; height: 48px;"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Accès Refusé</h4>
+                <p class="text-secondary mb-4">
+                    Vous ne disposez pas des permissions nécessaires pour afficher les détails de cette intervention.
+                    <br>Veuillez contacter votre administrateur si vous pensez qu'il s'agit d'une erreur.
+                </p>
+                <button class="btn btn-danger px-4" routerLink="/gbatcar/maintenance">
+                    Retour au journal des interventions
+                </button>
             </div>
         </div>
-
     </div>
-</div>
-
-<!-- Not found -->
-<div *ngIf="!loading && !record" class="row">
-    <div class="col-md-12 text-center py-5">
-        <h4 class="text-muted">Intervention introuvable.</h4>
-        <button [routerLink]="['/gbatcar/maintenance']" class="btn btn-primary mt-3">Retour au journal</button>
-    </div>
-</div>
+</ng-container>
