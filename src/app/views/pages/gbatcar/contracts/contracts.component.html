@@ -249,9 +249,18 @@
                                             }}</span>
                                     </td>
                                     <td>
-                                        <span class="d-block fs-13px fw-bold">{{ contract.vehicle?.marque }} {{
-                                            contract.vehicle?.modele }}</span>
-                                        <span class="text-muted fs-11px">{{ contract.vehicle?.immatriculation }}</span>
+                                        <div class="text-truncate px-0" style="max-width: 180px;"
+                                            [title]="contract.vehicleSummary || ''">
+                                            <span class="d-block fs-13px fw-bold">
+                                                {{ contract.vehicleSummary || (contract.vehicle ?
+                                                (contract.vehicle.marque + ' ' + contract.vehicle.modele) : 'Aucun
+                                                véhicule') }}
+                                            </span>
+                                            <span class="text-muted fs-11px"
+                                                *ngIf="contract.vehicle?.immatriculation && !contract.vehicleSummary">
+                                                {{ contract.vehicle?.immatriculation }}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="fs-13px fw-bold text-dark">{{ contract.endDate | date:'dd/MM/yyyy'
@@ -320,8 +329,7 @@
                                                 </button>
                                             </ng-container>
                                             <ng-container *ngxPermissionsOnly="'CONTRACT:EDIT'">
-                                                <button [routerLink]="['edit', contract.uuid]"
-                                                    *ngIf="contract.status !== 'VALIDÉ'"
+                                                <button [routerLink]="['edit', contract.uuid]" *ngIf="canEdit(contract)"
                                                     class="btn btn-xs btn-icon btn-outline-secondary border-1 shadow-none"
                                                     title="Modifier">
                                                     <i data-feather="edit-2" appFeatherIcon class="icon-sm"></i>
@@ -330,8 +338,8 @@
                                             <ng-container *ngxPermissionsOnly="'CONTRACT:DELETE'">
                                                 <button
                                                     class="btn btn-xs btn-icon btn-outline-danger border-1 shadow-none"
-                                                    *ngIf="contract.status !== 'VALIDÉ'"
-                                                    (click)="deleteContract(contract.uuid!)" title="Supprimer">
+                                                    *ngIf="canDelete(contract)" (click)="deleteContract(contract.uuid!)"
+                                                    title="Supprimer">
                                                     <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
                                                 </button>
                                             </ng-container>

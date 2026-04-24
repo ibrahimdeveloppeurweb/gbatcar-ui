@@ -9,6 +9,7 @@ export * from './payment/payment.service';
 export * from './penalty/penalty.service';
 export * from './permission/permission.service';
 export * from './setting/setting.service';
+export * from './subscription/subscription.service';
 export * from './user/user.service';
 export * from './vehicle/vehicle.service';
 export * from './dashboard/dashboard.service';

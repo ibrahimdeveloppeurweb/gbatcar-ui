@@ -155,4 +155,9 @@ export class ClientsComponent implements OnInit {
       }
     });
   }
+
+  hasValidatedContract(client: Client): boolean {
+    const validatedStatuses = ['VALIDÉ', 'VALIDATED', 'ACTIVE', 'EN COURS', 'EN_COURS', 'TERMINÉ', 'SOLDÉ', 'PROLONGÉ'];
+    return client.contracts?.some(c => validatedStatuses.includes(c.status?.toUpperCase() || '')) || false;
+  }
 }

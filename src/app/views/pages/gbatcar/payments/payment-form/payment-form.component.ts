@@ -42,6 +42,7 @@ export class PaymentFormComponent implements OnInit {
 
   nextInstallment: any = null;
   remainingBalance: number = 0;
+  isPeriodManuallyEdited: boolean = false;
 
   // Simulation data
   fullSchedules: any[] = []; // Store raw schedule to simulate on
@@ -66,12 +67,13 @@ export class PaymentFormComponent implements OnInit {
       method: ['Mobile Money', Validators.required],
       reference: [''],
       type: ['Mensualité', Validators.required],
-      period: [new Date().toISOString().substring(0, 7), Validators.required],
+      period: ['', Validators.required],
       notes: ['']
     });
 
     // Watch contract selection to set default amount (redevance) and frequency
     this.paymentForm.get('contractId')?.valueChanges.subscribe(uuid => {
+      this.isPeriodManuallyEdited = false;
       if (uuid && !this.isEditMode) { // Only auto-set if creating a new one
         this.applyContractDefaults(uuid);
       }
@@ -118,14 +120,13 @@ export class PaymentFormComponent implements OnInit {
     const contract = this.contracts.find(c => c.uuid === uuid);
     if (contract) {
       this.selectedFrequency = contract.paymentFrequency || 'Monthly';
+      // Use original logic for balance visibility
       this.remainingBalance = (contract.totalAmount || 0) - (contract.paidAmount || 0);
 
-      // Only set default amount if creating a NEW payment
       if (!this.isEditMode && contract.dailyRate) {
         this.paymentForm.get('amount')?.setValue(contract.dailyRate);
       }
 
-      // Fetch schedule to find next due period
       this.loadingSchedule = true;
       this.scheduleService.getList(uuid).subscribe({
         next: (schedules: any[]) => {
@@ -133,11 +134,12 @@ export class PaymentFormComponent implements OnInit {
           this.fullSchedules = schedules || [];
           this.noScheduleError = !schedules || schedules.length === 0;
 
-          // Compute virtual pending schedules for Simulation AND Summary
+          // Date format comparison fix
           const originalDateStr = this.originalPaymentDate ? new Date(this.originalPaymentDate).toISOString().substring(0, 10) : null;
+
           const pendingSchedulesForSimulation = (schedules || []).map(s => {
             const schedule = { ...s };
-            if (this.isEditMode && schedule.status === 'Payé' && schedule.paidAt) {
+            if (this.isEditMode && schedule.status === 'Payé' && schedule.paidAt && originalDateStr) {
               const paidAtDate = new Date(schedule.paidAt).toISOString().substring(0, 10);
               if (paidAtDate === originalDateStr) {
                 schedule.status = 'À venir';
@@ -147,12 +149,12 @@ export class PaymentFormComponent implements OnInit {
             return schedule;
           });
 
+          // Balance update
           const totalScheduled = (schedules || []).reduce((acc, s) => acc + (s.amount || 0), 0);
           const totalPaidOnSchedules = (schedules || []).reduce((acc, s) => acc + (s.paidAmount || 0), 0);
 
           if (this.isEditMode) {
             const currentAmount = this.paymentForm.get('amount')?.value || 0;
-            // Add back the current payment to show what's left to pay if THIS payment wasn't there
             this.remainingBalance = Math.max(0, totalScheduled - totalPaidOnSchedules + currentAmount);
           } else {
             this.remainingBalance = Math.max(0, totalScheduled - totalPaidOnSchedules);
@@ -160,26 +162,24 @@ export class PaymentFormComponent implements OnInit {
 
           if (this.noScheduleError) {
             this.nextInstallment = null;
-            this.setPeriodFromDate(new Date());
             return;
           }
 
           this.nextInstallment = (schedules || []).find(s => s.status === 'À venir' || s.status === 'En retard' || (s.amount - (s.paidAmount || 0)) > 0.01);
-
-          // In EDIT MODE, if everything is 'À jour', but we are editing the payment that MADE it à jour,
-          // we want to show that payment's impact. Use the first virtually re-opened schedule.
           if (this.isEditMode && !this.nextInstallment) {
             this.nextInstallment = pendingSchedulesForSimulation.find(s => true);
           }
 
-          if (this.nextInstallment && this.nextInstallment.expectedDate) {
-            const date = new Date(this.nextInstallment.expectedDate);
-            this.setPeriodFromDate(date);
-          } else {
-            this.setPeriodFromDate(new Date());
+          // ONLY set period if NEW or if field is empty (to avoid overwriting DB value)
+          const currentPeriod = this.paymentForm.get('period')?.value;
+          if (!this.isEditMode || !currentPeriod) {
+            if (this.nextInstallment && this.nextInstallment.expectedDate) {
+              this.setPeriodFromDate(new Date(this.nextInstallment.expectedDate));
+            } else {
+              this.setPeriodFromDate(new Date());
+            }
           }
 
-          // Set default type based on frequency if creating new
           if (!this.isEditMode) {
             const freq = contract.paymentFrequency;
             let defaultType = 'Mensualité';
@@ -188,14 +188,9 @@ export class PaymentFormComponent implements OnInit {
             this.paymentForm.get('type')?.setValue(defaultType);
           }
 
-          // Trigger initial simulation
           this.calculateSimulation();
         },
-        error: () => {
-          this.loadingSchedule = false;
-          this.noScheduleError = false;
-          this.setPeriodFromDate(new Date());
-        }
+        error: () => this.loadingSchedule = false
       });
     }
   }
@@ -211,17 +206,11 @@ export class PaymentFormComponent implements OnInit {
     }
 
     let remaining = this.paymentForm.get('amount')?.value || 0;
-
-    const paymentDate = this.paymentForm.get('date')?.value;
     const originalDateStr = this.originalPaymentDate ? new Date(this.originalPaymentDate).toISOString().substring(0, 10) : null;
-    const currentFormDateStr = paymentDate ? new Date(paymentDate).toISOString().substring(0, 10) : null;
 
-    // Process installments
     const pendingSchedules = this.fullSchedules.map(s => {
       const schedule = { ...s };
-      // If we are in edit mode, we "virtually" reset schedules that were paid at the same time as this payment
-      // so the simulation can show how the current amount is distributed over them.
-      if (this.isEditMode && schedule.status === 'Payé' && schedule.paidAt) {
+      if (this.isEditMode && schedule.status === 'Payé' && schedule.paidAt && originalDateStr) {
         const paidAtDate = new Date(schedule.paidAt).toISOString().substring(0, 10);
         if (paidAtDate === originalDateStr) {
           schedule.status = 'À venir';
@@ -233,67 +222,54 @@ export class PaymentFormComponent implements OnInit {
       .sort((a, b) => new Date(a.expectedDate).getTime() - new Date(b.expectedDate).getTime());
 
     const allocations: any[] = [];
-
     for (const schedule of pendingSchedules) {
       if (remaining <= 0) break;
-
-      const due = schedule.amount;
-      const alreadyPaid = schedule.paidAmount || 0;
-      const stillOwed = due - alreadyPaid;
-
-      let coveredAmount = 0;
-      let status = '';
-      let isPartial = false;
-
+      const stillOwed = (schedule.amount - (schedule.paidAmount || 0));
+      let covered = 0;
       if (remaining >= stillOwed) {
-        coveredAmount = stillOwed;
+        covered = stillOwed;
         remaining -= stillOwed;
-        status = 'Complet';
-        isPartial = false;
       } else {
-        coveredAmount = remaining;
+        covered = remaining;
         remaining = 0;
-        status = 'Partiel';
-        isPartial = true;
       }
-
       allocations.push({
         date: schedule.expectedDate,
-        due: due,
-        wasPaid: alreadyPaid,
-        willPay: coveredAmount,
-        status: status,
-        isPartial: isPartial
+        due: schedule.amount,
+        wasPaid: schedule.paidAmount || 0,
+        willPay: covered,
+        status: remaining >= 0 && covered >= stillOwed ? 'Complet' : 'Partiel'
       });
     }
 
     this.simulatedAllocations = allocations;
     this.simulatedExcess = remaining;
 
-    // Update the 'period' field automatically based on covered periods
-    if (allocations.length > 0) {
-      const periods = allocations.map(a => this.formatPeriod(new Date(a.date)));
-      const uniquePeriods = Array.from(new Set(periods));
-
-      let periodValue = '';
-      if (uniquePeriods.length > 4) {
-        periodValue = `${uniquePeriods[0]} -> ${uniquePeriods[uniquePeriods.length - 1]}`;
-      } else {
-        periodValue = uniquePeriods.join(', ');
+    // AUTO-UPDATE period field
+    // Only if: NOT manually edited AND (NEW payment OR currently empty)
+    const currentPeriod = this.paymentForm.get('period')?.value;
+    if (allocations.length > 0 && !this.isPeriodManuallyEdited) {
+      // In Edit mode, we ONLY overwrite if the user clears the field or if it was empty
+      if (!this.isEditMode || !currentPeriod || currentPeriod.includes('Auto-calculé')) {
+        const periods = allocations.map(a => this.formatPeriod(new Date(a.date)));
+        const uniquePeriods = Array.from(new Set(periods));
+        let periodValue = uniquePeriods.length > 4 ? `${uniquePeriods[0]} -> ${uniquePeriods[uniquePeriods.length - 1]}` : uniquePeriods.join(', ');
+        this.paymentForm.get('period')?.setValue(periodValue, { emitEvent: false });
       }
-      this.paymentForm.get('period')?.setValue(periodValue);
     }
+  }
+
+  onPeriodManualChange() {
+    this.isPeriodManuallyEdited = true;
   }
 
   private formatPeriod(date: Date): string {
     if (this.selectedFrequency === 'Daily') {
       return date.toLocaleDateString('fr-FR');
     } else if (this.selectedFrequency === 'Weekly') {
-      // Calculate week number
       const oneJan = new Date(date.getFullYear(), 0, 1);
       const numberOfDays = Math.floor((date.getTime() - oneJan.getTime()) / (24 * 60 * 60 * 1000));
-      const weekNumber = Math.ceil((date.getDay() + 1 + numberOfDays) / 7);
-      return `Sem ${weekNumber}`;
+      return `Sem ${Math.ceil((date.getDay() + 1 + numberOfDays) / 7)}`;
     } else {
       return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
     }
@@ -301,15 +277,14 @@ export class PaymentFormComponent implements OnInit {
 
   private setPeriodFromDate(date: Date) {
     if (this.selectedFrequency === 'Daily') {
-      this.paymentForm.get('period')?.setValue(date.toISOString().substring(0, 10));
+      this.paymentForm.get('period')?.setValue(date.toISOString().substring(0, 10), { emitEvent: false });
     } else if (this.selectedFrequency === 'Weekly') {
       const oneJan = new Date(date.getFullYear(), 0, 1);
       const numberOfDays = Math.floor((date.getTime() - oneJan.getTime()) / (24 * 60 * 60 * 1000));
       const weekNumber = Math.ceil((date.getDay() + 1 + numberOfDays) / 7);
-      const weekStr = `${date.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
-      this.paymentForm.get('period')?.setValue(weekStr);
+      this.paymentForm.get('period')?.setValue(`${date.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`, { emitEvent: false });
     } else {
-      this.paymentForm.get('period')?.setValue(date.toISOString().substring(0, 7));
+      this.paymentForm.get('period')?.setValue(date.toISOString().substring(0, 7), { emitEvent: false });
     }
   }
 
@@ -318,7 +293,6 @@ export class PaymentFormComponent implements OnInit {
       next: (res: any) => {
         const payment = res.data || res;
         this.originalPaymentDate = payment.date;
-        // IMPORTANT: Set frequency BEFORE patching values so the correct input field is shown
         if (payment.contract) {
           this.selectedFrequency = payment.contract.paymentFrequency || 'Monthly';
         }
@@ -330,11 +304,15 @@ export class PaymentFormComponent implements OnInit {
           method: payment.method,
           reference: payment.reference,
           type: payment.type,
-          period: payment.period,
+          period: payment.period, // Load FROM DB
           notes: payment.observation
         });
 
-        // RE-TRIGGER schedule loading and simulation for edit mode
+        // CRITICAL: If a period is loaded from DB, mark as manually edited to prevent simulation overwrite
+        if (payment.period) {
+          this.isPeriodManuallyEdited = true;
+        }
+
         if (payment.contract?.uuid) {
           this.applyContractDefaults(payment.contract.uuid);
         }
@@ -349,8 +327,6 @@ export class PaymentFormComponent implements OnInit {
       next: (res: any) => {
         this.contracts = res.data || res;
         this.loadingContracts = false;
-
-        // If a contract was already selected (e.g. via query params), apply its defaults now that the list is loaded
         const currentId = this.paymentForm.get('contractId')?.value;
         if (currentId && !this.isEditMode) {
           this.applyContractDefaults(currentId);
@@ -435,9 +411,7 @@ export class PaymentFormComponent implements OnInit {
       timer: 3000,
       timerProgressBar: true,
     });
-
     const iconType = (['error', 'success', 'warning', 'info', 'question'].includes(type)) ? type as any : 'info';
-
     Toast.fire({
       icon: iconType,
       title: title ? `${title} - ${msg}` : msg

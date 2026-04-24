@@ -88,10 +88,9 @@
                                     Période
                                 </label>
 
-                                <!-- Monthly/Weekly/Daily (Now Read-only and automated) -->
-                                <input type="text" class="form-control bg-light" formControlName="period"
-                                    [readonly]="['Mensualité', 'Hebdomadaire', 'Journalier', 'Recette Journalière', 'Recette Hebdomadaire'].includes(paymentForm.get('type')?.value)"
-                                    placeholder="Auto-calculé...">
+                                <!-- Manual Edition allowed now -->
+                                <input type="text" class="form-control" formControlName="period"
+                                    (input)="onPeriodManualChange()" placeholder="Ex: Janvier 2027...">
 
                                 <div class="form-text tx-11 text-muted mt-1">
                                     <i data-feather="info" appFeatherIcon class="icon-xs me-1"></i>

@@ -1,0 +1,506 @@
+<div class="landing-container" [formGroup]="form">
+    <!-- Navbar -->
+    <nav class="main-navbar">
+        <div class="navbar-brand">
+            <img src="images/logo1.png" width="250" height="94" alt=" GBATCAR" class="logo">
+        </div>
+        <ul class="nav-links">
+            <li><a href="javascript:;" (click)="scrollToSection('hero')">Modèles</a></li>
+            <li><a href="javascript:;">News</a></li>
+            <li><a href="javascript:;">À Propos de Nous</a></li>
+            <li><a href="javascript:;">Contactez-nous</a></li>
+        </ul>
+        <div class="nav-actions">
+            <!-- Desktop: bouton Souscrire -->
+            <button class="btn-sousscrire d-none d-lg-flex" (click)="scrollToSection('subscription-form')">
+                <i data-feather="arrow-right" appFeatherIcon class="icon-sm"></i>
+                Sousscrire
+            </button>
+            <!-- Mobile/Tablet: bouton hamburger -->
+            <button class="btn-hamburger d-flex d-lg-none" (click)="toggleDrawer()" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Overlay -->
+    <div class="drawer-overlay" [class.active]="drawerOpen" (click)="toggleDrawer()"></div>
+
+    <!-- Mobile Drawer -->
+    <div class="mobile-drawer" [class.open]="drawerOpen">
+        <div class="drawer-header">
+            <img src="images/logo1.png" alt="GBATCAR" class="drawer-logo">
+            <button class="drawer-close" (click)="toggleDrawer()" aria-label="Fermer">
+                <i data-feather="x" appFeatherIcon class="icon-sm"></i>
+            </button>
+        </div>
+        <ul class="drawer-links">
+            <li><a href="javascript:;" (click)="scrollToSection('hero'); toggleDrawer()">Modèles</a></li>
+            <li><a href="javascript:;">News</a></li>
+            <li><a href="javascript:;">À Propos de Nous</a></li>
+            <li><a href="javascript:;">Contactez-nous</a></li>
+        </ul>
+        <div class="drawer-footer">
+            <button class="btn-sousscrire-drawer" (click)="scrollToSection('subscription-form'); toggleDrawer()">
+                <i data-feather="arrow-right" appFeatherIcon class="icon-sm"></i>
+                Sousscrire
+            </button>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                Inscrivez-vous dès maintenant pour bénéficier d’un véhicule
+                <span class="highlight">en leasing</span>
+            </h1>
+            <p class="hero-subtitle">Simple, rapide et 100% digital</p>
+        </div>
+        <div class="scroll-indicator" (click)="scrollToSection('subscription-form')">
+            <i data-feather="chevron-down" appFeatherIcon class="text-white icon-lg"></i>
+        </div>
+    </section>
+
+    <!-- Form Section -->
+    <section class="form-section" id="subscription-form">
+        <div class="form-card">
+            <div class="card-header">
+                <h2>Vos informations</h2>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Type de client <span class="required">*</span></label>
+                        <div class="btn-type-selector">
+                            <button type="button" class="btn-type"
+                                [class.active]="form.get('clientType')?.value === 'Particulier'"
+                                (click)="form.get('clientType')?.setValue('Particulier')">Particulier</button>
+                            <button type="button" class="btn-type"
+                                [class.active]="form.get('clientType')?.value === 'Entreprise'"
+                                (click)="form.get('clientType')?.setValue('Entreprise')">Entreprise</button>
+                        </div>
+                    </div>
+                </div>
+
+                <ng-container *ngIf="form.get('clientType')?.value === 'Particulier'">
+                    <!-- Particulier fields -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nom complet <span class="required">*</span></label>
+                            <input type="text" placeholder="Nom et prénoms" formControlName="fullName"
+                                [class]="'form-control' + (submit && form.get('fullName')?.invalid ? ' is-invalid' : '')">
+                            <div class="invalid-feedback" *ngIf="submit && form.get('fullName')?.hasError('required')">
+                                Ce champ est obligatoire.</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Téléphone <span class="required">*</span></label>
+                            <input type="text" placeholder="Numéro de Téléphone" formControlName="phoneParticulier"
+                                [class]="'form-control' + (submit && form.get('phoneParticulier')?.invalid ? ' is-invalid' : '')">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">E-mail <span class="required">*</span></label>
+                            <input type="email" placeholder="Adresse e-mail" formControlName="emailParticulier"
+                                [class]="'form-control' + (submit && form.get('emailParticulier')?.invalid ? ' is-invalid' : '')">
+                            <div class="invalid-feedback"
+                                *ngIf="submit && form.get('emailParticulier')?.hasError('email')">Email invalide.</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Lieu d'habitation <span class="required">*</span></label>
+                            <input type="text" placeholder="Lieu d'habitation" formControlName="locationParticulier"
+                                [class]="'form-control' + (submit && form.get('locationParticulier')?.invalid ? ' is-invalid' : '')">
+                        </div>
+                    </div>
+                    <div class="row mb-5">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Profession <span class="required">*</span></label>
+                            <input type="text" placeholder="Votre profession" formControlName="profession"
+                                [class]="'form-control' + (submit && form.get('profession')?.invalid ? ' is-invalid' : '')">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Revenu mensuel <span class="required">*</span></label>
+                            <input type="text" placeholder="Votre revenu par mois" formControlName="monthlyIncome"
+                                [class]="'form-control' + (submit && form.get('monthlyIncome')?.invalid ? ' is-invalid' : '')">
+                        </div>
+                    </div>
+                </ng-container>
+
+                <ng-container *ngIf="form.get('clientType')?.value === 'Entreprise'">
+                    <!-- Entreprise fields -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Raison sociale <span class="required">*</span></label>
+                            <input type="text" placeholder="Nom de l'entreprise" formControlName="companyName"
+                                [class]="'form-control' + (submit && form.get('companyName')?.invalid ? ' is-invalid' : '')">
+                            <div class="invalid-feedback"
+                                *ngIf="submit && form.get('companyName')?.hasError('required')">Ce champ est
+                                obligatoire.</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nom du gérant <span class="required">*</span></label>
+                            <input type="text" placeholder="Nom et prénoms" formControlName="managerName"
+                                [class]="'form-control' + (submit && form.get('managerName')?.invalid ? ' is-invalid' : '')">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Téléphone <span class="required">*</span></label>
+                            <input type="text" placeholder="Numéro de Téléphone" formControlName="phoneEntreprise"
+                                [class]="'form-control' + (submit && form.get('phoneEntreprise')?.invalid ? ' is-invalid' : '')">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">E-mail <span class="required">*</span></label>
+                            <input type="email" placeholder="Adresse e-mail" formControlName="emailEntreprise"
+                                [class]="'form-control' + (submit && form.get('emailEntreprise')?.invalid ? ' is-invalid' : '')">
+                            <div class="invalid-feedback"
+                                *ngIf="submit && form.get('emailEntreprise')?.hasError('email')">Email invalide.</div>
+                        </div>
+                    </div>
+                    <div class="row mb-5">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Siège de l'entreprise <span class="required">*</span></label>
+                            <input type="text" placeholder="Siège de l'entreprise" formControlName="locationEntreprise"
+                                [class]="'form-control' + (submit && form.get('locationEntreprise')?.invalid ? ' is-invalid' : '')">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">N° Compte contribuable <span class="required">*</span></label>
+                            <input type="text" placeholder="Numéro de compte" formControlName="taxAccountNb"
+                                [class]="'form-control' + (submit && form.get('taxAccountNb')?.invalid ? ' is-invalid' : '')">
+                        </div>
+                    </div>
+                </ng-container>
+
+                <h3 class="section-title mb-4">Choisissez votre véhicule</h3>
+                <div class="row mb-5">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Marque <span class="required">*</span></label>
+                        <ng-select [items]="brands" bindLabel="name" bindValue="id" formControlName="brand"
+                            [placeholder]="'-- Sélectionner une marque --'"
+                            [class.is-invalid]="submit && form.get('brand')?.invalid">
+                        </ng-select>
+                        <div class="invalid-feedback" *ngIf="submit && form.get('brand')?.hasError('required')">
+                            Veuillez choisir une marque.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Modèle <span class="required">*</span></label>
+                        <ng-select [items]="filteredModels" bindLabel="name" bindValue="name"
+                            formControlName="vehicleType"
+                            [placeholder]="selectedBrandId ? '-- Sélectionner un modèle --' : '-- Choisissez d\'abord une marque --'"
+                            [disabled]="!selectedBrandId"
+                            [class.is-invalid]="submit && form.get('vehicleType')?.invalid">
+                        </ng-select>
+                        <div class="invalid-feedback" *ngIf="submit && form.get('vehicleType')?.hasError('required')">
+                            Veuillez choisir un modèle.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Nombre de véhicules <span class="required">*</span></label>
+                        <input type="number" formControlName="vehicleCount" min="1"
+                            [class]="'form-control' + (submit && form.get('vehicleCount')?.invalid ? ' is-invalid' : '')">
+                    </div>
+                </div>
+
+                <h3 class="section-title mb-4">Condition de leasing</h3>
+                <div class="row mb-5">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Type de contrat <span class="required">*</span></label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="contractType" id="contract1"
+                                value="Location à longue durée" formControlName="contractType"
+                                [class.is-invalid]="submit && form.get('contractType')?.invalid">
+                            <label class="form-check-label" for="contract1">Location à longue durée</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="contractType" id="contract2"
+                                value="Location à courte durée" formControlName="contractType"
+                                [class.is-invalid]="submit && form.get('contractType')?.invalid">
+                            <label class="form-check-label" for="contract2">Location à courte durée</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="contractType" id="contract3"
+                                value="Location avec option d'achat" formControlName="contractType"
+                                [class.is-invalid]="submit && form.get('contractType')?.invalid">
+                            <label class="form-check-label" for="contract3">Location avec option d'achat</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="contractType" id="contract4"
+                                value="Partenariat" formControlName="contractType"
+                                [class.is-invalid]="submit && form.get('contractType')?.invalid">
+                            <label class="form-check-label" for="contract4">Partenariat</label>
+                        </div>
+                        <div class="invalid-feedback d-block" *ngIf="submit && form.get('contractType')?.invalid">
+                            Veuillez choisir un type de contrat.
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Mode paiement <span class="required">*</span></label>
+                        <select formControlName="paymentMethod"
+                            [class]="'form-select' + (submit && form.get('paymentMethod')?.invalid ? ' is-invalid' : '')">
+                            <option value="">Sélectionnez votre mode de paiement</option>
+                            <option value="Virement">Virement bancaire</option>
+                            <option value="MobileMoney">Mobile Money</option>
+                            <option value="Especes">Espèces</option>
+                        </select>
+                        <div class="invalid-feedback" *ngIf="submit && form.get('paymentMethod')?.hasError('required')">
+                            Veuillez choisir un mode de paiement.</div>
+                    </div>
+                </div>
+
+                <h3 class="section-title mb-4">Téléchargez vos documents</h3>
+
+                <!-- Documents Particulier -->
+                <div class="upload-grid mb-5" *ngIf="form.get('clientType')?.value === 'Particulier'">
+                    <!-- Permis de conduire -->
+                    <div class="upload-group">
+                        <label class="form-label">Permis de conduire <span class="required">*</span></label>
+                        <div class="upload-box" (click)="filePermis.click()" [class.has-file]="uploadedFiles['permis']"
+                            [class.file-error]="submit && !uploadedFiles['permis']">
+                            <input type="file" #filePermis style="display:none" accept=".pdf,.jpg,.jpeg,.png"
+                                (change)="onFileSelected($event, 'permis')">
+                            <i data-feather="upload-cloud" appFeatherIcon class="upload-icon-feather"></i>
+                            <p class="upload-text">{{ uploadedFiles['permis'] || 'Cliquez pour télécharger' }}</p>
+                            <span class="upload-hint" *ngIf="!uploadedFiles['permis']">PDF, JPG, PNG</span>
+                        </div>
+                    </div>
+                    <!-- Pièce d'identité -->
+                    <div class="upload-group">
+                        <label class="form-label">Pièce d'identité / Attestation / Passeport <span
+                                class="required">*</span></label>
+                        <div class="upload-box" (click)="fileCni.click()" [class.has-file]="uploadedFiles['cni']"
+                            [class.file-error]="submit && !uploadedFiles['cni']">
+                            <input type="file" #fileCni style="display:none" accept=".pdf,.jpg,.jpeg,.png"
+                                (change)="onFileSelected($event, 'cni')">
+                            <i data-feather="upload-cloud" appFeatherIcon class="upload-icon-feather"></i>
+                            <p class="upload-text">{{ uploadedFiles['cni'] || 'Cliquez pour télécharger' }}</p>
+                            <span class="upload-hint" *ngIf="!uploadedFiles['cni']">PDF, JPG, PNG</span>
+                        </div>
+                    </div>
+                    <!-- Casier judiciaire -->
+                    <div class="upload-group">
+                        <label class="form-label">Casier judiciaire de moins de 3 mois <span
+                                class="required">*</span></label>
+                        <div class="upload-box" (click)="fileCasier.click()" [class.has-file]="uploadedFiles['casier']"
+                            [class.file-error]="submit && !uploadedFiles['casier']">
+                            <input type="file" #fileCasier style="display:none" accept=".pdf,.jpg,.jpeg,.png"
+                                (change)="onFileSelected($event, 'casier')">
+                            <i data-feather="upload-cloud" appFeatherIcon class="upload-icon-feather"></i>
+                            <p class="upload-text">{{ uploadedFiles['casier'] || 'Cliquez pour télécharger' }}</p>
+                            <span class="upload-hint" *ngIf="!uploadedFiles['casier']">PDF, JPG, PNG</span>
+                        </div>
+                    </div>
+                    <!-- 4 photos -->
+                    <div class="upload-group">
+                        <label class="form-label">04 photos identité <span class="required">*</span></label>
+                        <div class="upload-box" (click)="filePhotos.click()" [class.has-file]="uploadedFiles['photos']"
+                            [class.file-error]="submit && !uploadedFiles['photos']">
+                            <input type="file" #filePhotos style="display:none" accept=".jpg,.jpeg,.png" multiple
+                                (change)="onFileSelected($event, 'photos')">
+                            <i data-feather="upload-cloud" appFeatherIcon class="upload-icon-feather"></i>
+                            <p class="upload-text">{{ uploadedFiles['photos'] || 'Cliquez pour télécharger' }}</p>
+                            <span class="upload-hint" *ngIf="!uploadedFiles['photos']">JPG, PNG (plusieurs
+                                fichiers)</span>
+                        </div>
+                    </div>
+                    <!-- Certificat de résidence -->
+                    <div class="upload-group">
+                        <label class="form-label">Certificat de résidence de moins de 3 mois <span
+                                class="required">*</span></label>
+                        <div class="upload-box" (click)="fileCertif.click()" [class.has-file]="uploadedFiles['certif']"
+                            [class.file-error]="submit && !uploadedFiles['certif']">
+                            <input type="file" #fileCertif style="display:none" accept=".pdf,.jpg,.jpeg,.png"
+                                (change)="onFileSelected($event, 'certif')">
+                            <i data-feather="upload-cloud" appFeatherIcon class="upload-icon-feather"></i>
+                            <p class="upload-text">{{ uploadedFiles['certif'] || 'Cliquez pour télécharger' }}</p>
+                            <span class="upload-hint" *ngIf="!uploadedFiles['certif']">PDF, JPG, PNG</span>
+                        </div>
+                    </div>
+                    <!-- Bulletin de salaire -->
+                    <div class="upload-group">
+                        <label class="form-label">Bulletin de salaire</label>
+                        <div class="upload-box" (click)="fileBulletin.click()"
+                            [class.has-file]="uploadedFiles['bulletin']">
+                            <input type="file" #fileBulletin style="display:none" accept=".pdf,.jpg,.jpeg,.png"
+                                (change)="onFileSelected($event, 'bulletin')">
+                            <i data-feather="upload-cloud" appFeatherIcon class="upload-icon-feather"></i>
+                            <p class="upload-text">{{ uploadedFiles['bulletin'] || 'Cliquez pour télécharger' }}</p>
+                            <span class="upload-hint" *ngIf="!uploadedFiles['bulletin']">PDF, JPG, PNG</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents Entreprise -->
+                <div class="upload-grid mb-5" *ngIf="form.get('clientType')?.value === 'Entreprise'">
+                    <!-- Registre de commerce -->
+                    <div class="upload-group">
+                        <label class="form-label">Registre de commerce <span class="required">*</span></label>
+                        <div class="upload-box" (click)="fileRC.click()" [class.has-file]="uploadedFiles['rc']"
+                            [class.file-error]="submit && !uploadedFiles['rc']">
+                            <input type="file" #fileRC style="display:none" accept=".pdf,.jpg,.jpeg,.png"
+                                (change)="onFileSelected($event, 'rc')">
+                            <i data-feather="upload-cloud" appFeatherIcon class="upload-icon-feather"></i>
+                            <p class="upload-text">{{ uploadedFiles['rc'] || 'Cliquez pour télécharger' }}</p>
+                            <span class="upload-hint" *ngIf="!uploadedFiles['rc']">PDF, JPG, PNG</span>
+                        </div>
+                    </div>
+                    <!-- DFE -->
+                    <div class="upload-group">
+                        <label class="form-label">DFE <span class="required">*</span></label>
+                        <div class="upload-box" (click)="fileDFE.click()" [class.has-file]="uploadedFiles['dfe']"
+                            [class.file-error]="submit && !uploadedFiles['dfe']">
+                            <input type="file" #fileDFE style="display:none" accept=".pdf,.jpg,.jpeg,.png"
+                                (change)="onFileSelected($event, 'dfe')">
+                            <i data-feather="upload-cloud" appFeatherIcon class="upload-icon-feather"></i>
+                            <p class="upload-text">{{ uploadedFiles['dfe'] || 'Cliquez pour télécharger' }}</p>
+                            <span class="upload-hint" *ngIf="!uploadedFiles['dfe']">PDF, JPG, PNG</span>
+                        </div>
+                    </div>
+                    <!-- Pièce identité gérant -->
+                    <div class="upload-group">
+                        <label class="form-label">Pièce d'identité du gérant <span class="required">*</span></label>
+                        <div class="upload-box" (click)="fileCniGerant.click()"
+                            [class.has-file]="uploadedFiles['cniGerant']"
+                            [class.file-error]="submit && !uploadedFiles['cniGerant']">
+                            <input type="file" #fileCniGerant style="display:none" accept=".pdf,.jpg,.jpeg,.png"
+                                (change)="onFileSelected($event, 'cniGerant')">
+                            <i data-feather="upload-cloud" appFeatherIcon class="upload-icon-feather"></i>
+                            <p class="upload-text">{{ uploadedFiles['cniGerant'] || 'Cliquez pour télécharger' }}</p>
+                            <span class="upload-hint" *ngIf="!uploadedFiles['cniGerant']">PDF, JPG, PNG</span>
+                        </div>
+                    </div>
+                    <!-- Casier gérant -->
+                    <div class="upload-group">
+                        <label class="form-label">Casier judiciaire du gérant <span class="required">*</span></label>
+                        <div class="upload-box" (click)="fileCasierGerant.click()"
+                            [class.has-file]="uploadedFiles['casierGerant']"
+                            [class.file-error]="submit && !uploadedFiles['casierGerant']">
+                            <input type="file" #fileCasierGerant style="display:none" accept=".pdf,.jpg,.jpeg,.png"
+                                (change)="onFileSelected($event, 'casierGerant')">
+                            <i data-feather="upload-cloud" appFeatherIcon class="upload-icon-feather"></i>
+                            <p class="upload-text">{{ uploadedFiles['casierGerant'] || 'Cliquez pour télécharger' }}</p>
+                            <span class="upload-hint" *ngIf="!uploadedFiles['casierGerant']">PDF, JPG, PNG</span>
+                        </div>
+                    </div>
+                    <!-- Statut entreprise -->
+                    <div class="upload-group">
+                        <label class="form-label">Statut de l'entreprise <span class="required">*</span></label>
+                        <div class="upload-box" (click)="fileStatut.click()" [class.has-file]="uploadedFiles['statut']"
+                            [class.file-error]="submit && !uploadedFiles['statut']">
+                            <input type="file" #fileStatut style="display:none" accept=".pdf,.jpg,.jpeg,.png"
+                                (change)="onFileSelected($event, 'statut')">
+                            <i data-feather="upload-cloud" appFeatherIcon class="upload-icon-feather"></i>
+                            <p class="upload-text">{{ uploadedFiles['statut'] || 'Cliquez pour télécharger' }}</p>
+                            <span class="upload-hint" *ngIf="!uploadedFiles['statut']">PDF, JPG, PNG</span>
+                        </div>
+                    </div>
+                    <!-- Relevé bancaire -->
+                    <div class="upload-group">
+                        <label class="form-label">Relevé bancaire (6 derniers mois) <span
+                                class="required">*</span></label>
+                        <div class="upload-box" (click)="fileReleve.click()" [class.has-file]="uploadedFiles['releve']"
+                            [class.file-error]="submit && !uploadedFiles['releve']">
+                            <input type="file" #fileReleve style="display:none" accept=".pdf,.jpg,.jpeg,.png"
+                                (change)="onFileSelected($event, 'releve')">
+                            <i data-feather="upload-cloud" appFeatherIcon class="upload-icon-feather"></i>
+                            <p class="upload-text">{{ uploadedFiles['releve'] || 'Cliquez pour télécharger' }}</p>
+                            <span class="upload-hint" *ngIf="!uploadedFiles['releve']">PDF, JPG, PNG</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recaptcha-container mb-4 d-flex align-items-center gap-3">
+                    <div class="form-check d-flex align-items-center m-0">
+                        <input class="form-check-input mt-0 me-2" type="checkbox" id="recaptchaCheck"
+                            style="width: 24px; height: 24px; cursor: pointer;">
+                        <label class="form-check-label ms-1 fw-bold text-dark" for="recaptchaCheck"
+                            style="cursor: pointer;">
+                            Je ne suis pas un robot
+                        </label>
+                    </div>
+                    <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="reCAPTCHA" style="width: 32px;">
+                </div>
+
+                <div class="submit-container">
+                    <button type="submit" class="btn-submit" (click)="onSubmit()" [disabled]="loading">
+                        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"
+                            aria-hidden="true"></span>
+                        {{ loading ? 'Envoi en cours...' : 'Envoyer ma demande' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-grid">
+            <!-- Col 1: Logo & copyright -->
+            <div class="footer-col footer-col-logo">
+                <div class="footer-logo">
+                    <a href="javascript:;" class="sidebar-brand d-flex align-items-center">
+                        <img src="images/logo1.png" alt="GBATCAR" width="250" height="94">
+                    </a>
+                </div>
+                <div class="footer-copyright mt-2 text-white-50 tx-12">
+                    © 2026 Gbat Car - Tous droits réservés
+                </div>
+            </div>
+
+            <!-- Col 2: Location -->
+            <div class="footer-col footer-col-location ">
+                <div class="info-item d-flex align-items-center">
+                    <div class="m-0 bg-white d-flex align-items-center justify-content-center text-dark rounded-circle"
+                        style="width: 32px; height: 32px;">
+                        <i data-feather="map-pin" appFeatherIcon class="icon-sm"></i>
+                    </div>
+                    <div class="text-white tx-13">
+                        Abidjan, Cocody Angré Château<br>Star 16, Côte d'Ivoire
+                    </div>
+                </div>
+            </div>
+
+            <!-- Col 3: Contact (Phone + Email) -->
+            <div class="footer-col footer-col-contact d-flex flex-column justify-content-center">
+                <div class="info-item d-flex align-items-center mb-3">
+                    <div class="me-3 bg-white d-flex align-items-center justify-content-center text-dark rounded-circle"
+                        style="width: 32px; height: 32px;">
+                        <i data-feather="phone" appFeatherIcon class="icon-sm"></i>
+                    </div>
+                    <div class="text-white tx-13">
+                        +225 070 245 0202
+                    </div>
+                </div>
+                <div class="info-item d-flex align-items-center">
+                    <div class="m-0 bg-white d-flex align-items-center justify-content-center text-dark rounded-circle"
+                        style="width: 32px; height: 32px;">
+                        <i data-feather="mail" appFeatherIcon class="icon-sm"></i>
+                    </div>
+                    <div class="text-white tx-13">
+                        contact&#64;gbatcar.com
+                    </div>
+                </div>
+            </div>
+
+            <!-- Col 4: Socials -->
+            <div class="footer-col footer-col-social d-flex flex-column justify-content-center">
+                <h6 class="text-white mb-2 tx-13" style="font-weight: 500;">Suivez-nous</h6>
+                <div class="links d-flex gap-2">
+                    <a href="javascript:;"
+                        class="bg-white text-dark d-flex align-items-center justify-content-center rounded-circle"
+                        style="width: 32px; height: 32px;"><i data-feather="facebook" appFeatherIcon
+                            class="icon-sm"></i></a>
+                    <a href="javascript:;"
+                        class="bg-white text-dark d-flex align-items-center justify-content-center rounded-circle"
+                        style="width: 32px; height: 32px;"><i data-feather="instagram" appFeatherIcon
+                            class="icon-sm"></i></a>
+                    <a href="javascript:;"
+                        class="bg-white text-dark d-flex align-items-center justify-content-center rounded-circle"
+                        style="width: 32px; height: 32px;"><i data-feather="twitter" appFeatherIcon
+                            class="icon-sm"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>

@@ -20,5 +20,14 @@ export default [
     {
         path: 'details/:id',
         loadComponent: () => import('./client-details/client-details.component').then(c => c.ClientDetailsComponent)
+    },
+
+    {
+        path: 'subscriptions',
+        loadComponent: () => import('./subscriptions-list/subscriptions-list.component').then(c => c.SubscriptionsListComponent)
+    },
+    {
+        path: 'subscriptions/details/:id',
+        loadComponent: () => import('./subscription-details/subscription-details.component').then(c => c.SubscriptionDetailsComponent)
     }
 ] as Routes;

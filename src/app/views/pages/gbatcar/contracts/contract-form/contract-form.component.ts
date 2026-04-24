@@ -49,6 +49,7 @@ export class ContractFormComponent implements OnInit {
   settings: any = null;
   durations: any[] = [];
   canEditCaution: boolean = false;
+  canEditPrixDeVente: boolean = false;
   private isLoadingData: boolean = false; // Guard flag to prevent recalculating during data load
 
   customSearchFn = (term: string, item: any) => {
@@ -431,6 +432,16 @@ export class ContractFormComponent implements OnInit {
     }
   }
 
+  togglePrixDeVenteEdit() {
+    this.canEditPrixDeVente = !this.canEditPrixDeVente;
+    const ctrl = this.contractForm.get('prixDeVente');
+    if (this.canEditPrixDeVente) {
+      ctrl?.enable();
+    } else {
+      ctrl?.disable();
+    }
+  }
+
 
   recalculateCautionFromPrice() {
     if (!this.settings || this.isEditMode || this.canEditCaution) return;
@@ -470,6 +481,16 @@ export class ContractFormComponent implements OnInit {
           hasProofOfAddress: data.hasProofOfAddress,
           hasCriminalRecord: data.hasCriminalRecord
         });
+
+        // Check if status allows editing
+        const status = (data.status || '').toUpperCase();
+        const nonEditableStatuses = ['VALIDÉ', 'VALIDATED', 'ACTIVE', 'EN COURS', 'TERMINÉ', 'SOLDÉ', 'RÉSILIÉ', 'ROMPU'];
+        if (nonEditableStatuses.includes(status)) {
+          this.contractForm.disable();
+          this.isEditMode = false; // Effectively view mode
+          this.pageTitle = 'Consulter le Contrat (Lecture seule)';
+          this.toast('Ce contrat est verrouillé car il est ' + (data.status || 'actif'), 'Lecture seule', 'info');
+        }
 
         // Charger les lignes de demandes
         if (data.vehicleDemands && data.vehicleDemands.length > 0) {

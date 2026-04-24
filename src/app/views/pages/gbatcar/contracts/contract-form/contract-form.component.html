@@ -267,10 +267,16 @@
                             </select>
                         </div>
                         <div class="col-sm-4 mb-3">
-                            <label class="form-label text-dark fw-medium">
+                            <label class="form-label text-dark fw-medium d-flex justify-content-between">
                                 <span>Prix de Vente (FCFA)</span>
+                                <a href="javascript:;" (click)="togglePrixDeVenteEdit()" class="text-primary tx-12">
+                                    <i [attr.data-feather]="canEditPrixDeVente ? 'unlock' : 'lock'" appFeatherIcon
+                                        class="icon-xs me-1"></i>
+                                    {{ canEditPrixDeVente ? 'Verrouiller' : 'Modifier' }}
+                                </a>
                             </label>
-                            <input type="number" class="form-control" formControlName="prixDeVente">
+                            <input type="number" class="form-control" [ngClass]="{'bg-light': !canEditPrixDeVente}"
+                                formControlName="prixDeVente">
                         </div>
                         <div class="col-sm-4 mb-3">
                             <label class="form-label text-dark fw-medium">Redevance (FCFA) <span

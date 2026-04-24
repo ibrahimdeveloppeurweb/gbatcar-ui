@@ -11,6 +11,7 @@ export class VehicleService {
     vehicle: Vehicle;
     public edit: boolean = false;
     private url = 'private/vehicle';
+    private publicUrl = 'public/vehicles';
 
     constructor(private api: ApiService) { }
 
@@ -233,6 +234,13 @@ export class VehicleService {
             return new Observable(obs => { obs.next(); obs.complete(); });
         }
         return this.api._post('private/vehicle-model/new', { brand: brandId, name }).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    getPublicCatalog(): Observable<any[]> {
+        return this.api._get(this.publicUrl).pipe(
             map((response: any) => response),
             catchError((error: any) => throwError(() => error))
         );

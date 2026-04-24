@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { RouterLink } from '@angular/router';
 import { NgApexchartsModule, ApexOptions } from 'ng-apexcharts';
 import { FeatherIconDirective } from '../../../../../core/feather-icon/feather-icon.directive';
 import { ThemeCssVariableService } from '../../../../../core/services/theme-css-variable.service';
@@ -15,7 +16,7 @@ import { AuthService } from '../../../../../core/services/auth/auth.service';
 @Component({
   selector: 'app-contract-dashboard',
   standalone: true,
-  imports: [CommonModule, NgbDropdownModule, NgApexchartsModule, FeatherIconDirective, NgSelectModule, FormsModule, NgxPermissionsModule],
+  imports: [CommonModule, NgbDropdownModule, RouterLink, NgApexchartsModule, FeatherIconDirective, NgSelectModule, FormsModule, NgxPermissionsModule],
   templateUrl: './contract-dashboard.component.html',
   styleUrl: './contract-dashboard.component.scss'
 })

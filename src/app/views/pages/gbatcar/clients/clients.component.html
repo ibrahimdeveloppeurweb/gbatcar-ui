@@ -283,7 +283,9 @@
                                             </button>
                                             <button *ngxPermissionsOnly="'CLIENT:DELETE'"
                                                 class="btn btn-xs btn-icon btn-outline-danger border-1 shadow-none"
-                                                (click)="client.uuid && deleteClient(client.uuid)" title="Supprimer">
+                                                [disabled]="hasValidatedContract(client)"
+                                                (click)="client.uuid && deleteClient(client.uuid)"
+                                                [title]="hasValidatedContract(client) ? 'Impossible de supprimer un client avec un contrat validé ou actif' : 'Supprimer'">
                                                 <i data-feather="trash-2" appFeatherIcon class="icon-sm"></i>
                                             </button>
                                         </div>

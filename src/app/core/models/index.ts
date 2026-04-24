@@ -8,6 +8,7 @@ export * from './payment.model';
 export * from './penalty.model';
 export * from './permission.model';
 export * from './setting.model';
+export * from './subscription.model';
 export * from './user.model';
 export * from './vehicle.model';
 export * from './dashboard.model';

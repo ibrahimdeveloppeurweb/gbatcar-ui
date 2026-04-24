@@ -1,0 +1,225 @@
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+    <div class="d-flex align-items-center mb-1 mb-md-0">
+        <h4 class="mb-0 me-3">Détails de la Souscription</h4>
+        <span class="badge" [ngClass]="{
+            'bg-success': subscription?.status === 'VALIDÉ',
+            'bg-danger': subscription?.status === 'REJETÉ',
+            'bg-primary': !subscription?.status || subscription?.status === 'EN_ATTENTE' || subscription?.status === 'Nouveau'
+        }">{{ (subscription?.status === 'Nouveau' || !subscription?.status) ? 'EN_ATTENTE' : subscription?.status
+            }}</span>
+    </div>
+    <p class="text-secondary" *ngIf="subscription">Réf: SUB-{{ (subscription.uuid || '') | slice:0:8 | uppercase }}</p>
+    <div class="d-flex align-items-center flex-wrap text-nowrap">
+        <button type="button" class="btn btn-outline-secondary btn-icon-text mb-2 mb-md-0 me-2"
+            routerLink="/gbatcar/clients/subscriptions">
+            <i data-feather="arrow-left" appFeatherIcon class="btn-icon-prepend"></i>
+            Retour à la liste
+        </button>
+        <button type="button" class="btn btn-outline-danger btn-icon-text mb-2 mb-md-0 me-2"
+            (click)="deleteSubscription()" *ngIf="subscription">
+            <i data-feather="trash-2" appFeatherIcon class="btn-icon-prepend"></i>
+            Supprimer
+        </button>
+        <button type="button" class="btn btn-warning btn-icon-text mb-2 mb-md-0 me-2" (click)="rejectSubscription()"
+            *ngIf="subscription && subscription.status !== 'REJETÉ' && subscription.status !== 'VALIDÉ'">
+            <i data-feather="x-circle" appFeatherIcon class="btn-icon-prepend"></i>
+            Refuser
+        </button>
+        <button type="button" class="btn btn-success btn-icon-text mb-2 mb-md-0" (click)="validateSubscription()"
+            *ngIf="subscription && subscription.status !== 'VALIDÉ' && subscription.status !== 'REJETÉ'">
+            <i data-feather="check-circle" appFeatherIcon class="btn-icon-prepend"></i>
+            Valider le Dossier
+        </button>
+    </div>
+</div>
+
+<div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Chargement...</span>
+    </div>
+</div>
+
+<div class="row" *ngIf="subscription && !loading">
+    <div class="col-md-8 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title text-uppercase border-bottom pb-2">Informations du Demandeur</h6>
+                <div class="row mb-4">
+                    <div class="col-sm-6 mb-3">
+                        <label class="text-muted fs-12px mb-1">Type de Client</label>
+                        <div class="fw-bold">{{ subscription.clientType }}</div>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <label class="text-muted fs-12px mb-1">Nom / Gérant</label>
+                        <div class="fw-bold">{{ subscription.fullName }}</div>
+                    </div>
+                    <div class="col-sm-6 mb-3" *ngIf="subscription.clientType === 'Entreprise'">
+                        <label class="text-muted fs-12px mb-1">Raison Sociale</label>
+                        <div class="fw-bold">{{ subscription.companyName }}</div>
+                    </div>
+                    <div class="col-sm-6 mb-3" *ngIf="subscription.clientType === 'Entreprise'">
+                        <label class="text-muted fs-12px mb-1">N° Compte Contribuable</label>
+                        <div class="fw-bold">{{ subscription.taxAccountNb }}</div>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <label class="text-muted fs-12px mb-1">Lieu d'habitation / Siège</label>
+                        <div class="fw-bold">{{ subscription.location }}</div>
+                    </div>
+                    <div class="col-sm-6 mb-3" *ngIf="subscription.profession">
+                        <label class="text-muted fs-12px mb-1">Profession</label>
+                        <div class="fw-bold">{{ subscription.profession }}</div>
+                    </div>
+                    <div class="col-sm-6 mb-3" *ngIf="subscription.monthlyIncome">
+                        <label class="text-muted fs-12px mb-1">Revenu Mensuel</label>
+                        <div class="fw-bold">{{ subscription.monthlyIncome }}</div>
+                    </div>
+                </div>
+
+                <div class="row mb-4" *ngIf="subscription.status === 'REJETÉ' && subscription.rejectionReason">
+                    <div class="col-12">
+                        <div class="alert alert-danger mb-0 py-2">
+                            <h6 class="alert-heading fs-13px fw-bold mb-1"><i data-feather="alert-circle" appFeatherIcon
+                                    class="icon-xs me-1"></i> Motif du Refus</h6>
+                            <p class="mb-0 fs-13px">{{ subscription.rejectionReason }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="card-title text-uppercase border-bottom pb-2">Coordonnées</h6>
+                <div class="row mb-4">
+                    <div class="col-sm-6 mb-3">
+                        <label class="text-muted fs-12px mb-1">Téléphone</label>
+                        <div class="fw-bold">{{ subscription.phone }}</div>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <label class="text-muted fs-12px mb-1">Email</label>
+                        <div class="fw-bold"><a href="mailto:{{ subscription.email }}">{{ subscription.email }}</a>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="card-title text-uppercase border-bottom pb-2">Détails de la Demande</h6>
+                <div class="row">
+                    <div class="col-sm-6 mb-3">
+                        <label class="text-muted fs-12px mb-1">Véhicule Souhaité</label>
+                        <div class="fw-bold">{{ subscription.vehicleType }}</div>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <label class="text-muted fs-12px mb-1">Quantité / Nombre de Véhicules</label>
+                        <div class="fw-bold">{{ subscription.vehicleCount }}</div>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <label class="text-muted fs-12px mb-1">Type de Contrat</label>
+                        <div class="fw-bold">{{ subscription.contractType }}</div>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <label class="text-muted fs-12px mb-1">Mode de Paiement</label>
+                        <div class="fw-bold">{{ subscription.paymentMethod }}</div>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <label class="text-muted fs-12px mb-1">Date de Soumission</label>
+                        <div class="fw-bold text-primary">{{ subscription.createdAt | date:'dd MMMM yyyy à HH:mm:ss' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Documents -->
+    <div class="col-md-4 grid-margin stretch-card">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6 class="card-title text-uppercase mb-4">Documents Joints</h6>
+
+                <p class="text-muted fs-13px mb-4"
+                    *ngIf="!subscription.permis && !subscription.cni && !subscription.rc && !subscription.dfe && !subscription.statut">
+                    Aucun document joint détecté.</p>
+
+                <div class="list-group list-group-flush list-group-sm">
+                    <!-- Fichiers Communs -->
+                    <a *ngIf="subscription.cni" [href]="getFileUrl(subscription.cni)" target="_blank"
+                        class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-bottom">
+                        <i data-feather="file-text" appFeatherIcon class="icon-sm me-2 text-primary"></i> <span
+                            class="fw-bold flex-grow-1 fs-14px">Pièce d'Identité</span>
+                        <i data-feather="download" appFeatherIcon class="icon-xs text-muted"></i>
+                    </a>
+                    <a *ngIf="subscription.permis" [href]="getFileUrl(subscription.permis)" target="_blank"
+                        class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-bottom">
+                        <i data-feather="file-text" appFeatherIcon class="icon-sm me-2 text-primary"></i> <span
+                            class="fw-bold flex-grow-1 fs-14px">Permis de Conduire</span>
+                        <i data-feather="download" appFeatherIcon class="icon-xs text-muted"></i>
+                    </a>
+                    <a *ngIf="subscription.casier" [href]="getFileUrl(subscription.casier)" target="_blank"
+                        class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-bottom">
+                        <i data-feather="file-text" appFeatherIcon class="icon-sm me-2 text-primary"></i> <span
+                            class="fw-bold flex-grow-1 fs-14px">Casier Judiciaire</span>
+                        <i data-feather="download" appFeatherIcon class="icon-xs text-muted"></i>
+                    </a>
+                    <a *ngIf="subscription.photos" [href]="getFileUrl(subscription.photos)" target="_blank"
+                        class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-bottom">
+                        <i data-feather="image" appFeatherIcon class="icon-sm me-2 text-primary"></i> <span
+                            class="fw-bold flex-grow-1 fs-14px">Photos d'Identité</span>
+                        <i data-feather="download" appFeatherIcon class="icon-xs text-muted"></i>
+                    </a>
+                    <a *ngIf="subscription.certif" [href]="getFileUrl(subscription.certif)" target="_blank"
+                        class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-bottom">
+                        <i data-feather="file" appFeatherIcon class="icon-sm me-2 text-primary"></i> <span
+                            class="fw-bold flex-grow-1 fs-14px">Certificat Résidence</span>
+                        <i data-feather="download" appFeatherIcon class="icon-xs text-muted"></i>
+                    </a>
+                    <a *ngIf="subscription.bulletin" [href]="getFileUrl(subscription.bulletin)" target="_blank"
+                        class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-bottom">
+                        <i data-feather="file-text" appFeatherIcon class="icon-sm me-2 text-primary"></i> <span
+                            class="fw-bold flex-grow-1 fs-14px">Bulletin de Salaire</span>
+                        <i data-feather="download" appFeatherIcon class="icon-xs text-muted"></i>
+                    </a>
+
+                    <!-- Entreprise -->
+                    <a *ngIf="subscription.rc" [href]="getFileUrl(subscription.rc)" target="_blank"
+                        class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-bottom">
+                        <i data-feather="briefcase" appFeatherIcon class="icon-sm me-2 text-warning"></i> <span
+                            class="fw-bold flex-grow-1 fs-14px">Registre de Commerce</span>
+                        <i data-feather="download" appFeatherIcon class="icon-xs text-muted"></i>
+                    </a>
+                    <a *ngIf="subscription.dfe" [href]="getFileUrl(subscription.dfe)" target="_blank"
+                        class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-bottom">
+                        <i data-feather="file" appFeatherIcon class="icon-sm me-2 text-warning"></i> <span
+                            class="fw-bold flex-grow-1 fs-14px">DFE</span>
+                        <i data-feather="download" appFeatherIcon class="icon-xs text-muted"></i>
+                    </a>
+                    <a *ngIf="subscription.statut" [href]="getFileUrl(subscription.statut)" target="_blank"
+                        class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-bottom">
+                        <i data-feather="file-text" appFeatherIcon class="icon-sm me-2 text-warning"></i> <span
+                            class="fw-bold flex-grow-1 fs-14px">Statuts d'Entreprise</span>
+                        <i data-feather="download" appFeatherIcon class="icon-xs text-muted"></i>
+                    </a>
+                    <a *ngIf="subscription.cniGerant" [href]="getFileUrl(subscription.cniGerant)" target="_blank"
+                        class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-bottom">
+                        <i data-feather="user" appFeatherIcon class="icon-sm me-2 text-warning"></i> <span
+                            class="fw-bold flex-grow-1 fs-14px">Pièce d'Identité Gérant</span>
+                        <i data-feather="download" appFeatherIcon class="icon-xs text-muted"></i>
+                    </a>
+                    <a *ngIf="subscription.casierGerant" [href]="getFileUrl(subscription.casierGerant)" target="_blank"
+                        class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-bottom">
+                        <i data-feather="file-text" appFeatherIcon class="icon-sm me-2 text-warning"></i> <span
+                            class="fw-bold flex-grow-1 fs-14px">Casier Judiciaire Gérant</span>
+                        <i data-feather="download" appFeatherIcon class="icon-xs text-muted"></i>
+                    </a>
+                    <a *ngIf="subscription.releve" [href]="getFileUrl(subscription.releve)" target="_blank"
+                        class="list-group-item list-group-item-action d-flex align-items-center bg-transparent border-bottom">
+                        <i data-feather="credit-card" appFeatherIcon class="icon-sm me-2 text-warning"></i> <span
+                            class="fw-bold flex-grow-1 fs-14px">Relevé Bancaire</span>
+                        <i data-feather="download" appFeatherIcon class="icon-xs text-muted"></i>
+                    </a>
+                </div>
+
+                <div class="mt-4" *ngIf="subscription.cni">
+                    <p class="fs-12px text-muted mb-0"><i data-feather="info" appFeatherIcon class="icon-xs me-1"></i>
+                        Cliquez sur un document pour l'ouvrir dans un nouvel onglet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Rebuild trigger -->

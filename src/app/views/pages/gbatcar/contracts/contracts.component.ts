@@ -237,4 +237,14 @@ export class ContractsComponent implements OnInit {
     if (!contract.totalAmount || contract.totalAmount <= 0) return 0;
     return ((contract.paidAmount ?? 0) / contract.totalAmount) * 100;
   }
+
+  canEdit(contract: Contract): boolean {
+    if (!contract.status) return true;
+    const normalized = contract.status.toUpperCase();
+    return !['VALIDÉ', 'VALIDATED', 'ACTIVE', 'EN COURS', 'TERMINÉ', 'SOLDÉ', 'RÉSILIÉ', 'ROMPU'].includes(normalized);
+  }
+
+  canDelete(contract: Contract): boolean {
+    return this.canEdit(contract);
+  }
 }

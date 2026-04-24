@@ -35,41 +35,79 @@
         </a>
         <div ngbDropdownMenu class="px-0" aria-labelledby="appsDropdown">
           <div class="px-3 py-2 d-flex align-items-center justify-content-between border-bottom">
-            <p class="mb-0 fw-bold">Web Apps</p>
-            <a href="javascript:;" class="text-secondary">Edit</a>
+            <p class="mb-0 fw-bold">Actions Rapides</p>
+            <a href="javascript:;" class="text-secondary">Gérer</a>
           </div>
           <div class="row g-0 p-1">
-            <div class="col-3 text-center">
-              <a routerLink="/apps/chat"
-                class="dropdown-item d-flex flex-column align-items-center justify-content-center w-70px h-70px"><i
-                  class="feather icon-message-square icon-lg mb-1"></i>
-                <p class="fs-12px">Chat</p>
+            <!-- Row 1 -->
+            <div class="col-3 text-center" *ngxPermissionsOnly="'VEHICLE:NEW'">
+              <a routerLink="/gbatcar/vehicles/new"
+                class="dropdown-item d-flex flex-column align-items-center justify-content-center w-70px h-70px"
+                title="Nouveau Véhicule">
+                <i class="feather icon-plus-circle icon-lg mb-1 text-primary"></i>
+                <p class="fs-10px">Véhicule</p>
               </a>
             </div>
-            <div class="col-3 text-center">
-              <a routerLink="/apps/calendar"
-                class="dropdown-item d-flex flex-column align-items-center justify-content-center w-70px h-70px"><i
-                  class="feather icon-calendar icon-lg mb-1"></i>
-                <p class="fs-12px">Calendar</p>
+            <div class="col-3 text-center" *ngxPermissionsOnly="'CONTRACT:NEW'">
+              <a routerLink="/gbatcar/contracts/new"
+                class="dropdown-item d-flex flex-column align-items-center justify-content-center w-70px h-70px"
+                title="Nouveau Contrat">
+                <i class="feather icon-file-plus icon-lg mb-1 text-success"></i>
+                <p class="fs-10px">Contrat</p>
               </a>
             </div>
-            <div class="col-3 text-center">
-              <a routerLink="/apps/email/inbox"
-                class="dropdown-item d-flex flex-column align-items-center justify-content-center w-70px h-70px"><i
-                  class="feather icon-mail icon-lg mb-1"></i>
-                <p class="fs-12px">Email</p>
+            <div class="col-3 text-center" *ngxPermissionsOnly="'PAYMENT:NEW'">
+              <a routerLink="/gbatcar/payments/new"
+                class="dropdown-item d-flex flex-column align-items-center justify-content-center w-70px h-70px"
+                title="Nouveau Paiement">
+                <i class="feather icon-dollar-sign icon-lg mb-1 text-info"></i>
+                <p class="fs-10px">Paiement</p>
               </a>
             </div>
-            <div class="col-3 text-center">
-              <a routerLink="/general/profile"
-                class="dropdown-item d-flex flex-column align-items-center justify-content-center w-70px h-70px"><i
-                  class="feather icon-instagram icon-lg mb-1"></i>
-                <p class="fs-12px">Profile</p>
+            <div class="col-3 text-center" *ngxPermissionsOnly="'MAINTENANCE:NEW'">
+              <a routerLink="/gbatcar/maintenance/new"
+                class="dropdown-item d-flex flex-column align-items-center justify-content-center w-70px h-70px"
+                title="Nouvelle Maintenance">
+                <i class="feather icon-tool icon-lg mb-1 text-warning"></i>
+                <p class="fs-10px">Maint.</p>
+              </a>
+            </div>
+            <!-- Row 2 -->
+            <div class="col-3 text-center" *ngxPermissionsOnly="'CLIENT:NEW'">
+              <a routerLink="/gbatcar/clients/new"
+                class="dropdown-item d-flex flex-column align-items-center justify-content-center w-70px h-70px"
+                title="Nouveau Locataire">
+                <i class="feather icon-user-plus icon-lg mb-1 text-secondary"></i>
+                <p class="fs-10px">Client</p>
+              </a>
+            </div>
+            <div class="col-3 text-center" *ngxPermissionsOnly="'PENALTY:NEW'">
+              <a routerLink="/gbatcar/payments/penalties/new"
+                class="dropdown-item d-flex flex-column align-items-center justify-content-center w-70px h-70px"
+                title="Nouvelle Pénalité">
+                <i class="feather icon-alert-octagon icon-lg mb-1 text-danger"></i>
+                <p class="fs-10px">Pénalité</p>
+              </a>
+            </div>
+            <div class="col-3 text-center" *ngxPermissionsOnly="'MENU_APPS_CALENDAR'">
+              <a routerLink="/gbatcar/apps/calendar"
+                class="dropdown-item d-flex flex-column align-items-center justify-content-center w-70px h-70px"
+                title="Calendrier">
+                <i class="feather icon-calendar icon-lg mb-1 text-primary"></i>
+                <p class="fs-10px">Planning</p>
+              </a>
+            </div>
+            <div class="col-3 text-center" *ngxPermissionsOnly="'MENU_DASHBOARD_MAIN'">
+              <a routerLink="/gbatcar/dashboard"
+                class="dropdown-item d-flex flex-column align-items-center justify-content-center w-70px h-70px"
+                title="Tableau de Bord">
+                <i class="feather icon-pie-chart icon-lg mb-1 text-dark"></i>
+                <p class="fs-10px">Dash.</p>
               </a>
             </div>
           </div>
           <div class="px-3 py-2 d-flex align-items-center justify-content-center border-top">
-            <a href="" (click)="false">View all</a>
+            <a routerLink="/gbatcar/dashboard">Voir tout le projet</a>
           </div>
         </div>
       </li>

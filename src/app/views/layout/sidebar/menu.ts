@@ -26,6 +26,11 @@ export const MENU: MenuItem[] = [
         nom: 'MENU_CLIENTS_DASHBOARD'
       },
       {
+        label: 'Souscriptions',
+        link: '/gbatcar/clients/subscriptions',
+        nom: 'MENU_CLIENTS_SUBSCRIPTIONS'
+      },
+      {
         label: 'Tous les Clients',
         link: '/gbatcar/clients',
         nom: 'MENU_CLIENTS_LIST'

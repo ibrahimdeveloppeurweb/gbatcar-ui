@@ -10,6 +10,10 @@ export const routes: Routes = [
     canActivate: [noAuthGuard]
   },
   {
+    path: 'souscrire',
+    loadComponent: () => import('./views/pages/landing-page/landing-page.component').then(c => c.LandingPageComponent)
+  },
+  {
     path: '',
     component: BaseComponent,
     canActivateChild: [authGuard],

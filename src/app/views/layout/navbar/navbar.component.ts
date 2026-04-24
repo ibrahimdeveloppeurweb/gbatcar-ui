@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ThemeModeService } from '../../../core/services/theme-mode.service';
 import { AuthService, UserSession } from '../../../core/services/auth/auth.service';
@@ -9,7 +10,8 @@ import { AuthService, UserSession } from '../../../core/services/auth/auth.servi
   standalone: true,
   imports: [
     NgbDropdownModule,
-    RouterLink
+    RouterLink,
+    NgxPermissionsModule
   ],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss'
@@ -22,10 +24,15 @@ export class NavbarComponent implements OnInit {
   constructor(
     private router: Router,
     private themeModeService: ThemeModeService,
-    private auth: AuthService
+    private auth: AuthService,
+    private permissionsService: NgxPermissionsService
   ) { }
 
   ngOnInit(): void {
+    // Charger les permissions dans le service
+    const permissions = this.auth.getPermissions();
+    this.permissionsService.loadPermissions(permissions);
+
     // Récupérer l'utilisateur connecté depuis la session
     this.currentUser = this.auth.getDataToken();
 
