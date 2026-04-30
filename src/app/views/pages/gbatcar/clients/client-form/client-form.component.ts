@@ -35,6 +35,9 @@ export class ClientFormComponent implements OnInit {
     this.clientForm = this.formBuilder.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
+      companyName: [''],
+      managerName: [''],
+      taxAccountNb: [''],
       birthDate: [''],
       gender: ['Homme'],
       maritalStatus: ['Célibataire'],
@@ -70,6 +73,41 @@ export class ClientFormComponent implements OnInit {
       this.pageTitle = 'Modifier le Dossier';
       this.loadClientData(this.clientId);
     }
+
+    // Gérer les validateurs dynamiques selon le type de client
+    this.clientForm.get('type')?.valueChanges.subscribe(type => {
+      this.updateValidators(type);
+    });
+    this.updateValidators(this.clientForm.get('type')?.value);
+  }
+
+  updateValidators(type: string) {
+    const isEntreprise = type === 'Entreprise';
+
+    // Champs Particulier/Chauffeur
+    const firstNameControl = this.clientForm.get('firstName');
+    const lastNameControl = this.clientForm.get('lastName');
+
+    // Champs Entreprise
+    const companyNameControl = this.clientForm.get('companyName');
+    const managerNameControl = this.clientForm.get('managerName');
+
+    if (isEntreprise) {
+      firstNameControl?.clearValidators();
+      lastNameControl?.clearValidators();
+      companyNameControl?.setValidators([Validators.required]);
+      managerNameControl?.setValidators([Validators.required]);
+    } else {
+      firstNameControl?.setValidators([Validators.required]);
+      lastNameControl?.setValidators([Validators.required]);
+      companyNameControl?.clearValidators();
+      managerNameControl?.clearValidators();
+    }
+
+    firstNameControl?.updateValueAndValidity();
+    lastNameControl?.updateValueAndValidity();
+    companyNameControl?.updateValueAndValidity();
+    managerNameControl?.updateValueAndValidity();
   }
 
   onFileChange(event: Event, field: string) {
@@ -87,6 +125,9 @@ export class ClientFormComponent implements OnInit {
         this.clientForm.patchValue({
           firstName: client.firstName,
           lastName: client.lastName,
+          companyName: client.companyName,
+          managerName: client.managerName,
+          taxAccountNb: client.taxAccountNb,
           birthDate: client.birthDate ? new Date(client.birthDate.date || client.birthDate).toISOString().split('T')[0] : '',
           gender: client.gender,
           maritalStatus: client.maritalStatus,
@@ -164,6 +205,15 @@ export class ClientFormComponent implements OnInit {
     if (this.selectedFiles['photoFile']) formData.append('photoFile', this.selectedFiles['photoFile']);
     if (this.selectedFiles['idScanFile']) formData.append('idScanFile', this.selectedFiles['idScanFile']);
     if (this.selectedFiles['licenseScanFile']) formData.append('licenseScanFile', this.selectedFiles['licenseScanFile']);
+
+    const additionalFiles = [
+      'casierFile', 'certifResidenceFile', 'bulletinSalaireFile',
+      'rcFile', 'dfeFile', 'statutFile', 'cniGerantFile',
+      'casierGerantFile', 'releveBancaireFile'
+    ];
+    additionalFiles.forEach(field => {
+      if (this.selectedFiles[field]) formData.append(field, this.selectedFiles[field]);
+    });
 
     if (this.isEditMode && this.clientId) {
       formData.append('uuid', this.clientId);

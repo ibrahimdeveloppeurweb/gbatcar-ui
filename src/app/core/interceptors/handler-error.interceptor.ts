@@ -41,7 +41,18 @@ export const handlerErrorInterceptor: HttpInterceptorFn = (req, next) => {
                 switch (response.status) {
 
                     // ── Déconnexion ─────────────────────────────────────────────────
-                    case 400:
+                    // ── Bad Request ────────────────────────────────────────────────
+                    case 400: {
+                        const msg400 = response.error?.message ?? response.error?.detail ?? 'Requête invalide.';
+                        Toast.fire({
+                            icon: 'warning',
+                            title: 'Attention',
+                            text: msg400
+                        });
+                        break;
+                    }
+
+                    // ── Déconnexion ─────────────────────────────────────────────────
                     case 401: {
                         Toast.fire({
                             icon: 'warning',

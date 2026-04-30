@@ -36,21 +36,31 @@
                         <div class="col-sm-6 mb-3">
                             <label class="form-label text-dark fw-medium">Locataire (Client) <span
                                     class="text-danger">*</span></label>
-                            <ng-select [items]="clients" bindLabel="lastName" bindValue="uuid"
-                                placeholder="-- Sélectionner un client --" formControlName="clientId"
-                                [loading]="loadingClients" [searchFn]="clientSearchFn"
+                            <ng-select [items]="clients" bindValue="uuid" placeholder="-- Sélectionner un client --"
+                                formControlName="clientId" [loading]="loadingClients" [searchFn]="clientSearchFn"
                                 [ngClass]="{'is-invalid': submit && contractForm.get('clientId')?.invalid}">
                                 <ng-template ng-option-tmp let-item="item">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <span class="fw-bold text-dark">{{item.firstName}} {{item.lastName}}</span>
-                                            <br>
-                                            <small class="text-muted">{{item.email || 'Pas d\'email'}}</small>
+                                            <ng-container *ngIf="item.type === 'Entreprise'">
+                                                <span class="fw-bold text-dark">{{item.companyName}}</span><br>
+                                                <small class="text-muted">Gérant: {{item.managerName}} &bull;
+                                                    {{item.email || ''}}</small>
+                                            </ng-container>
+                                            <ng-container *ngIf="item.type !== 'Entreprise'">
+                                                <span class="fw-bold text-dark">{{item.firstName}}
+                                                    {{item.lastName}}</span><br>
+                                                <small class="text-muted">{{item.email || 'Pas d email'}}</small>
+                                            </ng-container>
                                         </div>
                                     </div>
                                 </ng-template>
                                 <ng-template ng-label-tmp let-item="item">
-                                    <ng-container *ngIf="item.lastName">
+                                    <ng-container *ngIf="item.type === 'Entreprise'">
+                                        <span class="fw-bold">{{item.companyName}}</span>
+                                        <small class="text-muted ms-1">({{item.managerName}})</small>
+                                    </ng-container>
+                                    <ng-container *ngIf="item.type !== 'Entreprise' && item.lastName">
                                         <span class="fw-bold">{{item.firstName}} {{item.lastName}}</span>
                                     </ng-container>
                                 </ng-template>
@@ -239,7 +249,7 @@
                                     <label class="form-check-label" for="taxi">Taxi Compteur</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" value="Perso"
+                                    <input class="form-check-input" type="radio" value="Personnel"
                                         formControlName="usageType" id="perso">
                                     <label class="form-check-label" for="perso">Personnel / Privé</label>
                                 </div>

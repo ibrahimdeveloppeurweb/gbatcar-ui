@@ -518,4 +518,68 @@ export class VehicleFormComponent implements OnInit {
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('fr-FR').format(Math.round(amount)) + ' XOF';
   }
+
+  onDeleteBrand(event: Event, brand: any): void {
+    event.stopPropagation();
+    Swal.fire({
+      title: 'Supprimer la marque ?',
+      text: `Voulez-vous vraiment supprimer la marque "${brand.name}" ?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Supprimer',
+      cancelButtonText: 'Annuler',
+      confirmButtonColor: '#d33',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.loading = true;
+        this.vehicleService.deleteBrand(brand.id).subscribe({
+          next: () => {
+            this.loading = false;
+            this.toast('Marque supprimée', 'Succès', 'success');
+            this.loadBrands();
+            if (this.form.get('marque')?.value === brand.name) {
+              this.form.get('marque')?.setValue(null);
+            }
+          },
+          error: (err) => {
+            this.loading = false;
+            this.toast(err.error?.message || 'Erreur lors de la suppression', 'Erreur', 'error');
+          }
+        });
+      }
+    });
+  }
+
+  onDeleteModel(event: Event, model: any): void {
+    event.stopPropagation();
+    Swal.fire({
+      title: 'Supprimer le modèle ?',
+      text: `Voulez-vous vraiment supprimer le modèle "${model.name}" ?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Supprimer',
+      cancelButtonText: 'Annuler',
+      confirmButtonColor: '#d33',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.loading = true;
+        this.vehicleService.deleteModel(model.id).subscribe({
+          next: () => {
+            this.loading = false;
+            this.toast('Modèle supprimé', 'Succès', 'success');
+            if (this.selectedBrandId) {
+              this.loadModels(this.selectedBrandId);
+            }
+            if (this.form.get('modele')?.value === model.name) {
+              this.form.get('modele')?.setValue(null);
+            }
+          },
+          error: (err) => {
+            this.loading = false;
+            this.toast(err.error?.message || 'Erreur lors de la suppression', 'Erreur', 'error');
+          }
+        });
+      }
+    });
+  }
 }

@@ -4,7 +4,10 @@
             <nav class="page-breadcrumb mb-1">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a routerLink="/gbatcar/clients">Clients</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">{{ client.lastName }} {{ client.firstName }}
+                    <li class="breadcrumb-item active" aria-current="page">
+                        <ng-container *ngIf="client.type === 'Entreprise'">{{ client.companyName }}</ng-container>
+                        <ng-container *ngIf="client.type !== 'Entreprise'">{{ client.lastName }} {{ client.firstName
+                            }}</ng-container>
                     </li>
                 </ol>
             </nav>
@@ -12,7 +15,11 @@
                 <button (click)="goBack()" class="btn btn-primary btn-icon btn-xs me-3" title="Retour à la liste">
                     <i data-feather="arrow-left" appFeatherIcon></i>
                 </button>
-                <h4 class="mb-0">Dossier : {{ client.lastName }} {{ client.firstName }}</h4>
+                <h4 class="mb-0">Dossier :
+                    <ng-container *ngIf="client.type === 'Entreprise'">{{ client.companyName }}</ng-container>
+                    <ng-container *ngIf="client.type !== 'Entreprise'">{{ client.lastName }} {{ client.firstName
+                        }}</ng-container>
+                </h4>
             </div>
         </div>
         <div class="d-flex align-items-center flex-wrap text-nowrap">
@@ -363,7 +370,7 @@
                     <a ngbNavLink>Profil Détaillé</a>
                     <ng-template ngbNavContent>
                         <div class="row p-2">
-                            <div class="col-md-6 mb-4">
+                            <div class="col-md-6 mb-4" *ngIf="client.type !== 'Entreprise'">
                                 <h6 class="mb-3 text-primary fs-13px text-uppercase">Informations Personnelles</h6>
                                 <p class="text-muted mb-2 fs-13px"><strong>Genre:</strong> <span class="text-dark">{{
                                         client.gender || 'N/A' }}</span></p>
@@ -396,8 +403,19 @@
                                 <p class="text-muted mb-2 fs-13px"><strong>Acquisition via:</strong> <span
                                         class="text-dark">{{
                                         client.discoveryChannel || 'N/A' }}</span></p>
+
+                                <ng-container *ngIf="client.type === 'Entreprise'">
+                                    <h6 class="mb-3 mt-4 text-primary fs-13px text-uppercase">Informations Entreprise
+                                    </h6>
+                                    <p class="text-muted mb-2 fs-13px"><strong>Raison Sociale:</strong> <span
+                                            class="text-dark fw-bold">{{ client.companyName || 'N/A' }}</span></p>
+                                    <p class="text-muted mb-2 fs-13px"><strong>Nom du Gérant:</strong> <span
+                                            class="text-dark">{{ client.managerName || 'N/A' }}</span></p>
+                                    <p class="text-muted mb-2 fs-13px"><strong>Compte Contribuable:</strong> <span
+                                            class="text-dark">{{ client.taxAccountNb || 'N/A' }}</span></p>
+                                </ng-container>
                             </div>
-                            <div class="col-md-6 mb-4">
+                            <div class="col-md-6 mb-4" *ngIf="client.type !== 'Entreprise'">
                                 <h6 class="mb-3 text-primary fs-13px text-uppercase">Situation Socio-Économique</h6>
                                 <p class="text-muted mb-2 fs-13px"><strong>Niveau d'étude:</strong> <span
                                         class="text-dark">{{ client.educationLevel || 'N/A' }}</span></p>
@@ -448,7 +466,6 @@
                                         <th>Contrat</th>
                                         <th>Montant</th>
                                         <th>Moyen</th>
-                                        <th>Statut</th>
                                         <th class="text-end">Actions</th>
                                     </tr>
                                 </thead>
@@ -465,22 +482,29 @@
                                         <td class="tx-12">{{ p.method }} <span class="text-muted d-block tx-10">{{
                                                 p.period
                                                 }}</span></td>
-                                        <td>
-                                            <span class="badge" [ngClass]="{
-                                            'bg-success': p.status === 'Validé' || p.status === 'VALIDATED' || p.status === 'VALIDÉ',
-                                            'bg-warning text-dark': p.status === 'En attente' || p.status === 'PENDING'
-                                        }">{{ translateContractStatus(p.status) }}</span>
-                                        </td>
+
                                         <td class="text-end">
-                                            <button (click)="openReceipt(p.receiptUrl)"
-                                                class="btn btn-xs btn-outline-primary border-0 bg-white"
-                                                title="Visionner le reçu" [disabled]="!p.receiptUrl">
-                                                <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
-                                            </button>
+                                            <div class="d-flex justify-content-end gap-1">
+                                                <button [routerLink]="['/gbatcar/payments/details', p.uuid]"
+                                                    class="btn btn-xs btn-outline-info border-0 bg-white"
+                                                    title="Détails du paiement">
+                                                    <i data-feather="eye" appFeatherIcon class="icon-sm"></i>
+                                                </button>
+                                                <button [routerLink]="['/gbatcar/contracts/details', p.contractUuid]"
+                                                    class="btn btn-xs btn-outline-secondary border-0 bg-white"
+                                                    title="Détails du contrat">
+                                                    <i data-feather="file" appFeatherIcon class="icon-sm"></i>
+                                                </button>
+                                                <button (click)="openReceipt(p.receiptUrl)"
+                                                    class="btn btn-xs btn-outline-primary border-0 bg-white"
+                                                    title="Visionner le reçu" [disabled]="!p.receiptUrl">
+                                                    <i data-feather="file-text" appFeatherIcon class="icon-sm"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr *ngIf="!allPayments || allPayments.length === 0">
-                                        <td colspan="6" class="text-center text-muted py-5">
+                                        <td colspan="5" class="text-center text-muted py-5">
                                             <i data-feather="database" appFeatherIcon class="icon-lg mb-2"></i>
                                             <p>Aucun paiement trouvé pour ce client.</p>
                                         </td>

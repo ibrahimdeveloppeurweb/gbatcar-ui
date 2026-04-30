@@ -98,6 +98,59 @@
                     </div>
                 </div>
 
+                <h6 class="card-title text-uppercase border-bottom pb-2">Profil Personnel & Informations Complémentaires
+                </h6>
+                <div class="row mb-4">
+                    <div class="col-sm-4 mb-3" *ngIf="subscription.birthDate">
+                        <label class="text-muted fs-12px mb-1">Date de naissance</label>
+                        <div class="fw-bold">{{ subscription.birthDate | date:'dd/MM/yyyy' }}</div>
+                    </div>
+                    <div class="col-sm-4 mb-3" *ngIf="subscription.birthPlace">
+                        <label class="text-muted fs-12px mb-1">Lieu de naissance</label>
+                        <div class="fw-bold">{{ subscription.birthPlace }}</div>
+                    </div>
+                    <div class="col-sm-4 mb-3" *ngIf="subscription.nationality">
+                        <label class="text-muted fs-12px mb-1">Nationalité</label>
+                        <div class="fw-bold">{{ subscription.nationality }}</div>
+                    </div>
+                    <div class="col-sm-4 mb-3" *ngIf="subscription.gender">
+                        <label class="text-muted fs-12px mb-1">Sexe</label>
+                        <div class="fw-bold">{{ subscription.gender }}</div>
+                    </div>
+                    <div class="col-sm-4 mb-3" *ngIf="subscription.maritalStatus">
+                        <label class="text-muted fs-12px mb-1">Situation matrimoniale</label>
+                        <div class="fw-bold">{{ subscription.maritalStatus }}</div>
+                    </div>
+                    <div class="col-sm-4 mb-3" *ngIf="subscription.childrenCount !== null">
+                        <label class="text-muted fs-12px mb-1">Nombre d'enfants</label>
+                        <div class="fw-bold">{{ subscription.childrenCount }}</div>
+                    </div>
+                    <div class="col-sm-4 mb-3" *ngIf="subscription.educationLevel">
+                        <label class="text-muted fs-12px mb-1">Niveau d'étude</label>
+                        <div class="fw-bold">{{ subscription.educationLevel }}</div>
+                    </div>
+                    <div class="col-sm-4 mb-3" *ngIf="subscription.housingStatus">
+                        <label class="text-muted fs-12px mb-1">Statut logement</label>
+                        <div class="fw-bold">{{ subscription.housingStatus }}</div>
+                    </div>
+                    <div class="col-sm-4 mb-3" *ngIf="subscription.idNumber">
+                        <label class="text-muted fs-12px mb-1">Numéro CNI</label>
+                        <div class="fw-bold">{{ subscription.idNumber }}</div>
+                    </div>
+                    <div class="col-sm-4 mb-3" *ngIf="subscription.licenseNumber">
+                        <label class="text-muted fs-12px mb-1">Numéro Permis</label>
+                        <div class="fw-bold">{{ subscription.licenseNumber }}</div>
+                    </div>
+                    <div class="col-sm-4 mb-3" *ngIf="subscription.primaryBankAccount">
+                        <label class="text-muted fs-12px mb-1">Banque Principale</label>
+                        <div class="fw-bold">{{ subscription.primaryBankAccount }}</div>
+                    </div>
+                    <div class="col-sm-4 mb-3" *ngIf="subscription.drivingExperienceYears !== null">
+                        <label class="text-muted fs-12px mb-1">Expérience conduite</label>
+                        <div class="fw-bold">{{ subscription.drivingExperienceYears }} ans</div>
+                    </div>
+                </div>
+
                 <h6 class="card-title text-uppercase border-bottom pb-2">Détails de la Demande</h6>
                 <div class="row">
                     <div class="col-sm-6 mb-3">

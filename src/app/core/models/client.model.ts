@@ -25,6 +25,9 @@ export interface Client {
     name?: string;
     firstName?: string;
     lastName?: string;
+    companyName?: string;
+    managerName?: string;
+    taxAccountNb?: string;
     libelle?: string;
     civilite?: string;
     gender?: string;

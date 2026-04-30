@@ -207,6 +207,30 @@ export class ClientDetailsComponent implements OnInit {
       });
     }
 
+    const additionalDocs = [
+      { field: 'casierUrl', libelle: "Casier Judiciaire", name: "Casier_Judiciaire" },
+      { field: 'certifResidenceUrl', libelle: "Certificat de Résidence", name: "Certif_Residence" },
+      { field: 'bulletinSalaireUrl', libelle: "Bulletin de Salaire", name: "Bulletin_Salaire" },
+      { field: 'rcUrl', libelle: "Registre de Commerce", name: "RC" },
+      { field: 'dfeUrl', libelle: "DFE", name: "DFE" },
+      { field: 'statutUrl', libelle: "Statuts Entreprise", name: "Statuts" },
+      { field: 'cniGerantUrl', libelle: "CNI Gérant", name: "CNI_Gerant" },
+      { field: 'casierGerantUrl', libelle: "Casier Judiciaire Gérant", name: "Casier_Gerant" },
+      { field: 'releveBancaireUrl', libelle: "Relevé Bancaire", name: "Releve_Bancaire" }
+    ];
+
+    additionalDocs.forEach(doc => {
+      if (this.client[doc.field]) {
+        this.allDocuments.push({
+          libelle: doc.libelle,
+          originalName: `${doc.name}.pdf`,
+          storedName: this.client[doc.field],
+          type: 'official',
+          isStatic: true
+        });
+      }
+    });
+
     // 2. Contract docs
     if (this.activeContracts) {
       this.activeContracts.forEach(c => {

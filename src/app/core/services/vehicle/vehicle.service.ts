@@ -245,4 +245,26 @@ export class VehicleService {
             catchError((error: any) => throwError(() => error))
         );
     }
+
+    deleteBrand(id: number): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._delete(`private/brand/${id}/delete`).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
+
+    deleteModel(id: number): Observable<any> {
+        if (!navigator.onLine) {
+            NoInternetHelper.internet();
+            return new Observable(obs => { obs.next(); obs.complete(); });
+        }
+        return this.api._delete(`private/vehicle-model/${id}/delete`).pipe(
+            map((response: any) => response),
+            catchError((error: any) => throwError(() => error))
+        );
+    }
 }

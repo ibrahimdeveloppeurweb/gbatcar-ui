@@ -44,6 +44,16 @@
                                 addTagText="Ajouter cette marque" placeholder="Sélectionnez ou ajoutez..."
                                 formControlName="marque"
                                 [ngClass]="{'is-invalid': submit && form.get('marque')?.invalid}">
+                                <ng-template ng-option-tmp let-item="item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>{{ item.name }}</span>
+                                        <button type="button" class="btn btn-link text-danger p-0 border-0"
+                                            (click)="onDeleteBrand($event, item)" title="Supprimer cette marque">
+                                            <i data-feather="trash-2" appFeatherIcon
+                                                style="width: 14px; height: 14px;"></i>
+                                        </button>
+                                    </div>
+                                </ng-template>
                             </ng-select>
                             <div class="invalid-feedback d-block" *ngIf="submit && form.get('marque')?.invalid">Marque
                                 requise.</div>
@@ -55,6 +65,16 @@
                                 addTagText="Ajouter ce modèle" placeholder="Sélectionnez ou ajoutez..."
                                 formControlName="modele"
                                 [ngClass]="{'is-invalid': submit && form.get('modele')?.invalid}">
+                                <ng-template ng-option-tmp let-item="item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>{{ item.name }}</span>
+                                        <button type="button" class="btn btn-link text-danger p-0 border-0"
+                                            (click)="onDeleteModel($event, item)" title="Supprimer ce modèle">
+                                            <i data-feather="trash-2" appFeatherIcon
+                                                style="width: 14px; height: 14px;"></i>
+                                        </button>
+                                    </div>
+                                </ng-template>
                             </ng-select>
                             <div class="invalid-feedback d-block" *ngIf="submit && form.get('modele')?.invalid">Modèle
                                 requis.</div>

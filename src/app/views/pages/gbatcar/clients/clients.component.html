@@ -210,7 +210,16 @@
                                     <td class="fw-bold text-danger">CLI-{{ (client.uuid || '') | slice:0:3 | uppercase
                                         }}
                                     </td>
-                                    <td class="text-dark">{{ client.lastName }} {{ client.firstName }}</td>
+                                    <td class="text-dark">
+                                        <ng-container *ngIf="client.type !== 'Entreprise'">
+                                            {{ client.lastName }} {{ client.firstName }}
+                                        </ng-container>
+                                        <ng-container *ngIf="client.type === 'Entreprise'">
+                                            <span class="fw-bold">{{ client.companyName }}</span>
+                                            <span class="fs-12px text-muted d-block">Gérant: {{ client.managerName
+                                                }}</span>
+                                        </ng-container>
+                                    </td>
                                     <td>
                                         <div class="fw-bold fs-13px">{{ client.phone }}</div>
                                         <div class="text-muted fs-11px">{{ client.email }}</div>

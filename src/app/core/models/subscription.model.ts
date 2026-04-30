@@ -57,6 +57,20 @@ export interface Subscription {
     phone?: string;
     location?: string;
 
+    // Personal & Socio-economic fields
+    birthDate?: string;
+    birthPlace?: string;
+    nationality?: string;
+    gender?: string;
+    maritalStatus?: string;
+    childrenCount?: number;
+    educationLevel?: string;
+    housingStatus?: string;
+    idNumber?: string;
+    licenseNumber?: string;
+    primaryBankAccount?: string;
+    drivingExperienceYears?: number;
+
     // Documents (fichiers – sérialisés côté backend)
     documents?: SubscriptionDocuments;
 

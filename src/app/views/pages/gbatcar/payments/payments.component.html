@@ -217,7 +217,8 @@
                                     <td>
                                         <a [routerLink]="['/gbatcar/clients/details', payment.client?.uuid]"
                                             class="text-primary fw-medium d-block">
-                                            {{ payment.client?.lastName }} {{ payment.client?.firstName }}
+                                            {{ payment.client?.libelle || (payment.client?.lastName + ' ' +
+                                            payment.client?.firstName) }}
                                         </a>
                                         <span class="tx-11 text-muted" *ngIf="payment.contract">
                                             <i data-feather="file-text" appFeatherIcon class="icon-xs me-1"></i>

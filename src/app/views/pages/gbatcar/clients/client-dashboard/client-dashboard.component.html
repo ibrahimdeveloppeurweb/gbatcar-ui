@@ -176,11 +176,17 @@
                             <tbody>
                                 <tr *ngFor="let c of riskClients">
                                     <td>
-                                        <span class="d-block fw-medium text-primary fs-12px">{{ c.lastName }} {{
-                                            c.firstName
-                                            }}</span>
-                                        <span class="text-muted fs-11px">{{ c.marque ? c.marque + ' ' + c.modele : 'N/A'
-                                            }}</span>
+                                        <ng-container *ngIf="c.type === 'Entreprise'">
+                                            <span class="d-block fw-medium text-primary fs-12px">{{ c.companyName
+                                                }}</span>
+                                            <span class="text-muted fs-11px">Gérant: {{ c.managerName }}</span>
+                                        </ng-container>
+                                        <ng-container *ngIf="c.type !== 'Entreprise'">
+                                            <span class="d-block fw-medium text-primary fs-12px">{{ c.lastName }} {{
+                                                c.firstName }}</span>
+                                            <span class="text-muted fs-11px">{{ c.marque ? c.marque + ' ' + c.modele :
+                                                'N/A' }}</span>
+                                        </ng-container>
                                     </td>
                                     <td class="text-danger fw-bold fs-12px">{{ c.delayDays || 0 }}j</td>
                                     <td class="fw-bold text-dark fs-12px">{{ formatCurrency(c.totalDue || 0) }}</td>
@@ -236,10 +242,16 @@
                             <tbody>
                                 <tr *ngFor="let c of recentClients">
                                     <td>
-                                        <span class="d-block fw-medium text-primary fs-12px">{{ c.lastName }} {{
-                                            c.firstName
-                                            }}</span>
-                                        <span class="text-muted fs-11px">{{ c.phone }}</span>
+                                        <ng-container *ngIf="c.type === 'Entreprise'">
+                                            <span class="d-block fw-medium text-primary fs-12px">{{ c.companyName
+                                                }}</span>
+                                            <span class="text-muted fs-11px">{{ c.phone }}</span>
+                                        </ng-container>
+                                        <ng-container *ngIf="c.type !== 'Entreprise'">
+                                            <span class="d-block fw-medium text-primary fs-12px">{{ c.lastName }} {{
+                                                c.firstName }}</span>
+                                            <span class="text-muted fs-11px">{{ c.phone }}</span>
+                                        </ng-container>
                                     </td>
                                     <td class="text-muted fs-12px">{{ c.vehicle ? c.vehicle.marque + ' ' +
                                         c.vehicle.modele

@@ -35,42 +35,100 @@
                 <div class="card-body">
                     <h6 class="card-title fw-bold text-uppercase mb-4">
                         <i data-feather="user" appFeatherIcon class="icon-sm me-2 text-primary"></i>
-                        Informations Personnelles
+                        Informations Personnelles / Entreprise
                     </h6>
-                    <div class="row mb-3">
-                        <div class="col-sm-6">
-                            <label class="form-label text-dark fw-medium">Nom <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" formControlName="lastName" placeholder="Ex: Koné"
-                                [ngClass]="{'is-invalid': submit && clientForm.get('lastName')?.invalid}">
-                            <div class="invalid-feedback">Nom requis.</div>
-                        </div>
-                        <div class="col-sm-6">
-                            <label class="form-label text-dark fw-medium">Prénom <span
-                                    class="text-danger">*</span></label>
-                            <input type="text" class="form-control" formControlName="firstName" placeholder="Ex: Amadou"
-                                [ngClass]="{'is-invalid': submit && clientForm.get('firstName')?.invalid}">
-                            <div class="invalid-feedback">Prénom requis.</div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-dark fw-bold">Type de client <span
+                                class="text-danger">*</span></label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" formControlName="type" id="typeParticulier"
+                                    value="Particulier">
+                                <label class="form-check-label fw-medium cursor-pointer"
+                                    for="typeParticulier">Particulier</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" formControlName="type" id="typeEntreprise"
+                                    value="Entreprise">
+                                <label class="form-check-label fw-medium cursor-pointer" for="typeEntreprise">Entreprise
+                                    / Flotte</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" formControlName="type" id="typeVTC"
+                                    value="Chauffeur VTC">
+                                <label class="form-check-label fw-medium cursor-pointer" for="typeVTC">Chauffeur
+                                    VTC</label>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="row mb-3">
-                        <div class="col-sm-3">
-                            <label class="form-label text-dark fw-medium">Genre</label>
-                            <select class="form-select" formControlName="gender">
-                                <option value="Homme">Homme</option>
-                                <option value="Femme">Femme</option>
-                            </select>
+                    <!-- Entreprise specific fields -->
+                    <ng-container *ngIf="clientForm.get('type')?.value === 'Entreprise'">
+                        <div class="row mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label text-dark fw-medium">Raison Sociale <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" formControlName="companyName"
+                                    placeholder="Nom de l'entreprise">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label text-dark fw-medium">Nom du Gérant <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" formControlName="managerName"
+                                    placeholder="Ex: M. Koné">
+                            </div>
                         </div>
-                        <div class="col-sm-3">
-                            <label class="form-label text-dark fw-medium">Date de naissance</label>
-                            <input type="date" class="form-control" formControlName="birthDate">
+                        <div class="row mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label text-dark fw-medium">N° de Compte Contribuable</label>
+                                <input type="text" class="form-control" formControlName="taxAccountNb"
+                                    placeholder="Numéro Contribuable">
+                            </div>
                         </div>
-                        <div class="col-sm-6">
-                            <label class="form-label text-dark fw-medium">Lieu de naissance</label>
-                            <input type="text" class="form-control" formControlName="birthPlace"
-                                placeholder="Ex: Abidjan">
+                    </ng-container>
+
+                    <ng-container *ngIf="clientForm.get('type')?.value !== 'Entreprise'">
+                        <div class="row mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label text-dark fw-medium">Nom <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" formControlName="lastName"
+                                    placeholder="Ex: Koné"
+                                    [ngClass]="{'is-invalid': submit && clientForm.get('lastName')?.invalid}">
+                                <div class="invalid-feedback">Nom requis.</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label text-dark fw-medium">Prénom <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" formControlName="firstName"
+                                    placeholder="Ex: Amadou"
+                                    [ngClass]="{'is-invalid': submit && clientForm.get('firstName')?.invalid}">
+                                <div class="invalid-feedback">Prénom requis.</div>
+                            </div>
                         </div>
-                    </div>
+                    </ng-container>
+
+                    <ng-container *ngIf="clientForm.get('type')?.value !== 'Entreprise'">
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <label class="form-label text-dark fw-medium">Genre</label>
+                                <select class="form-select" formControlName="gender">
+                                    <option value="Homme">Homme</option>
+                                    <option value="Femme">Femme</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-3">
+                                <label class="form-label text-dark fw-medium">Date de naissance</label>
+                                <input type="date" class="form-control" formControlName="birthDate">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label text-dark fw-medium">Lieu de naissance</label>
+                                <input type="text" class="form-control" formControlName="birthPlace"
+                                    placeholder="Ex: Abidjan">
+                            </div>
+                        </div>
+                    </ng-container>
 
                     <div class="row mb-3">
                         <div class="col-sm-6">
@@ -90,25 +148,27 @@
                         </div>
                     </div>
 
-                    <div class="row mb-0">
-                        <div class="col-sm-4">
-                            <label class="form-label text-dark fw-medium">Statut matrimonial</label>
-                            <select class="form-select" formControlName="maritalStatus">
-                                <option value="Célibataire">Célibataire</option>
-                                <option value="Marié(e)">Marié(e)</option>
-                                <option value="Divorcée(e)">Divorcée(e)</option>
-                                <option value="Veuf/Veuve">Veuf/Veuve</option>
-                            </select>
+                    <ng-container *ngIf="clientForm.get('type')?.value !== 'Entreprise'">
+                        <div class="row mb-0">
+                            <div class="col-sm-4">
+                                <label class="form-label text-dark fw-medium">Statut matrimonial</label>
+                                <select class="form-select" formControlName="maritalStatus">
+                                    <option value="Célibataire">Célibataire</option>
+                                    <option value="Marié(e)">Marié(e)</option>
+                                    <option value="Divorcée(e)">Divorcée(e)</option>
+                                    <option value="Veuf/Veuve">Veuf/Veuve</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label text-dark fw-medium">Nombre d'enfants</label>
+                                <input type="number" class="form-control" formControlName="childrenCount" min="0">
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label text-dark fw-medium">Nationalité</label>
+                                <input type="text" class="form-control" formControlName="nationality">
+                            </div>
                         </div>
-                        <div class="col-sm-4">
-                            <label class="form-label text-dark fw-medium">Nombre d'enfants</label>
-                            <input type="number" class="form-control" formControlName="childrenCount" min="0">
-                        </div>
-                        <div class="col-sm-4">
-                            <label class="form-label text-dark fw-medium">Nationalité</label>
-                            <input type="text" class="form-control" formControlName="nationality">
-                        </div>
-                    </div>
+                    </ng-container>
                 </div>
             </div>
 
@@ -144,69 +204,71 @@
             </div>
 
             <!-- Section 3: Profil Socio-Économique -->
-            <div class="card grid-margin border-start border-warning border-3">
-                <div class="card-body">
-                    <h6 class="card-title fw-bold text-uppercase mb-4">
-                        <i data-feather="briefcase" appFeatherIcon class="icon-sm me-2 text-warning"></i>
-                        Profil Socio-Économique & Logement
-                    </h6>
-                    <div class="row mb-3">
-                        <div class="col-sm-4">
-                            <label class="form-label text-dark fw-medium">Niveau d'étude</label>
-                            <select class="form-select" formControlName="educationLevel">
-                                <option value="Aucun">Aucun</option>
-                                <option value="Primaire">Primaire</option>
-                                <option value="Secondaire">Secondaire</option>
-                                <option value="Universitaire">Universitaire</option>
-                                <option value="Professionnel">Professionnel</option>
-                            </select>
+            <ng-container *ngIf="clientForm.get('type')?.value !== 'Entreprise'">
+                <div class="card grid-margin border-start border-warning border-3">
+                    <div class="card-body">
+                        <h6 class="card-title fw-bold text-uppercase mb-4">
+                            <i data-feather="briefcase" appFeatherIcon class="icon-sm me-2 text-warning"></i>
+                            Profil Socio-Économique & Logement
+                        </h6>
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <label class="form-label text-dark fw-medium">Niveau d'étude</label>
+                                <select class="form-select" formControlName="educationLevel">
+                                    <option value="Aucun">Aucun</option>
+                                    <option value="Primaire">Primaire</option>
+                                    <option value="Secondaire">Secondaire</option>
+                                    <option value="Universitaire">Universitaire</option>
+                                    <option value="Professionnel">Professionnel</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label text-dark fw-medium">Profession</label>
+                                <input type="text" class="form-control" formControlName="profession"
+                                    placeholder="Ex: Commerçant">
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label text-dark fw-medium">Statut de logement</label>
+                                <select class="form-select" formControlName="housingStatus">
+                                    <option value="Locataire">Locataire</option>
+                                    <option value="Propriétaire">Propriétaire</option>
+                                    <option value="Hébergé(e)">Hébergé(e)</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-sm-4">
-                            <label class="form-label text-dark fw-medium">Profession</label>
-                            <input type="text" class="form-control" formControlName="profession"
-                                placeholder="Ex: Commerçant">
+                        <div class="row mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label text-dark fw-medium">Tranche de revenus mensuels</label>
+                                <select class="form-select" formControlName="incomeBracket">
+                                    <option value="Moins de 200 000 FCFA">Moins de 200 000 FCFA</option>
+                                    <option value="Entre 200 000 et 500 000 FCFA">Entre 200 000 et 500 000 FCFA</option>
+                                    <option value="Plus de 500 000 FCFA">Plus de 500 000 FCFA</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label text-dark fw-medium">Banque principale / Mobile Money</label>
+                                <input type="text" class="form-control" formControlName="primaryBankAccount"
+                                    placeholder="Ex: Wave, Orange Money, Ecobank">
+                            </div>
                         </div>
-                        <div class="col-sm-4">
-                            <label class="form-label text-dark fw-medium">Statut de logement</label>
-                            <select class="form-select" formControlName="housingStatus">
-                                <option value="Locataire">Locataire</option>
-                                <option value="Propriétaire">Propriétaire</option>
-                                <option value="Hébergé(e)">Hébergé(e)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-sm-6">
-                            <label class="form-label text-dark fw-medium">Tranche de revenus mensuels</label>
-                            <select class="form-select" formControlName="incomeBracket">
-                                <option value="Moins de 200 000 FCFA">Moins de 200 000 FCFA</option>
-                                <option value="Entre 200 000 et 500 000 FCFA">Entre 200 000 et 500 000 FCFA</option>
-                                <option value="Plus de 500 000 FCFA">Plus de 500 000 FCFA</option>
-                            </select>
-                        </div>
-                        <div class="col-sm-6">
-                            <label class="form-label text-dark fw-medium">Banque principale / Mobile Money</label>
-                            <input type="text" class="form-control" formControlName="primaryBankAccount"
-                                placeholder="Ex: Wave, Orange Money, Ecobank">
-                        </div>
-                    </div>
-                    <div class="row mb-0">
-                        <div class="col-sm-6">
-                            <label class="form-label text-dark fw-medium">Source de remboursement</label>
-                            <input type="text" class="form-control" formControlName="repaymentSource"
-                                placeholder="Ex: Recettes VTC">
-                        </div>
-                        <div class="col-sm-6">
-                            <label class="form-label text-dark fw-medium">Expérience crédit précédente</label>
-                            <select class="form-select" formControlName="previousCreditExperience">
-                                <option value="Aucune">Aucune</option>
-                                <option value="Déjà client GbatCar">Déjà client GbatCar</option>
-                                <option value="Autre Institution">Autre Institution</option>
-                            </select>
+                        <div class="row mb-0">
+                            <div class="col-sm-6">
+                                <label class="form-label text-dark fw-medium">Source de remboursement</label>
+                                <input type="text" class="form-control" formControlName="repaymentSource"
+                                    placeholder="Ex: Recettes VTC">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label text-dark fw-medium">Expérience crédit précédente</label>
+                                <select class="form-select" formControlName="previousCreditExperience">
+                                    <option value="Aucune">Aucune</option>
+                                    <option value="Déjà client GbatCar">Déjà client GbatCar</option>
+                                    <option value="Autre Institution">Autre Institution</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </ng-container>
 
         </div>
 
@@ -220,14 +282,6 @@
                         <i data-feather="settings" appFeatherIcon class="icon-sm me-2 text-success"></i>
                         Type & Statut du Dossier
                     </h6>
-                    <div class="mb-3">
-                        <label class="form-label text-dark fw-medium">Type de client</label>
-                        <select class="form-select" formControlName="type">
-                            <option value="Particulier">Particulier</option>
-                            <option value="Entreprise">Entreprise / Flotte</option>
-                            <option value="Chauffeur VTC">Chauffeur VTC</option>
-                        </select>
-                    </div>
                     <div class="mb-0">
                         <label class="form-label text-dark fw-medium">Statut du dossier</label>
                         <select class="form-select text-uppercase fw-bold" formControlName="status">
@@ -284,23 +338,71 @@
                         <label class="form-label text-dark fw-medium">Photo de profil / Identité</label>
                         <input type="file" class="form-control form-control-sm" accept="image/*"
                             (change)="onFileChange($event, 'photoFile')">
-                        <small *ngIf="selectedFiles['photoFile']" class="text-success">{{
-                            selectedFiles['photoFile'].name }}</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-dark fw-medium">Scan CNI / Passeport</label>
                         <input type="file" class="form-control form-control-sm" accept="image/*,.pdf"
                             (change)="onFileChange($event, 'idScanFile')">
-                        <small *ngIf="selectedFiles['idScanFile']" class="text-success">{{
-                            selectedFiles['idScanFile'].name }}</small>
                     </div>
-                    <div class="mb-0">
+                    <div class="mb-3">
                         <label class="form-label text-dark fw-medium">Scan Permis de conduire</label>
                         <input type="file" class="form-control form-control-sm" accept="image/*,.pdf"
                             (change)="onFileChange($event, 'licenseScanFile')">
-                        <small *ngIf="selectedFiles['licenseScanFile']" class="text-success">{{
-                            selectedFiles['licenseScanFile'].name }}</small>
                     </div>
+
+                    <!-- Particulier Extra Docs -->
+                    <ng-container *ngIf="clientForm.get('type')?.value === 'Particulier'">
+                        <div class="mb-3">
+                            <label class="form-label text-dark fw-medium">Certificat de Résidence</label>
+                            <input type="file" class="form-control form-control-sm" accept="image/*,.pdf"
+                                (change)="onFileChange($event, 'certifResidenceFile')">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-dark fw-medium">Bulletin de Salaire</label>
+                            <input type="file" class="form-control form-control-sm" accept="image/*,.pdf"
+                                (change)="onFileChange($event, 'bulletinSalaireFile')">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-dark fw-medium">Casier Judiciaire</label>
+                            <input type="file" class="form-control form-control-sm" accept="image/*,.pdf"
+                                (change)="onFileChange($event, 'casierFile')">
+                        </div>
+                    </ng-container>
+
+                    <!-- Entreprise Extra Docs -->
+                    <ng-container *ngIf="clientForm.get('type')?.value === 'Entreprise'">
+                        <h6 class="fs-12px text-muted mt-4 mb-2 text-uppercase fw-bold">Documents d'Entreprise</h6>
+                        <div class="mb-3">
+                            <label class="form-label text-dark fw-medium">Registre de Commerce (RC)</label>
+                            <input type="file" class="form-control form-control-sm" accept="image/*,.pdf"
+                                (change)="onFileChange($event, 'rcFile')">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-dark fw-medium">DFE</label>
+                            <input type="file" class="form-control form-control-sm" accept="image/*,.pdf"
+                                (change)="onFileChange($event, 'dfeFile')">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-dark fw-medium">Statuts de l'Entreprise</label>
+                            <input type="file" class="form-control form-control-sm" accept="image/*,.pdf"
+                                (change)="onFileChange($event, 'statutFile')">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-dark fw-medium">Relevé Bancaire (6 derniers mois)</label>
+                            <input type="file" class="form-control form-control-sm" accept="image/*,.pdf"
+                                (change)="onFileChange($event, 'releveBancaireFile')">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-dark fw-medium">CNI du Gérant</label>
+                            <input type="file" class="form-control form-control-sm" accept="image/*,.pdf"
+                                (change)="onFileChange($event, 'cniGerantFile')">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-dark fw-medium">Casier Judiciaire du Gérant</label>
+                            <input type="file" class="form-control form-control-sm" accept="image/*,.pdf"
+                                (change)="onFileChange($event, 'casierGerantFile')">
+                        </div>
+                    </ng-container>
                 </div>
             </div>
 

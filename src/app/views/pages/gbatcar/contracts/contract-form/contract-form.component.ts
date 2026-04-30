@@ -64,8 +64,10 @@ export class ContractFormComponent implements OnInit {
     term = term.toLowerCase();
     const nom = (item.lastName || '').toLowerCase();
     const prenom = (item.firstName || '').toLowerCase();
-    const reference = (item.uuid || '').toLowerCase(); // Or reference if available
-    return nom.includes(term) || prenom.includes(term) || reference.includes(term);
+    const company = (item.companyName || '').toLowerCase();
+    const manager = (item.managerName || '').toLowerCase();
+    const reference = (item.uuid || '').toLowerCase();
+    return nom.includes(term) || prenom.includes(term) || company.includes(term) || manager.includes(term) || reference.includes(term);
   };
 
   constructor() {
@@ -74,7 +76,7 @@ export class ContractFormComponent implements OnInit {
       assignmentType: ['Specific', Validators.required], // 'Specific' ou 'Fleet'
       vehicleId: [null, Validators.required], // Optionnel conditionnellement
       vehicleDemands: this.fb.array([]), // FormArray pour les lignes de commande
-      usageType: ['VTC', Validators.required],
+      usageType: ['Personnel', Validators.required],
       startDate: [new Date().toISOString().substring(0, 10), Validators.required],
       duration: [36, [Validators.required, Validators.min(1)]],
       paymentFrequency: ['Monthly', Validators.required],
